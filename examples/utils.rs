@@ -1,0 +1,60 @@
+
+use actix_web::HttpRequest;
+use std::collections::HashMap;
+
+/// 获取请求对象头的值
+pub fn get_header_value_str(req: &HttpRequest, key: &str) -> String {
+    let some_val = req.head().headers.get(key);
+    match some_val {
+        Some(t) => t.to_str().unwrap().to_string(),
+        None => "".to_owned(),
+    }
+}
+
+/// 解析地址栏参数
+pub fn parse_query(query_string: &str) -> HashMap<String, String> {
+    if query_string.is_empty() {
+        return HashMap::new();
+    }
+    use percent_encoding::percent_decode;
+    let query_str = percent_decode(query_string.as_bytes())
+        .decode_utf8()
+        .unwrap();
+    let q_a: Vec<&str> = query_str.split("&").collect();
+    let mut res: HashMap<String, String> = HashMap::new();
+    for s in q_a {
+        // let ss: &str = s;
+        let kv: Vec<&str> = s.split("=").collect();
+        res.insert(kv[0].to_string(), kv[1].to_string());
+    }
+    res
+}
+
+/// 获取头部地址栏参数据的值
+/// param1: httpRequest对象
+/// param2: 获取关键字
+pub fn get_hq_value(req: &HttpRequest, key: &str) -> String {
+    let mut val = get_header_value_str(&req, key);
+    if val.is_empty() {
+        let q_str: &str = req.query_string();
+        let query_params: HashMap<String, String> = parse_query(q_str);
+        val = match query_params.get(key) {
+            Some(val) => val.clone(),
+            None => "".to_owned(),
+        };
+    }
+    val
+}
+
+/// 获取访问者的ip
+pub fn get_ip(req: &HttpRequest) -> String {
+    use std::net::IpAddr::V4;
+    // use std::net::SocketAddr::V4;
+    let addr = req.peer_addr();
+    if let Some(ad) = addr {
+        if let V4(ip) = ad.ip() {
+            return format!("{:?}", ip);
+        }
+    }
+    "127.0.0.1".to_owned()
+}

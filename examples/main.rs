@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate actix_web;
+#[macro_use] 
+extern crate lazy_static;
 
 use std::{env, io};
 
@@ -14,12 +16,14 @@ use actix_web::{
 use bytes::Bytes;
 use bytes::{BytesMut};
 use futures::StreamExt;
-
+pub mod utils;
+pub mod config;
+use config::{init_config};
 /// favicon handler
 /// simple index handler
 #[post("/")]
 async fn index_handler(req: HttpRequest, mut payload: web::Payload) -> Result<HttpResponse> {
-    println!("{:?}", req);
+    //println!("{:?}", req);
 
     // payload is a stream of Bytes objects
     let mut body = BytesMut::new();
@@ -44,7 +48,48 @@ async fn index_handler(req: HttpRequest, mut payload: web::Payload) -> Result<Ht
         .content_type("text/html; charset=utf-8")
         .body("nclude_str"))
 }
+#[post("/WxComponent.axd")]
+async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<HttpResponse> {
+    let query = req.query_string();
+    let dic=utils::parse_query(query);
+    //随机数
+    let nonce=dic.get_key_value("nonce").unwrap();
+    //时间缀
+    let timestamp=dic.get_key_value("timestamp").unwrap();
+    //签名信息
+    let msg_signature=dic.get_key_value("msg_signature").unwrap();
 
+    // payload is a stream of Bytes objects
+   let post_str=get_request_body(payload).await;
+    println!("post_str={:?}",post_str);
+    // response
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("component_event"))
+}
+async fn get_request_body(mut payload: web::Payload)->String{
+    let mut body = BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        // limit max size of in-memory payload
+        // if (body.len() + chunk.len()) > MAX_SIZE {
+        //     return Err(error::ErrorBadRequest("overflow"));
+        // }
+        match chunk{
+            Ok(sw)=>{
+                body.extend_from_slice(&sw);
+            },
+            Err(_)=>{
+
+            }
+        }       
+    }
+
+    let post_str = match std::str::from_utf8(&body) {
+        Ok(s) => s,
+        Err(_e) => ""
+    };
+    post_str.to_owned()
+}
 #[get("/auth")]
 async fn index_auth( req: HttpRequest) -> Result<HttpResponse> {
     println!("{:?}", req);
@@ -78,7 +123,7 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
-
+    init_config("");
     HttpServer::new(|| {
         App::new()
             // enable logger - always register actix-web Logger middleware last
@@ -86,6 +131,7 @@ async fn main() -> io::Result<()> {
             // register simple route, handle all methods
             .service(index_handler)
             .service(index_auth)
+            .service(component_event)
             // with path parameters
             .service(web::resource("/user/{name}").route(web::get().to(with_param)))
             // async response body

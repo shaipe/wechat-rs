@@ -14,6 +14,7 @@ log/
 .DS_Store
 *.lock
 *.log
+*.conf
 
 ## delete remote file
 # git rm --cache filename
