@@ -12,12 +12,33 @@ use actix_web::{
     Result,
 };
 use bytes::Bytes;
+use bytes::{BytesMut};
+use futures::StreamExt;
 
 /// favicon handler
 /// simple index handler
-#[get("/")]
-async fn index_handler( req: HttpRequest) -> Result<HttpResponse> {
+#[post("/")]
+async fn index_handler(req: HttpRequest, mut payload: web::Payload) -> Result<HttpResponse> {
     println!("{:?}", req);
+
+    // payload is a stream of Bytes objects
+    let mut body = BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk?;
+        // limit max size of in-memory payload
+        // if (body.len() + chunk.len()) > MAX_SIZE {
+        //     return Err(error::ErrorBadRequest("overflow"));
+        // }
+        body.extend_from_slice(&chunk);
+    }
+
+    let post_str = match std::str::from_utf8(&body) {
+        Ok(s) => s,
+        Err(_e) => ""
+    };
+
+    println!("{}", post_str);
+
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
