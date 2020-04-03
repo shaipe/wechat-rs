@@ -11,3 +11,14 @@ serde = "1.0.105"
 serde_json = "1.0.48"
 serde_derive = "1.0.105"
 reqwest = "0.10.4"
+
+
+actix-rt = "1.0.0"
+actix-web = "2.0.0"
+actix-files = "0.2.1"
+actix-session = "0.3.0"
+actix-utils = "1.0.3"
+
+futures = "0.3.1"
+env_logger = "0.5"
+bytes = "0.5"
