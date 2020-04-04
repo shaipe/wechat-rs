@@ -4,6 +4,7 @@ use crate::config::Config;
 use reqwest::Client as HttpClient;
 use std::time::Duration;
 
+/// 
 pub(crate) struct Client {
 
     pub(crate) config: Config,

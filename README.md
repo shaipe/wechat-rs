@@ -3,17 +3,21 @@
 只使用一个第三方平台，小程序发版也只有一个模板；
 
 ## PC端
+
 ### 1、第三方平台配置
+
 ### 2、微信推送的ticket收录
-##### 1）从url 中获取nonce（随机数），timestamp（时间缀），msg_signature（微信那边的签名）
-##### 2）读取post的数据，解析xml，获取xml中的加密信息、
-##### 3）生成签名，根据token（检验token)、timestamp（时间缀）,nonce（随机数）,encryptmsg(加密密文)
-##### 4）校验签名是否正确
-##### 5) 减密密文，获取appid，根据aeskey
-##### 6）校验appid与第三方的是否一致
-##### 7）返回减密后的内容，并保存ticket
+
+1）从url 中获取nonce（随机数），timestamp（时间缀），msg_signature（微信那边的签名）
+2）读取post的数据，解析xml，获取xml中的加密信息、
+3）生成签名，根据token（检验token)、timestamp（时间缀）,nonce（随机数）,encryptmsg(加密密文)
+4）校验签名是否正确
+5) 减密密文，获取appid，根据aeskey
+6）校验appid与第三方的是否一致
+7）返回减密后的内容，并保存ticket
 
 ### 3、公众号，小程序授权调整
+
 #### 1) 使用appid,secret,ticket 交换第三方token 
 ```接口：/cgi-bin/component/api_component_token
 json参数：{
