@@ -1,51 +1,50 @@
 use serde_derive::Deserialize;
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 use std::sync::Mutex;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct TripartiteConfig{
-    pub name:String,
-    pub domain:String,
-    pub app_id:String,
-    pub secret:String,
-    pub token:String,
-    pub encoding_aes_key:String,
-    pub access_ticket:String,
-    pub ticket_time:String,
-    pub access_token:String,
-    pub at_expired_time:String,
-    pub wap_domain:String,
-    pub webview_domain:String,
-    pub request_domain:String,
-    pub extjson:String
+pub struct TripartiteConfig {
+    pub name: String,
+    pub domain: String,
+    pub app_id: String,
+    pub secret: String,
+    pub token: String,
+    pub encoding_aes_key: String,
+    pub access_ticket: String,
+    pub ticket_time: String,
+    pub access_token: String,
+    pub at_expired_time: String,
+    pub wap_domain: String,
+    pub webview_domain: String,
+    pub request_domain: String,
+    pub extjson: String,
 }
-impl TripartiteConfig{
-    pub fn default()->Self{
-        TripartiteConfig{
-            name:String::from(""),
-            domain:String::from(""),
-            app_id:String::from(""),
-            secret:String::from(""),
-            token:String::from(""),
-            encoding_aes_key:String::from(""),
-            access_ticket:String::from(""),
-            ticket_time:String::from(""),
-            access_token:String::from(""),
-            at_expired_time:String::from(""),
-            wap_domain:String::from(""),
-            webview_domain:String::from(""),
-            request_domain:String::from(""),
-            extjson:String::from("")
+impl TripartiteConfig {
+    pub fn default() -> Self {
+        TripartiteConfig {
+            name: String::from(""),
+            domain: String::from(""),
+            app_id: String::from(""),
+            secret: String::from(""),
+            token: String::from(""),
+            encoding_aes_key: String::from(""),
+            access_ticket: String::from(""),
+            ticket_time: String::from(""),
+            access_token: String::from(""),
+            at_expired_time: String::from(""),
+            wap_domain: String::from(""),
+            webview_domain: String::from(""),
+            request_domain: String::from(""),
+            extjson: String::from(""),
         }
     }
 }
 // 业务配置信息
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
-    pub tripartite: Option<TripartiteConfig>
+    pub tripartite: Option<TripartiteConfig>,
 }
-
 
 impl Config {
     // 加载配置
@@ -88,16 +87,16 @@ impl Config {
 
 // // 默认加载静态全局
 lazy_static! {
-    pub static ref TRIPARTITE_CACHES: Mutex<TripartiteConfig> = Mutex::new(TripartiteConfig::default());
+    pub static ref TRIPARTITE_CACHES: Mutex<TripartiteConfig> =
+        Mutex::new(TripartiteConfig::default());
 }
 
-pub fn set_tripartite_config(cnf: TripartiteConfig){
+pub fn set_tripartite_config(cnf: TripartiteConfig) {
     let mut cache = TRIPARTITE_CACHES.lock().unwrap();
-    *cache=cnf;
+    *cache = cnf;
 }
 
 pub fn get_tripartite_config() -> TripartiteConfig {
     let mut cache = TRIPARTITE_CACHES.lock().unwrap();
     cache.clone()
 }
-
