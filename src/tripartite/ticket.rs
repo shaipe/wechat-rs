@@ -23,7 +23,7 @@ impl WechatTicket {
     ) -> WeChatResult<String> {
         let c = WeChatCrypto::new(&self.token, &self.aes_key, &self.app_id);
         let decrpty = c.decrypt_message(xml, signature, timestamp, nonce);
-        println!("decrpty={:?}", decrpty);
+        //println!("decrpty={:?}", decrpty);
         let ticketstr=self.parse_ticket(&decrpty.unwrap());
         Ok(ticketstr)
     }

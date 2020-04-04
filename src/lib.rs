@@ -14,4 +14,7 @@ pub mod wechat_crypto;
 pub mod xmlutil;
 
 pub mod tripartite;
-pub use tripartite::WechatTicket;
+pub use tripartite::{WechatTicket,TripartiteConfig};
+
+// #[macro_use]
+// extern crate lazy_static;

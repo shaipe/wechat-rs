@@ -2,6 +2,7 @@
 extern crate actix_web;
 #[macro_use] 
 extern crate lazy_static;
+
 extern crate wechat_sdk;
 
 use std::{env, io};
@@ -19,8 +20,9 @@ use bytes::{BytesMut};
 use futures::StreamExt;
 pub mod utils;
 pub mod config;
-use config::{Config,TripartiteConfig,get_tripartite_config};
-use wechat_sdk::{types::WeChatResult,tripartite::WechatTicket};
+use config::{Config,get_tripartite_config,set_tripartite_config};
+
+use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig}};
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -64,11 +66,17 @@ async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<Http
    let post_str=get_request_body(payload).await;
    //println!("post_str={:?}",post_str);
 
-    let config:TripartiteConfig=get_tripartite_config();
+    let mut config:TripartiteConfig=get_tripartite_config();
     let t=WechatTicket::new(&config.token,&config.encoding_aes_key,&config.app_id);
     let result:WeChatResult<String>=t.save_ticket(&post_str, &signature, timestamp, &nonce);
-    println!("{:?}",result);
-  
+    match result {
+        Ok(val) =>{
+            config.access_ticket=val;
+            println!("config:{:?}",config);
+            set_tripartite_config(config);
+        },
+        Err(err) =>{}
+    };
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")

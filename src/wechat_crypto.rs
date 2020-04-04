@@ -43,7 +43,7 @@ impl WeChatCrypto {
         ];
         data.sort();
         let data_str = data.join("");
-        // TODO: do not unwrap
+        // TODO: sha1
         let mut hasher = Sha1::new();
 
         // write input message
@@ -68,7 +68,7 @@ impl WeChatCrypto {
     }
     pub fn decrypt(&self, ciphertext: &str) -> WeChatResult<String> {
         let b64decoded = base64::decode(ciphertext)?;
-        // TODO: do not unwrap
+        // TODO: aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded,&self.key, &self.key[..16]).unwrap();
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
