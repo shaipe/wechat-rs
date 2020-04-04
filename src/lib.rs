@@ -12,3 +12,6 @@ pub mod types;
 pub mod wechat_crypto;
 
 pub mod xmlutil;
+
+pub mod tripartite;
+pub use tripartite::WechatTicket;

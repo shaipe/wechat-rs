@@ -20,7 +20,7 @@ use futures::StreamExt;
 pub mod utils;
 pub mod config;
 use config::{Config,TripartiteConfig,get_tripartite_config};
-use wechat_sdk::{wechat_crypto::WeChatCrypto,types::WeChatResult};
+use wechat_sdk::{types::WeChatResult,tripartite::WechatTicket};
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -64,9 +64,9 @@ async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<Http
    let post_str=get_request_body(payload).await;
    //println!("post_str={:?}",post_str);
 
-    let tripartite:TripartiteConfig=get_tripartite_config();
-    let wechat_crypto=WeChatCrypto::new(&tripartite.token,&tripartite.encoding_aes_key,&tripartite.app_id);
-    let result:WeChatResult<String>=wechat_crypto.decrypt_message(&post_str, &signature, timestamp, &nonce);
+    let config:TripartiteConfig=get_tripartite_config();
+    let t=WechatTicket::new(&config.token,&config.encoding_aes_key,&config.app_id);
+    let result:WeChatResult<String>=t.save_ticket(&post_str, &signature, timestamp, &nonce);
     println!("{:?}",result);
   
     // response
