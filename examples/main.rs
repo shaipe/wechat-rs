@@ -2,6 +2,7 @@
 extern crate actix_web;
 #[macro_use] 
 extern crate lazy_static;
+extern crate wechat_sdk;
 
 use std::{env, io};
 
@@ -18,7 +19,8 @@ use bytes::{BytesMut};
 use futures::StreamExt;
 pub mod utils;
 pub mod config;
-use config::{init_config};
+use config::{Config,TripartiteConfig,get_tripartite_config};
+use wechat_sdk::{wechat_crypto::WeChatCrypto,types::WeChatResult};
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -53,15 +55,20 @@ async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<Http
     let query = req.query_string();
     let dic=utils::parse_query(query);
     //随机数
-    let nonce=dic.get_key_value("nonce").unwrap();
+    let nonce=utils::get_hash_value(&dic,"nonce");
     //时间缀
-    let timestamp=dic.get_key_value("timestamp").unwrap();
+    let timestamp=utils::get_hash_value(&dic,"timestamp").parse::<i64>().unwrap();
     //签名信息
-    let msg_signature=dic.get_key_value("msg_signature").unwrap();
-
-    // payload is a stream of Bytes objects
+    let signature=utils::get_hash_value(&dic,"msg_signature");
+      // payload is a stream of Bytes objects
    let post_str=get_request_body(payload).await;
-    println!("post_str={:?}",post_str);
+   //println!("post_str={:?}",post_str);
+
+    let tripartite:TripartiteConfig=get_tripartite_config();
+    let wechat_crypto=WeChatCrypto::new(&tripartite.token,&tripartite.encoding_aes_key,&tripartite.app_id);
+    let result:WeChatResult<String>=wechat_crypto.decrypt_message(&post_str, &signature, timestamp, &nonce);
+    println!("{:?}",result);
+  
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
@@ -123,7 +130,7 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
-    init_config("");
+    Config::init("");
     HttpServer::new(|| {
         App::new()
             // enable logger - always register actix-web Logger middleware last

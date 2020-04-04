@@ -58,3 +58,10 @@ pub fn get_ip(req: &HttpRequest) -> String {
     }
     "127.0.0.1".to_owned()
 }
+
+pub fn get_hash_value(query_params: &HashMap<String,String>, key: &str) -> String {
+    match query_params.get(key) {
+        Some(val) => val.clone(),
+        None => "".to_owned(),
+    }
+}

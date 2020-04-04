@@ -4,3 +4,11 @@
 pub mod config;
 
 pub mod client;
+
+pub mod errors;
+
+pub mod types;
+
+pub mod wechat_crypto;
+
+pub mod xmlutil;

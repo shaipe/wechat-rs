@@ -49,9 +49,9 @@ pub struct Config {
 
 impl Config {
     // 加载配置
-    pub fn new(config_path: &str) -> Self {
+    pub fn init(config_path: &str) -> Self {
         let file_path =  if config_path.is_empty() {
-            "config.conf"
+            "prod.conf"
         }
         else{
             config_path
@@ -70,33 +70,21 @@ impl Config {
             Err(e) => panic!("Error Reading file:{}", e)
         };
        
-        let c: Config = serde_json::from_str(&str_val).unwrap();
-        c
+        let cnf: Config = serde_json::from_str(&str_val).unwrap();
+        let web_config=match cnf.clone().tripartite{
+            Some(val) => {
+                set_tripartite_config(val.clone());
+                val
+            },
+            _ => {
+                println!("请配置第三方文件!");
+                TripartiteConfig::default()
+            }
+        };
+        cnf
     }
 }
 
-// 获取配置信息
-pub fn init_config(mode: &str)->TripartiteConfig {
-    let config_path = match mode {
-        "dev" => "dev.conf",
-        _ => "prod.conf"
-    };
-    let cnf: Config = Config::new(config_path);
-
-
-    let web_config=match cnf.clone().tripartite{
-        Some(val) => {
-            set_tripartite_config(val.clone());
-            val
-        },
-        _ => {
-            println!("请配置第三方文件!");
-            TripartiteConfig::default()
-        }
-    };
-    println!("web_config={:?}",web_config);
-    web_config
-}
 
 // // 默认加载静态全局
 lazy_static! {
