@@ -6,6 +6,7 @@ pub struct WechatTicket {
     aes_key: String,
     app_id: String,
 }
+
 impl WechatTicket {
     pub fn new(_token: &str, _aes_key: &str, _app_id: &str) -> WechatTicket {
         WechatTicket {
@@ -24,12 +25,12 @@ impl WechatTicket {
         let c = WeChatCrypto::new(&self.token, &self.aes_key, &self.app_id);
         let decrpty = c.decrypt_message(xml, signature, timestamp, nonce);
         //println!("decrpty={:?}", decrpty);
-        let ticketstr=self.parse_ticket(&decrpty.unwrap());
-        Ok(ticketstr)
+        // let ticketstr=self.parse_ticket(&decrpty.unwrap());
+        Ok("ticketstr".to_owned())
     }
-    pub fn parse_ticket(&self, xml: &str) -> String {
-        let package = xmlutil::parse(xml);
-        let doc = package.as_document();
-        xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string()
-    }
+    // pub fn parse_ticket(&self, xml: &str) -> String {
+    //     let package = xmlutil::parse(xml);
+    //     let doc = package.as_document();
+    //     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string()
+    // }
 }
