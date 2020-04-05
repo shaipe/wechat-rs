@@ -1,4 +1,5 @@
 use serde_derive::Deserialize;
+use crate::tripartite::component::WechatComponent;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct TripartiteConfig {
@@ -34,6 +35,14 @@ impl TripartiteConfig {
             webview_domain: String::from(""),
             request_domain: String::from(""),
             extjson: String::from(""),
+        }
+    }
+    pub async fn get_token(&self) ->String {
+        let c=WechatComponent::new(&self.app_id,&self.secret,&self.access_ticket);
+        let result=c.get_component_token().await;
+        match result{
+            Ok(token) => token,
+            Err(err) =>"".to_owned()
         }
     }
 }
