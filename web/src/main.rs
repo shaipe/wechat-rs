@@ -110,8 +110,7 @@ async fn get_request_body(mut payload: web::Payload)->String{
 async fn index_auth( req: HttpRequest) -> Result<HttpResponse> {
     let mut config:TripartiteConfig=get_tripartite_config();
     let token=config.get_token().await;
-    
-    println!("reust={:?}",reust);
+
 
     // response
     Ok(HttpResponse::build(StatusCode::OK)
