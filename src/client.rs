@@ -3,14 +3,16 @@
 use crate::config::Config;
 use reqwest::Client as HttpClient;
 use std::time::Duration;
+use crate::errors::WeChatError;
+use crate::types::WeChatResult;
 
-/// 
+use std::collections::HashMap;
+
+///
 pub(crate) struct Client {
-
     pub(crate) config: Config,
 
-    pub(crate) client: HttpClient
-
+    pub(crate) client: HttpClient,
 }
 
 impl Client {
@@ -23,5 +25,61 @@ impl Client {
                 .build()
                 .unwrap(),
         }
+    }
+    /**
+     * url
+     * params
+     */
+    pub async fn post(&self, url: &str, params: &HashMap<String, String>) -> WeChatResult<String> {
+  
+       match self.client
+            .post(url)
+            .json(params)
+            .send().await
+        {
+            Ok(res) => {
+                if res.status() == 200 {
+                    match res.text().await {
+                        Ok(txt) => Ok(txt),
+                        Err(e) => Err(WeChatError::ClientError {
+                            errcode: -1,
+                            errmsg: format!("Send request error: {}", e),
+                        }),
+                    }
+                } else {
+                    Err(WeChatError::ClientError {
+                        errcode: 500,
+                        errmsg: format!("status={}", res.status()),
+                    })
+                }
+            }
+            Err(e) => Err(WeChatError::ClientError {
+                errcode: 500,
+                errmsg: format!("Send request error: {}", e),
+            })
+        }
+      
+    }
+    /**
+     * url
+     */
+    pub async fn get(&self,url: &str) -> WeChatResult<String> {
+       
+        match self.client
+            .get(url)
+            .send().await
+            {
+                Ok(res) => {
+                    if res.status() == 200 {
+                        match res.text().await{
+                            Ok(txt) => Ok(txt),
+                            Err(e) =>Err(WeChatError::ClientError { errcode: -1, errmsg: format!("Send request error: {}", e) })
+                        }
+                    } else {
+                        Err(WeChatError::ClientError { errcode: 500, errmsg: format!("status={}",res.status()) })
+                    }
+                },
+                Err(e)=>Err(WeChatError::ClientError { errcode: 500, errmsg: format!("Send request error: {}", e) })
+            }
     }
 }

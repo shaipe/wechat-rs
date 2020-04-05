@@ -22,7 +22,7 @@ pub mod utils;
 pub mod config;
 use config::{Config,get_tripartite_config,set_tripartite_config};
 
-use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig}};
+use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent}};
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -77,6 +77,7 @@ async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<Http
         },
         Err(err) =>{}
     };
+    
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
@@ -107,7 +108,11 @@ async fn get_request_body(mut payload: web::Payload)->String{
 }
 #[get("/auth")]
 async fn index_auth( req: HttpRequest) -> Result<HttpResponse> {
-    println!("{:?}", req);
+    let mut config:TripartiteConfig=get_tripartite_config();
+    let token=config.get_token().await;
+    
+    println!("reust={:?}",reust);
+
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
