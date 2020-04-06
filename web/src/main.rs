@@ -20,9 +20,9 @@ use bytes::{BytesMut};
 use futures::StreamExt;
 pub mod utils;
 pub mod config;
-use config::{Config,get_tripartite_config,set_tripartite_config};
+use config::{Config};
 
-use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent}};
+use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent,get_tripartite_config,set_tripartite_config}};
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -110,8 +110,12 @@ async fn get_request_body(mut payload: web::Payload)->String{
 async fn index_auth( req: HttpRequest) -> Result<HttpResponse> {
     let mut config:TripartiteConfig=get_tripartite_config();
     let token=config.get_token().await;
-
-
+    println!("access_token={:?}", token);
+    let c=WechatComponent::new(&config.app_id,&config.secret,&config.access_ticket);
+    let code=c.create_preauthcode(&token).await;
+    println!("code={:?}",code);
+    let path=c.component_login_page(&code.unwrap(),"http://b2b323.366ec.net/WxComponent.axd?q=",1).await;
+    println!("path={:?}",path);
     // response
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
