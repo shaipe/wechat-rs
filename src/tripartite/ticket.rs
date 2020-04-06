@@ -25,12 +25,12 @@ impl WechatTicket {
         let c = WeChatCrypto::new(&self.token, &self.aes_key, &self.app_id);
         let decrpty = c.decrypt_message(xml, signature, timestamp, nonce);
         //println!("decrpty={:?}", decrpty);
-        // let ticketstr=self.parse_ticket(&decrpty.unwrap());
-        Ok("ticketstr".to_owned())
+        let ticketstr=self.parse_ticket(&decrpty.unwrap());
+        Ok(ticketstr)
     }
-    // pub fn parse_ticket(&self, xml: &str) -> String {
-    //     let package = xmlutil::parse(xml);
-    //     let doc = package.as_document();
-    //     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string()
-    // }
+    pub fn parse_ticket(&self, xml: &str) -> String {
+        let package = xmlutil::parse(xml);
+        let doc = package.as_document();
+        xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string()
+    }
 }
