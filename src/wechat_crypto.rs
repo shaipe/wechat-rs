@@ -55,9 +55,9 @@ impl WeChatCrypto {
 
     pub fn decrypt_message(&self, xml: &str, signature: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
         use super::xmlutil;
-        // let package = xmlutil::parse(xml);
-        // let doc = package.as_document();
-        let encrypted_msg = "TODO:"; // xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
+        let package = xmlutil::parse(xml);
+        let doc = package.as_document();
+        let encrypted_msg = xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
         //println!("encrypted_msg={:?}",encrypted_msg);
         let real_signature = self.get_signature(timestamp, nonce, &encrypted_msg);
         if signature != &real_signature {

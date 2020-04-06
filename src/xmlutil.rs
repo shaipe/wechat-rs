@@ -1,11 +1,10 @@
-
 extern crate sxd_document;
 extern crate sxd_xpath;
 
 use sxd_document::Package;
 use sxd_document::dom::Document;
 use sxd_document::parser;
-use sxd_xpath::{XPath,Value, Factory,Context};
+use sxd_xpath::{XPath,Value, Factory,Context,evaluate_xpath};
 
 
 
@@ -34,11 +33,13 @@ impl<'d> XPathEvaluator<'d> {
         }
     }
 
-    fn evaluate(&self, doc: &'d Document<'d>, xpath: &str) -> Value<'d> {
+    fn evaluate(&self, doc: &'d Document<'d>, path: &str) -> Value<'d> {
         let root = doc.root();
-        let xpath = self.factory.build(xpath).expect("Could not compile XPath");
-        let xpath = xpath.expect("No XPath was compiled");
-        xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
+        let xpath:XPath = self.factory.build(path).expect("Could not compile XPath").expect("No XPath was compiled");
+        
+        let value = evaluate_xpath(doc, path).expect("XPath evaluation failed");
+        value
+        //xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
     }
 
 }
