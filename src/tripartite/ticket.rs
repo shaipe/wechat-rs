@@ -6,6 +6,7 @@ pub struct WechatTicket {
     aes_key: String,
     app_id: String,
 }
+
 impl WechatTicket {
     pub fn new(_token: &str, _aes_key: &str, _app_id: &str) -> WechatTicket {
         WechatTicket {

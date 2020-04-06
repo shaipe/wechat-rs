@@ -1,9 +1,13 @@
-use std::collections::HashMap;
+
+extern crate sxd_document;
+extern crate sxd_xpath;
 
 use sxd_document::Package;
 use sxd_document::dom::Document;
 use sxd_document::parser;
-use sxd_xpath::{Value, Functions, Variables, Namespaces, Factory, EvaluationContext};
+use sxd_xpath::{XPath,Value, Factory,Context};
+
+
 
 
 pub fn parse<T: AsRef<str>>(xml: T) -> Package {
@@ -16,34 +20,25 @@ pub fn evaluate<'d, T: AsRef<str>>(package: &'d Document<'d>, xpath: T) -> Value
 }
 
 struct XPathEvaluator<'d> {
-    functions: Functions,
-    variables: Variables<'d>,
-    namespaces: Namespaces,
+    context: Context<'d>,
     factory: Factory,
 }
 
 impl<'d> XPathEvaluator<'d> {
     fn new() -> XPathEvaluator<'d> {
-        let mut fns = HashMap::new();
-        sxd_xpath::function::register_core_functions(&mut fns);
+        let context = Context::new();
+        //sxd_xpath::function::register_core_functions(&mut context);
         XPathEvaluator {
-            functions: fns,
-            variables: HashMap::new(),
-            namespaces: HashMap::new(),
+            context: context,
             factory: Factory::new(),
         }
     }
 
     fn evaluate(&self, doc: &'d Document<'d>, xpath: &str) -> Value<'d> {
         let root = doc.root();
-        let context = EvaluationContext::new(
-            root,
-            &self.functions,
-            &self.variables,
-            &self.namespaces,
-        );
-
-        let xpath = self.factory.build(xpath).unwrap().unwrap();
-        xpath.evaluate(&context).ok().unwrap()
+        let xpath = self.factory.build(xpath).expect("Could not compile XPath");
+        let xpath = xpath.expect("No XPath was compiled");
+        xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
     }
+
 }

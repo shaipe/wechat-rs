@@ -2,13 +2,13 @@ use std::fmt;
 use std::error;
 use std::io;
 
-use base64::Base64Error;
+use base64::DecodeError;
 
 #[derive(Debug)]
 pub enum WeChatError {
     InvalidSignature,
     InvalidAppId,
-    InvalidBase64(Base64Error),
+    InvalidBase64(DecodeError),
     ClientError { errcode: i32, errmsg: String },
     IOError(io::Error),
 }
@@ -38,8 +38,8 @@ impl error::Error for WeChatError {
     }
 }
 
-impl From<Base64Error> for WeChatError {
-    fn from(err: Base64Error) -> WeChatError {
+impl From<DecodeError> for WeChatError {
+    fn from(err: DecodeError) -> WeChatError {
         WeChatError::InvalidBase64(err)
     }
 }
