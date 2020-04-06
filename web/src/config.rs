@@ -2,7 +2,7 @@ use serde_derive::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
 use std::sync::Mutex;
-use wechat_sdk::tripartite::TripartiteConfig;
+use wechat_sdk::tripartite::{TripartiteConfig,set_tripartite_config};
 // 业务配置信息
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
@@ -45,21 +45,4 @@ impl Config {
         };
         cnf
     }
-}
-
-
-// // 默认加载静态全局
-lazy_static! {
-    pub static ref TRIPARTITE_CACHES: Mutex<TripartiteConfig> =
-        Mutex::new(TripartiteConfig::default());
-}
-
-pub fn set_tripartite_config(cnf: TripartiteConfig) {
-    let mut cache = TRIPARTITE_CACHES.lock().unwrap();
-    *cache = cnf;
-}
-
-pub fn get_tripartite_config() -> TripartiteConfig {
-    let  cache = TRIPARTITE_CACHES.lock().unwrap();
-    cache.clone()
 }

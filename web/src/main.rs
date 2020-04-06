@@ -20,9 +20,9 @@ use bytes::{BytesMut};
 use futures::StreamExt;
 pub mod utils;
 pub mod config;
-use config::{Config,get_tripartite_config,set_tripartite_config};
+use config::{Config};
 
-use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent}};
+use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent,get_tripartite_config,set_tripartite_config}};
 /// favicon handler
 /// simple index handler
 #[post("/")]
