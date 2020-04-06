@@ -7,6 +7,7 @@ use crate::errors::WeChatError;
 use crate::types::WeChatResult;
 
 use std::collections::HashMap;
+use rustc_serialize::json::{Json};
 
 ///
 pub(crate) struct Client {
@@ -81,5 +82,32 @@ impl Client {
                 },
                 Err(e)=>Err(WeChatError::ClientError { errcode: 500, errmsg: format!("Send request error: {}", e) })
             }
+    }
+
+    #[inline]
+    pub fn json_decode(&self,data:&str) -> WeChatResult<Json> {
+        let obj = match Json::from_str(data) {
+            Ok(decoded) => { decoded },
+            Err(ref e) => {
+                return Err(WeChatError::ClientError { errcode: -3, errmsg: format!("Json decode error: {}", e) });
+            }
+        };
+        match obj.find("errcode") {
+            Some(code) => {
+                let errcode = code.as_i64().unwrap();
+                if errcode != 0 {
+                    let errmsg = match obj.find("errmsg") {
+                        Some(msg) => {
+                            msg.as_string().unwrap()
+                        },
+                        None => { "" }
+                    };
+                    return Err(WeChatError::ClientError { errcode: errcode as i32, errmsg: errmsg.to_owned() });
+                }
+            },
+            None => {},
+        };
+        Ok(obj)
+   
     }
 }
