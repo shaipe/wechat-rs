@@ -83,7 +83,7 @@ async fn component_ticket(req: HttpRequest, payload: web::Payload) -> Result<Htt
     let signature = utils::get_hash_value(&dic, "msg_signature");
     // payload is a stream of Bytes objects
     let post_str = get_request_body(payload).await;
-    //println!("post_str={:?}",post_str);
+    println!("query={:?};post_str={:?}",query,post_str);
 
     let mut config: TripartiteConfig = get_tripartite_config();
     let t = WechatTicket::new(&config.token, &config.encoding_aes_key, &config.app_id);
