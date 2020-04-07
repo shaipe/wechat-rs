@@ -111,8 +111,8 @@ impl WechatComponent{
     
         let encode_uri=utf8_percent_encode(redirect_uri, NON_ALPHANUMERIC).to_string();
 
-        let uri=format!("{}{}",WECHAT_URI,format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&redirect_uri={}&auth_type={}",
-        self.app_id,pre_auth_code,encode_uri,auth_type));
+        let uri=format!("https://mp.weixin.qq.com/{}",format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&auth_type={}&redirect_uri={}",
+        self.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
 }

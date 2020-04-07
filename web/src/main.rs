@@ -30,6 +30,8 @@ use wechat_sdk::{
     },
     types::WeChatResult,
 };
+
+use base64;
 /// favicon handler
 /// simple index handler
 #[post("/")]
@@ -131,16 +133,16 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 
     let mut config: TripartiteConfig = get_tripartite_config();
     let token = config.get_token().await;
-    println!("access_token={:?}", token);
+    //println!("access_token={:?}", token);
     let c = WechatComponent::new(&config.app_id, &config.secret, &config.access_ticket);
     let code = c.create_preauthcode(&token).await;
-    println!("code={:?}", code);
+    //println!("code={:?}", code);
     let path = c.component_login_page(
         &code.unwrap(),
         &format!("{}/auth_calback?q={}", config.domain, base_query),
         1,
     );
-    println!("path={:?}", path);
+    //println!("path={:?}", path);
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
@@ -150,10 +152,33 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 */
 #[post("official_auth_calback")]
 async fn official_auth_calback(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+    let query = req.query_string();
+    let dic = utils::parse_query(query);
+    //随机数
+    let base_query = utils::get_hash_value(&dic, "q");
+    let auth_code=utils::get_hash_value(&dic, "auth_code");
+    let mut path="http://366kmpf.com/WebZone/Main.aspx";
+    let path=match base64::decode(&base_query){
+        Ok(val)=>{
+            let s=String::from_utf8(val).unwrap();
+          
+            let arr:Vec<&str>=s.split("|").collect();
+            println!("q={:?}",arr[4]);
+            if arr.len()==5{
+                format!("{}?p={}&auth_code={}",arr[4],base_query,auth_code)
+            }
+            else{
+                "".to_owned()
+            }
+        },
+        Err(_)=>{"".to_owned()}
+    };
+
+    println!("path={:?}",path);
     // response
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body("component_event"))
+    Ok(HttpResponse::build(StatusCode::FOUND)
+        .header(http::header::LOCATION, path)
+        .body(""))
 }
 /*
 获取第三方的token
@@ -184,7 +209,15 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
         .content_type("text/plain")
         .body(format!("Hello {}!", path.0))
 }
-
+/*
+获取第三方的token
+*/
+#[get("index")]
+async fn index(req: HttpRequest) -> Result<HttpResponse> {
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("<a href='http://b2b323.366ec.net/auth?q=M3wxfDJ8MXxodHRwOi8vd3d3LjM2NmttcGYuY29tL1dlYlpvbmUvU29jaWFsL1dlY2hhdFNldC5hc3B4'>222</a>"))
+}
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
@@ -194,6 +227,7 @@ async fn main() -> io::Result<()> {
         App::new()
             // enable logger - always register actix-web Logger middleware last
             .wrap(middleware::Logger::default())
+            .service(index)
             // register simple route, handle all methods
             .service(index_handler)
             .service(component_ticket)
