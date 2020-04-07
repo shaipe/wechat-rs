@@ -108,8 +108,14 @@ impl WechatComponent{
      */
     pub  fn component_login_page(&self,pre_auth_code:&str,redirect_uri:&str,auth_type:u32)-> String{
         use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-    
-        let encode_uri=utf8_percent_encode(redirect_uri, NON_ALPHANUMERIC).to_string();
+        
+        let encode_uri= if redirect_uri.starts_with("http") {
+            utf8_percent_encode(redirect_uri, NON_ALPHANUMERIC).to_string()
+        }
+        else{
+            utf8_percent_encode(&format!("http://{}",redirect_uri), NON_ALPHANUMERIC).to_string()
+        };
+
 
         let uri=format!("https://mp.weixin.qq.com/{}",format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&auth_type={}&redirect_uri={}",
         self.app_id,pre_auth_code,auth_type,encode_uri));

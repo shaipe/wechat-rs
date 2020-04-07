@@ -130,7 +130,22 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
-
+    let app_type=match base64::decode(&base_query){
+        Ok(val)=>{
+            let s=String::from_utf8(val).unwrap();
+          
+            let arr:Vec<&str>=s.split("|").collect();
+            println!("q={:?}",arr[3]);
+            if arr.len()==5{
+                arr[3].parse::<u32>()
+                .unwrap()
+            }
+            else{
+                1
+            }
+        },
+        Err(_)=>{1}
+    };
     let mut config: TripartiteConfig = get_tripartite_config();
     let token = config.get_token().await;
     //println!("access_token={:?}", token);
@@ -139,8 +154,8 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     //println!("code={:?}", code);
     let path = c.component_login_page(
         &code.unwrap(),
-        &format!("{}/auth_calback?q={}", config.domain, base_query),
-        1,
+        &format!("{}/official_auth_calback?q={}", config.domain, base_query),
+        app_type,
     );
     //println!("path={:?}", path);
     Ok(HttpResponse::build(StatusCode::FOUND)
@@ -150,14 +165,13 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 /*
     公众号授权回调
 */
-#[post("official_auth_calback")]
+#[get("official_auth_calback")]
 async fn official_auth_calback(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
     let auth_code=utils::get_hash_value(&dic, "auth_code");
-    let mut path="http://366kmpf.com/WebZone/Main.aspx";
     let path=match base64::decode(&base_query){
         Ok(val)=>{
             let s=String::from_utf8(val).unwrap();
