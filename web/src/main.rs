@@ -19,8 +19,6 @@ use bytes::Bytes;
 use bytes::{BytesMut};
 use futures::StreamExt;
 pub mod utils;
-pub mod config;
-use config::{Config};
 
 use wechat_sdk::{types::WeChatResult,tripartite::{WechatTicket,TripartiteConfig,WechatComponent,get_tripartite_config,set_tripartite_config}};
 /// favicon handler
@@ -72,8 +70,10 @@ async fn component_event( req: HttpRequest,payload: web::Payload) -> Result<Http
     match result {
         Ok(val) =>{
             config.access_ticket=val;
+            config.save("");
             println!("config:{:?}",config);
-            set_tripartite_config(config);
+            set_tripartite_config(config.clone());
+            
         },
         Err(err) =>{}
     };
@@ -146,7 +146,7 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
-    Config::init("");
+    TripartiteConfig::init("");
     HttpServer::new(|| {
         App::new()
             // enable logger - always register actix-web Logger middleware last

@@ -72,10 +72,8 @@ impl WechatComponent{
         hash.insert("component_appid".to_string(),self.app_id.clone());
         let c=Config::default();
         let api=Client::new(c);
-        println!("sss");
         //post
         let result=api.post(&uri,&hash).await?;
-        println!("pre_auth_code_str={:?}",result);
         let data = match api.json_decode(&result) {
             Ok(_data) => _data,
             Err(err) => {
@@ -103,7 +101,6 @@ impl WechatComponent{
             },
             _ => "".to_string()
         };
-        println!("pre_auth_code_str={:?}",pre_auth_code_str);
         Ok(pre_auth_code_str)
     }
     /**

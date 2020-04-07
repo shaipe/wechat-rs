@@ -37,9 +37,9 @@ impl<'d> XPathEvaluator<'d> {
         let root = doc.root();
         let xpath:XPath = self.factory.build(path).expect("Could not compile XPath").expect("No XPath was compiled");
         
-        let value = evaluate_xpath(doc, path).expect("XPath evaluation failed");
-        value
-        //xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
+        // let value = evaluate_xpath(doc, path).expect("XPath evaluation failed");
+        // value
+        xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
     }
 
 }
