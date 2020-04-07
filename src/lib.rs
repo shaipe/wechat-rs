@@ -19,6 +19,4 @@ pub use tripartite::{WechatTicket,TripartiteConfig,WechatComponent,set_tripartit
 #[macro_use]
 extern crate lazy_static;
 
-// #[macro_use]
-// extern crate lazy_static;
 

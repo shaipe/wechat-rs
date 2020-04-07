@@ -109,40 +109,13 @@ impl WechatComponent{
     /**
      * 授权页面
      */
-    pub async fn component_login_page(&self,pre_auth_code:&str,redirect_uri:&str,auth_type:u32)-> WeChatResult<String>{
+    pub  fn component_login_page(&self,pre_auth_code:&str,redirect_uri:&str,auth_type:u32)-> String{
+        use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    
+        let encode_uri=utf8_percent_encode(redirect_uri, NON_ALPHANUMERIC).to_string();
+
         let uri=format!("{}{}",WECHAT_URI,format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&redirect_uri={}&auth_type={}",
-        self.app_id,pre_auth_code,redirect_uri,auth_type));
-        let hash=HashMap::new();
-        let c=Config::default();
-        let api=Client::new(c);
-        //post
-        let result=api.post(&uri,&hash).await?;
-        let data = match api.json_decode(&result) {
-            Ok(_data) => _data,
-            Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
-            },
-        };
-         //asscess_token
-         let pre_auth_code = match data.find("pre_auth_code") {
-            Some(token) => token.to_owned(),
-            None => { Json::Null}
-        };
-        let pre_auth_code_str = match pre_auth_code {
-            Json::String(ref v) => {
-                format!("{}", v)
-            },
-            _ => "".to_string()
-        };
-        Ok(pre_auth_code_str)
+        self.app_id,pre_auth_code,encode_uri,auth_type));
+        uri
     }
 }
