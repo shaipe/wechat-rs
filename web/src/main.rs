@@ -64,12 +64,17 @@ async fn index_handler(req: HttpRequest, mut payload: web::Payload) -> Result<Ht
 /*
     第三方ticket
 */
-#[post("/component_ticket")]
+#[post("/wx/ticket")]
 async fn component_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
     //随机数
     let nonce = utils::get_hash_value(&dic, "nonce");
+    if nonce.is_empty(){
+        return Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("error"));
+    }
     //时间缀
     let timestamp = utils::get_hash_value(&dic, "timestamp")
         .parse::<i64>()
@@ -223,15 +228,7 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
         .content_type("text/plain")
         .body(format!("Hello {}!", path.0))
 }
-/*
-获取第三方的token
-*/
-#[get("index")]
-async fn index(req: HttpRequest) -> Result<HttpResponse> {
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body("<a href='http://b2b323.366ec.net/auth?q=M3wxfDJ8MXxodHRwOi8vd3d3LjM2NmttcGYuY29tL1dlYlpvbmUvU29jaWFsL1dlY2hhdFNldC5hc3B4'>222</a>"))
-}
+
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
@@ -241,7 +238,6 @@ async fn main() -> io::Result<()> {
         App::new()
             // enable logger - always register actix-web Logger middleware last
             .wrap(middleware::Logger::default())
-            .service(index)
             // register simple route, handle all methods
             .service(index_handler)
             .service(component_ticket)
