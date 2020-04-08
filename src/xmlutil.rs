@@ -1,13 +1,9 @@
-extern crate sxd_document;
-extern crate sxd_xpath;
 
-use sxd_document::Package;
+
 use sxd_document::dom::Document;
 use sxd_document::parser;
-use sxd_xpath::{XPath,Value, Factory,Context,evaluate_xpath};
-
-
-
+use sxd_document::Package;
+use sxd_xpath::{Context, Factory, Value, XPath};
 
 pub fn parse<T: AsRef<str>>(xml: T) -> Package {
     parser::parse(xml.as_ref()).unwrap()
@@ -35,11 +31,16 @@ impl<'d> XPathEvaluator<'d> {
 
     fn evaluate(&self, doc: &'d Document<'d>, path: &str) -> Value<'d> {
         let root = doc.root();
-        let xpath:XPath = self.factory.build(path).expect("Could not compile XPath").expect("No XPath was compiled");
-        
+        let xpath: XPath = self
+            .factory
+            .build(path)
+            .expect("Could not compile XPath")
+            .expect("No XPath was compiled");
         // let value = evaluate_xpath(doc, path).expect("XPath evaluation failed");
         // value
-        xpath.evaluate(&self.context,root).ok().expect("XPath evaluation failed")
+        xpath
+            .evaluate(&self.context, root)
+            .ok()
+            .expect("XPath evaluation failed")
     }
-
 }

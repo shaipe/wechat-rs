@@ -70,10 +70,10 @@ async fn component_ticket(req: HttpRequest, payload: web::Payload) -> Result<Htt
     let dic = utils::parse_query(query);
     //随机数
     let nonce = utils::get_hash_value(&dic, "nonce");
-    if nonce.is_empty(){
+    if nonce.is_empty() {
         return Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body("error"));
+            .content_type("text/html; charset=utf-8")
+            .body("error"));
     }
     //时间缀
     let timestamp = utils::get_hash_value(&dic, "timestamp")
@@ -83,7 +83,7 @@ async fn component_ticket(req: HttpRequest, payload: web::Payload) -> Result<Htt
     let signature = utils::get_hash_value(&dic, "msg_signature");
     // payload is a stream of Bytes objects
     let post_str = get_request_body(payload).await;
-    println!("query={:?};post_str={:?}",query,post_str);
+    println!("query={:?};post_str={:?}", query, post_str);
 
     let mut config: TripartiteConfig = get_tripartite_config();
     let t = WechatTicket::new(&config.token, &config.encoding_aes_key, &config.app_id);
@@ -126,30 +126,27 @@ async fn get_request_body(mut payload: web::Payload) -> String {
     };
     post_str.to_owned()
 }
-/*
-    发起授权
-*/
+
+/// 发起授权
 #[get("/auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
-    let app_type=match base64::decode(&base_query){
-        Ok(val)=>{
-            let s=String::from_utf8(val).unwrap();
-          
-            let arr:Vec<&str>=s.split("|").collect();
-            println!("q={:?}",arr[3]);
-            if arr.len()==5{
-                arr[3].parse::<u32>()
-                .unwrap()
-            }
-            else{
+    let app_type = match base64::decode(&base_query) {
+        Ok(val) => {
+            let s = String::from_utf8(val).unwrap();
+
+            let arr: Vec<&str> = s.split("|").collect();
+            println!("q={:?}", arr[3]);
+            if arr.len() == 5 {
+                arr[3].parse::<u32>().unwrap()
+            } else {
                 1
             }
-        },
-        Err(_)=>{1}
+        }
+        Err(_) => 1,
     };
     let mut config: TripartiteConfig = get_tripartite_config();
     let token = config.get_token().await;
@@ -167,41 +164,38 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         .header(http::header::LOCATION, path)
         .body(""))
 }
-/*
-    公众号授权回调
-*/
+
+/// 公众号授权回调
 #[get("official_auth_calback")]
 async fn official_auth_calback(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
-    let auth_code=utils::get_hash_value(&dic, "auth_code");
-    let path=match base64::decode(&base_query){
-        Ok(val)=>{
-            let s=String::from_utf8(val).unwrap();
-          
-            let arr:Vec<&str>=s.split("|").collect();
-            println!("q={:?}",arr[4]);
-            if arr.len()==5{
-                format!("{}?p={}&auth_code={}",arr[4],base_query,auth_code)
-            }
-            else{
+    let auth_code = utils::get_hash_value(&dic, "auth_code");
+    let path = match base64::decode(&base_query) {
+        Ok(val) => {
+            let s = String::from_utf8(val).unwrap();
+
+            let arr: Vec<&str> = s.split("|").collect();
+            println!("q={:?}", arr[4]);
+            if arr.len() == 5 {
+                format!("{}?p={}&auth_code={}", arr[4], base_query, auth_code)
+            } else {
                 "".to_owned()
             }
-        },
-        Err(_)=>{"".to_owned()}
+        }
+        Err(_) => "".to_owned(),
     };
 
-    println!("path={:?}",path);
+    println!("path={:?}", path);
     // response
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
 }
-/*
-获取第三方的token
-*/
+
+/// 获取第三方的token
 #[post("fetch_component_token")]
 async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     let mut config: TripartiteConfig = get_tripartite_config();
@@ -255,13 +249,11 @@ async fn main() -> io::Result<()> {
                     _ => HttpResponse::NotFound(),
                 }),
             )
-            .service(web::resource("/error").to(|| {
-                async {
-                    error::InternalError::new(
-                        io::Error::new(io::ErrorKind::Other, "test"),
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                    )
-                }
+            .service(web::resource("/error").to(|| async {
+                error::InternalError::new(
+                    io::Error::new(io::ErrorKind::Other, "test"),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                )
             }))
         // // default
         // .default_service(
@@ -276,7 +268,7 @@ async fn main() -> io::Result<()> {
         //         ),
         // )
     })
-    .bind("127.0.0.1:8089")?
+    .bind("0.0.0.0:8089")?
     .run()
     .await
 }

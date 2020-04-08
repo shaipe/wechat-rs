@@ -1,6 +1,5 @@
 //! copyright © shaipe 2020 - persent
 
-use crate::config::Config;
 use reqwest::Client as HttpClient;
 use std::time::Duration;
 use crate::errors::WeChatError;
@@ -9,17 +8,14 @@ use crate::types::WeChatResult;
 use std::collections::HashMap;
 use rustc_serialize::json::{Json};
 
-///
+/// 请求客户端
 pub(crate) struct Client {
-    pub(crate) config: Config,
-
     pub(crate) client: HttpClient,
 }
 
 impl Client {
-    pub fn new(config: Config) -> Self {
+    pub fn new() -> Self {
         Client {
-            config: config,
             client: HttpClient::builder()
                 .timeout(Duration::from_secs(5))
                 .connect_timeout(Duration::from_secs(5))
@@ -61,9 +57,9 @@ impl Client {
         }
       
     }
-    /**
-     * url
-     */
+
+    /// get方法
+    #[allow(dead_code)]
     pub async fn get(&self,url: &str) -> WeChatResult<String> {
        
         match self.client

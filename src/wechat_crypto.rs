@@ -1,19 +1,13 @@
-
-
-use crypto::sha1::Sha1;
 use crypto::digest::Digest;
-
-
+use crypto::sha1::Sha1;
 use std::io::Cursor;
-
 use base64;
 use byteorder::{NativeEndian, ReadBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::{aes, blockmodes, buffer, symmetriccipher};
 
-use crate::types::WeChatResult;
 use crate::errors::WeChatError;
-
+use crate::types::WeChatResult;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct WeChatCrypto {
@@ -23,6 +17,8 @@ pub struct WeChatCrypto {
 }
 
 impl WeChatCrypto {
+
+    /// new
     pub fn new(token: &str, encoding_aes_key: &str, _id: &str) -> WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
@@ -34,6 +30,7 @@ impl WeChatCrypto {
         }
     }
 
+    /// 获取签名
     fn get_signature(&self, timestamp: i64, nonce: &str, encrypted: &str) -> String {
         let mut data = vec![
             self.token.clone(),
@@ -50,10 +47,17 @@ impl WeChatCrypto {
         hasher.input_str(&data_str);
 
         // read hash digest
-         hasher.result_str()
+        hasher.result_str()
     }
 
-    pub fn decrypt_message(&self, xml: &str, signature: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
+    /// 消息解密 
+    pub fn decrypt_message(
+        &self,
+        xml: &str,
+        signature: &str,
+        timestamp: i64,
+        nonce: &str,
+    ) -> WeChatResult<String> {
         use super::xmlutil;
         let package = xmlutil::parse(xml);
         let doc = package.as_document();
@@ -63,17 +67,19 @@ impl WeChatCrypto {
         if signature != &real_signature {
             return Err(WeChatError::InvalidSignature);
         }
-        let msg =self.decrypt(&encrypted_msg)?;
+        let msg = self.decrypt(&encrypted_msg)?;
         Ok(msg)
     }
+
+    /// 解密 
     pub fn decrypt(&self, ciphertext: &str) -> WeChatResult<String> {
         let b64decoded = base64::decode(ciphertext).unwrap();
         // TODO: aes descrypt
-        let text = aes256_cbc_decrypt(&b64decoded,&self.key, &self.key[..16]).unwrap();
+        let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
-        let content = &text[20 .. content_length + 20];
-        let from_id = &text[content_length + 20 ..];
+        let content = &text[20..content_length + 20];
+        let from_id = &text[content_length + 20..];
         if from_id != self._id.as_bytes() {
             return Err(WeChatError::InvalidAppId);
         }
@@ -83,12 +89,13 @@ impl WeChatCrypto {
 }
 
 /// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
-    let mut decryptor = aes::cbc_decryptor(
-        aes::KeySize::KeySize256,
-        key,
-        iv,
-        blockmodes::PkcsPadding);
+fn aes256_cbc_decrypt(
+    encrypted_data: &[u8],
+    key: &[u8],
+    iv: &[u8],
+) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+    let mut decryptor =
+        aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
 
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
@@ -97,10 +104,16 @@ fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Ve
 
     loop {
         let result = (decryptor.decrypt(&mut read_buffer, &mut write_buffer, true))?;
-        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+        final_result.extend(
+            write_buffer
+                .take_read_buffer()
+                .take_remaining()
+                .iter()
+                .map(|&i| i),
+        );
         match result {
             BufferResult::BufferUnderflow => break,
-            BufferResult::BufferOverflow => { }
+            BufferResult::BufferOverflow => {}
         }
     }
 
@@ -120,7 +133,9 @@ mod tests {
         let timestamp = 1585977998;
         let nonce = "27b1461bc5b9926a8b7ba1dc62f514a9fb385fd3";
         let crypto = WeChatCrypto::new("tokenkm323", "", "wx618efe0d63406d44");
-        let decrypted = crypto.decrypt_message(xml, signature, timestamp, nonce).unwrap();
-        println!("decrypted={:?}",decrypted);
+        let decrypted = crypto
+            .decrypt_message(xml, signature, timestamp, nonce)
+            .unwrap();
+        println!("decrypted={:?}", decrypted);
     }
 }

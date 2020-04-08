@@ -1,8 +1,7 @@
-//! copyright 
-//! 
+//! copyright
+//!
 
 use crate::config::Config;
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccessTokenBody {
@@ -24,18 +23,17 @@ pub struct AccessToken {
 }
 
 impl AccessToken {
-    pub fn new( config: Config) -> Self {
+    pub fn new(config: Config) -> Self {
         AccessToken {
             access_token: None,
-            config
+            config,
         }
     }
 
     pub async fn update_token(&self) -> Result<AccessTokenValue> {
         let url = format!("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", 
                           self.config.app_id, self.config.secret);
-        let at = reqwest::get(&url).await?
-            .json::<AccessTokenBody>().await?;
+        let at = reqwest::get(&url).await?.json::<AccessTokenBody>().await?;
         let key = format!("accesstoken-{}", self.config.app_id);
 
         match at.access_token {
@@ -47,10 +45,8 @@ impl AccessToken {
                 self.cache.set(&key, atd.clone()).await?;
                 self.cache.ttl(&key, atd.expires_in).await?;
                 Ok(atd)
-            },
-            None => {
-                Err(Error::AccessTokenError(at))
             }
+            None => Err(Error::AccessTokenError(at)),
         }
     }
 
@@ -58,7 +54,7 @@ impl AccessToken {
         let key = format!("accesstoken-{}", self.config.app_id);
         match self.cache.get(&key).await? {
             Some(token) => Ok(token),
-            None => self.update_token().await
+            None => self.update_token().await,
         }
     }
 }

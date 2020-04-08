@@ -1,3 +1,7 @@
+//! copyright
+//! 
+//! 微信处理错误信息处理
+
 use std::fmt;
 use std::error;
 use std::io;
@@ -27,13 +31,14 @@ impl fmt::Display for WeChatError {
 
 impl error::Error for WeChatError {
 
+    /// 错误信息输出
     fn description(&self) -> &str {
         match *self {
             WeChatError::InvalidSignature => "Invalid signature",
             WeChatError::InvalidAppId => "Invalid app_id",
-            WeChatError::InvalidBase64(ref err) => err.description(),
+            WeChatError::InvalidBase64(ref _err) => "Invalid Base64",
             WeChatError::ClientError { ref errmsg, .. } => errmsg,
-            WeChatError::IOError(ref err) => err.description(),
+            WeChatError::IOError(ref _err) => "Invalid IOError",
         }
     }
 }
