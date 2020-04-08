@@ -12,8 +12,6 @@ pub mod client;
 
 pub mod message;
 
-pub mod types;
-
 pub mod wechat_crypto;
 
 pub mod xmlutil;

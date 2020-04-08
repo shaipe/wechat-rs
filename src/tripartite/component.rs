@@ -2,9 +2,8 @@ use rustc_serialize::json::Json;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::client::Client;
-use crate::errors::WeChatError;
-use crate::types::WeChatResult;
+use crate::{ client::Client, errors::WeChatError, WeChatResult};
+
 const WECHAT_URI: &'static str = "https://api.weixin.qq.com";
 const REFETCH_ACCESS_TOKEN_ERRCODES: [i32; 3] = [40001, 40014, 42001];
 pub struct WechatComponent {

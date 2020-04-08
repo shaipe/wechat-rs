@@ -67,12 +67,8 @@ pub fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> Stri
 
 /// 读取body里面的内容
 pub async fn get_request_body(mut payload: web::Payload) -> String {
-    use bytes::Bytes;
     use bytes::BytesMut;
-    use futures::{
-        future::{ok, Either, Ready},
-        StreamExt,
-    };
+    use futures::StreamExt;
     let mut body = BytesMut::new();
     while let Some(chunk) = payload.next().await {
         // limit max size of in-memory payload

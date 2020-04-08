@@ -1,8 +1,6 @@
 use serde_derive::{Deserialize,Serialize};
-use serde_json::json;
 use std::fs::File;
 use std::io::prelude::*;
-use std::sync::Mutex;
 use wechat_sdk::tripartite::{set_tripartite_config, TripartiteConfig};
 // 业务配置信息
 #[derive(Debug, Clone, Deserialize,Serialize)]
