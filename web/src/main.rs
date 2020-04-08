@@ -7,11 +7,9 @@ extern crate actix_web;
 extern crate lazy_static;
 
 use std::{env, io};
-use actix_utils::mpsc;
-use actix_web::http;
-use actix_web::http::{Method, StatusCode};
+use actix_web::http::{StatusCode};
 use actix_web::{
-    error, middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Result,
+    middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result,
 };
 
 mod utils;

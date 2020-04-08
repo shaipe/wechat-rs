@@ -3,7 +3,7 @@
 use reqwest::Client as HttpClient;
 use std::time::Duration;
 use crate::errors::WeChatError;
-use crate::types::WeChatResult;
+use crate::WeChatResult;
 
 use std::collections::HashMap;
 use rustc_serialize::json::{Json};

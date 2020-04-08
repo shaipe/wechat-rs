@@ -3,13 +3,11 @@ use wechat_sdk::tripartite::{get_ticket, set_ticket, Ticket};
 use super::utils;
 
 use actix_web::http;
-use actix_web::http::{Method, StatusCode};
-use actix_web::{
-    error, middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Result,
-};
+use actix_web::http::{StatusCode};
+use actix_web::{ web, Error, HttpRequest, HttpResponse, Result};
 use wechat_sdk::{
-    tripartite::{get_tripartite_config, set_tripartite_config, TripartiteConfig, WechatComponent},
-    types::WeChatResult,
+    tripartite::{get_tripartite_config, TripartiteConfig, WechatComponent},
+    WeChatResult,
 };
 
 /// 第三方ticket推送接收处理
@@ -79,7 +77,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 
 /// 公众号授权回调
 #[get("official_auth_calback")]
-async fn official_auth_calback(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
     //随机数
@@ -147,26 +145,26 @@ pub async fn callback(
 
     println!("{:?}", post_str);
 
-    //随机数
-    let nonce = utils::get_hash_value(&dic, "nonce");
-    if nonce.is_empty() {
-        return Ok(HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body("error"));
-    }
-    //时间缀
-    let timestamp = utils::get_hash_value(&dic, "timestamp")
-        .parse::<i64>()
-        .unwrap();
-    //签名信息
-    let signature = utils::get_hash_value(&dic, "msg_signature");
+    // //随机数
+    // let nonce = utils::get_hash_value(&dic, "nonce");
+    // if nonce.is_empty() {
+    //     return Ok(HttpResponse::build(StatusCode::OK)
+    //         .content_type("text/html; charset=utf-8")
+    //         .body("error"));
+    // }
+    // //时间缀
+    // let timestamp = utils::get_hash_value(&dic, "timestamp")
+    //     .parse::<i64>()
+    //     .unwrap();
+    // //签名信息
+    // let signature = utils::get_hash_value(&dic, "msg_signature");
 
-    use wechat_sdk::message::Message;
-    let config: TripartiteConfig = get_tripartite_config();
-    let t = Message::new(&config.token, &config.encoding_aes_key, &config.app_id);
-    let result: WeChatResult<String> = t.parse(&post_str, &signature, timestamp, &nonce);
+    // use wechat_sdk::message::Message;
+    // let config: TripartiteConfig = get_tripartite_config();
+    // let t = Message::new(&config.token, &config.encoding_aes_key, &config.app_id);
+    // let result: WeChatResult<String> = t.parse(&post_str, &signature, timestamp, &nonce);
 
-    println!("{:?}", result);
+    // println!("{:?}", result);
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")

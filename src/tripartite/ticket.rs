@@ -1,6 +1,6 @@
 use super::config::TripartiteConfig;
 use crate::tripartite::component::WechatComponent;
-use crate::types::WeChatResult;
+use crate::WeChatResult;
 use crate::wechat_crypto::WeChatCrypto;
 use crate::xmlutil;
 use serde_derive::{Deserialize, Serialize};
@@ -38,21 +38,10 @@ impl Ticket {
         conf: TripartiteConfig,
         xml: &str,
         query_params: HashMap<String, String>,
-    ) -> WeChatResult<String> {
-        //随机数
-        let nonce = get_hash_value(&query_params, "nonce");
-        //时间缀
-        let timestamp = match get_hash_value(&query_params, "timestamp").parse::<i64>() {
-            Ok(v) => v,
-            Err(_e) => 0,
-        };
-        //签名信息
-        let signature = get_hash_value(&query_params, "msg_signature");
-        // println!("{:?}", conf);
-        
+    ) -> WeChatResult<String> {        
         let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
-        match c.decrypt_message(xml, &signature, timestamp, &nonce) {
+        match c.decrypt_message(xml, query_params) {
             Ok(v) => { 
                 let package = xmlutil::parse(v);
                 let doc = package.as_document();
@@ -115,14 +104,6 @@ impl Ticket {
         }
     }
 }
-
-fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
-    match query_params.get(key) {
-        Some(val) => val.clone(),
-        None => "".to_owned(),
-    }
-}
-
 
 // 默认加载静态全局
 lazy_static! {
