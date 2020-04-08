@@ -44,11 +44,11 @@ async fn main() -> io::Result<()> {
             // register simple route, handle all methods
             .service(index_handler)
             .service(wx_handler::receive_ticket)
-            // .service(official_auth)
-            // .service(official_auth_calback)
-            // .service(fetch_component_token)
+            .service(wx_handler::official_auth)
+            .service(wx_handler::official_auth_calback)
+            .service(wx_handler::fetch_component_token)
             // with path parameters
-            .service(web::resource("/wx/cback/{name}").route(web::post().to(wx_handler::callback)))
+            .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
             
     })
     .bind(addr)?

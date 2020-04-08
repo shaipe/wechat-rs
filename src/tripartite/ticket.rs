@@ -15,7 +15,7 @@ use std::sync::Mutex;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Ticket {
     pub access_ticket: String,
-    pub ticket_time: String,
+    pub ticket_time: i64,
     pub access_token: String,
     pub at_expired_time: i64,
 }
@@ -24,7 +24,7 @@ impl Default for Ticket {
     fn default() -> Self {
         Ticket {
             access_ticket: String::from(""),
-            ticket_time: String::from(""),
+            ticket_time: 0,
             access_token: String::from(""),
             at_expired_time: 0,
         }
@@ -87,31 +87,33 @@ impl Ticket {
         };
     }
 
-    // pub async fn get_token(&mut self, conf: TripartiteConfig) -> String {
-    //     let timestamp = SystemTime::now()
-    //         .duration_since(UNIX_EPOCH)
-    //         .unwrap()
-    //         .as_secs() as i64;
-    //     let expires_at: i64 = self.at_expired_time;
-    //     //比较过期时间
-    //     if expires_at <= timestamp {
-    //         let c = WechatComponent::new(&conf.app_id, &conf.secret, &conf.access_ticket);
-    //         let result = c.fetch_access_token().await;
-    //         match result {
-    //             Ok(token) => {
-    //                 println!("token={:?}", token);
-    //                 self.access_token = token.0.clone();
-    //                 self.at_expired_time = token.1;
-    //                 set_tripartite_config(self.clone());
-    //                 self.save("");
-    //                 token.0
-    //             }
-    //             Err(_) => "".to_owned(),
-    //         }
-    //     } else {
-    //         self.access_token.clone()
-    //     }
-    // }
+    /// 获取access_token
+    pub async fn get_token(&mut self, conf: TripartiteConfig) -> String {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+
+        let expires_at: i64 = self.at_expired_time;
+        //比较过期时间
+        if expires_at <= timestamp {
+            let c = WechatComponent::new(&conf.app_id, &conf.secret, &self.access_ticket);
+            let result = c.fetch_access_token().await;
+            match result {
+                Ok(token) => {
+                    println!("token={:?}", token);
+                    self.access_token = token.0.clone();
+                    self.at_expired_time = token.1;
+                    set_ticket(self.clone());
+                    self.save("");
+                    token.0
+                }
+                Err(_) => "".to_owned(),
+            }
+        } else {
+            self.access_token.clone()
+        }
+    }
 }
 
 fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
