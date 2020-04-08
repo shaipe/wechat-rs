@@ -40,7 +40,9 @@ impl WeChatCrypto {
         ];
         data.sort();
         let data_str = data.join("");
-        // TODO: sha1
+
+        
+        // sha1
         let mut hasher = Sha1::new();
 
         // write input message
@@ -62,8 +64,13 @@ impl WeChatCrypto {
         let package = xmlutil::parse(xml);
         let doc = package.as_document();
         let encrypted_msg = xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
-        //println!("encrypted_msg={:?}",encrypted_msg);
+        
+        // println!("encrypted_msg={:?}",encrypted_msg);
+        
         let real_signature = self.get_signature(timestamp, nonce, &encrypted_msg);
+
+        println!("o: {}, new: {}", signature, real_signature);
+
         if signature != &real_signature {
             return Err(WeChatError::InvalidSignature);
         }
