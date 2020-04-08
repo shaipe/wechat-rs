@@ -140,8 +140,13 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 
     let token = ticket.get_token(config.clone()).await;
     
-    println!("md5_value={:?},token_md5={:?}",md5_value,token);
-    response_ok(&format!(r#"{{"token":"{}"}}"#,token))
+    if token.is_empty(){
+        response_error("获取token为空，请检查ticket是否正确推送")
+    }
+    else{
+       response_ok(&token)
+    }
+
 }
 
 
@@ -186,7 +191,7 @@ pub async fn callback(
 ///返回ok
 fn response_ok(content:&str) -> Result<HttpResponse>{
     
-    let result=format!(r#"{{"Success":true,"Code":200,"Message":"","Content":{}}}"#,content);
+    let result=format!(r#"{{"Success":true,"Code":200,"Message":"","Content":"{}"}}"#,content);
     println!("ok={:?}",result);
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("application/json; charset=utf-8")
