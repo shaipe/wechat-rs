@@ -5,7 +5,8 @@
 extern crate actix_web;
 #[macro_use]
 extern crate lazy_static;
-
+#[macro_use]
+extern crate md5;
 use std::{env, io};
 use actix_utils::mpsc;
 use actix_web::http;

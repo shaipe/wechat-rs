@@ -11,7 +11,7 @@ use wechat_sdk::{
     tripartite::{get_tripartite_config, set_tripartite_config, TripartiteConfig, WechatComponent},
     types::WeChatResult,
 };
-
+use md5;
 /// 第三方ticket推送接收处理
 #[post("/wx/ticket")]
 pub async fn receive_ticket(
@@ -110,27 +110,40 @@ async fn official_auth_calback(req: HttpRequest, payload: web::Payload) -> Resul
 /// 获取第三方的token
 #[post("fetch_component_token")]
 async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
+    use percent_encoding::percent_decode;
     // 获取token
     let token = match req.head().headers.get("token") {
         Some(t) => t.to_str().unwrap().to_string(),
         None => "".to_owned(),
     };
-
+    //解码
+    let token = percent_decode(token.as_bytes())
+    .decode_utf8()
+    .unwrap();
+  
     // token无效时直接返回空值
     if token.is_empty() {
-        return Ok(HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(""));
+        return response_error("token 为空");
     }
-
+    let md5_value = match req.head().headers.get("md5") {
+        Some(t) => t.to_str().unwrap().to_string(),
+        None => "".to_owned(),
+    };
+    let token_md5=format!(
+        "{:x}",
+        md5::compute(format!("rwxkj:{}", token).as_bytes())
+    );
+   
+    if(md5_value!=token_md5){
+        return response_error("校验失败");
+    }
     let config: TripartiteConfig = get_tripartite_config();
     let mut ticket = get_ticket();
+
     let token = ticket.get_token(config.clone()).await;
     
-
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body(ticket.access_token))
+    println!("md5_value={:?},token_md5={:?}",md5_value,token);
+    response_ok(&format!(r#"{{"token":"{}"}}"#,token))
 }
 
 
@@ -171,4 +184,21 @@ pub async fn callback(
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(format!("Hello {}!", path.0)))
+}
+///返回ok
+fn response_ok(content:&str) -> Result<HttpResponse>{
+    
+    let result=format!(r#"{{"Success":true,"Code":200,"Message":"","Content":{}}}"#,content);
+    println!("ok={:?}",result);
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("application/json; charset=utf-8")
+        .body(result))
+}
+///返回error
+fn response_error(msg:&str) -> Result<HttpResponse>{
+   
+    let result=format!(r#"{{"Success":false,"Code":500,"Message":"{}","Content":""}}"#,msg);
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("application/json; charset=utf-8")
+        .body(result))
 }
