@@ -28,6 +28,13 @@ pub use tripartite::{
 extern crate lazy_static;
 use rustc_serialize::json::Json;
 
+/// 获取当前时间戮
+pub fn current_timestamp() -> i64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64
+}
+
+/// Json解码
 #[inline]
 pub fn json_decode(data: &str) -> WeChatResult<Json> {
     let obj = match Json::from_str(data) {
