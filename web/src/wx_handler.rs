@@ -8,7 +8,7 @@ use actix_web::{ web, Error, HttpRequest, HttpResponse, Result};
 use std::collections::HashMap;
 use wechat_sdk::{
     tripartite::{get_tripartite_config, TripartiteConfig, WechatComponent},
-    WeChatResult,
+    xmlutil, WeChatCrypto, WeChatResult,
 };
 use md5;
 use super::result_response::{ResultResponse,get_success_result,get_exception_result};
@@ -22,7 +22,11 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    println!("url_param: {:?} \n post_str: {:?}", req.query_string(), post_str);
+    println!(
+        "url_param: {:?} \n post_str: {:?}",
+        req.query_string(),
+        post_str
+    );
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
@@ -42,11 +46,11 @@ pub async fn receive_ticket(
 #[get("/auth")]
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
-    let path=format!("/official_auth?{}",query);
-    println!("cctiv={:?}",path);
+    let path = format!("/official_auth?{}", query);
+    println!("cctiv={:?}", path);
     Ok(HttpResponse::build(StatusCode::OK)
-    .content_type("text/html; charset=utf-8")
-    .body(format!("<script>location.href='{}'</script>",path)))
+        .content_type("text/html; charset=utf-8")
+        .body(format!("<script>location.href='{}'</script>", path)))
 }
 #[get("/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
@@ -98,8 +102,9 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
             let s = String::from_utf8(val).unwrap();
 
             let arr: Vec<&str> = s.split("|").collect();
-            let absolute_path=arr[4].to_lowercase();
-            let absolute_path=absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
+            let absolute_path = arr[4].to_lowercase();
+            let absolute_path =
+                absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
             println!("q={:?}", absolute_path);
             if arr.len() == 5 {
                 format!("{}?q={}&auth_code={}", absolute_path, base_query, auth_code)
@@ -127,10 +132,7 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
         None => "".to_owned(),
     };
     //解码
-    let token = percent_decode(token.as_bytes())
-    .decode_utf8()
-    .unwrap();
-  
+    let token = percent_decode(token.as_bytes()).decode_utf8().unwrap();
     // token无效时直接返回空值
     if token.is_empty() {
         return get_exception_result("token 为空",500);
@@ -164,7 +166,6 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 
 }
 
-
 /// 微信第三方消息回调处理
 pub async fn callback(
     req: HttpRequest,
@@ -178,6 +179,31 @@ pub async fn callback(
 
     println!("{:?}", post_str);
 
+    // 对获取的消息内容进行解密
+    let conf: TripartiteConfig = get_tripartite_config();
+    let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
+    match c.decrypt_message(&post_str, dic) {
+        Ok(v) => {
+            println!("{:?}", v);
+            let package = xmlutil::parse(v);
+            let doc = package.as_document();
+            let to_user = xmlutil::evaluate(&doc, "//xml/ToUserName/text()").string();
+            let msg_type = xmlutil::evaluate(&doc, "//xml/MsgType/text()").string();
+            let info_type = xmlutil::evaluate(&doc, "//xml/InfoType/text()").string();
+            if info_type == "unauthorized" {
+                let auth_app_id = xmlutil::evaluate(&doc, "//xml/AuthorizerAppid/text()").string();
+                let mut ticket = get_ticket();
+                let access_token = ticket.get_token(conf);
+            }
+            // 全网发布时的测试用户
+            if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {}
+            let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
+            //Ok(ticketstr)
+        }
+        Err(e) => {
+            println!("err: {}", e);
+        }
+    }
     // //随机数
     // let nonce = utils::get_hash_value(&dic, "nonce");
     // if nonce.is_empty() {
