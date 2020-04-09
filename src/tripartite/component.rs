@@ -2,10 +2,11 @@ use rustc_serialize::json::Json;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::{ client::Client, errors::WeChatError, WeChatResult};
+use crate::{ json_decode, client::Client, errors::WeChatError, WeChatResult};
 
 const WECHAT_URI: &'static str = "https://api.weixin.qq.com";
 const REFETCH_ACCESS_TOKEN_ERRCODES: [i32; 3] = [40001, 40014, 42001];
+
 pub struct WechatComponent {
     app_id: String,
     secret: String,
@@ -28,10 +29,10 @@ impl WechatComponent {
         hash.insert("component_appid".to_string(), self.app_id.clone());
         hash.insert("component_appsecret".to_string(), self.secret.clone());
         hash.insert("component_verify_ticket".to_string(), self.ticket.clone());
-        let api = Client::new();
+        
         //post
-        let result = api.post(&uri, &hash).await?;
-        let data = match api.json_decode(&result) {
+        let result = Client::new().post(&uri, &hash).await?;
+        let data = match json_decode(&result) {
             Ok(_data) => _data,
             Err(err) => {
                 return Err(err);
@@ -72,10 +73,10 @@ impl WechatComponent {
         );
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), self.app_id.clone());
-        let api = Client::new();
+        
         //post
-        let result = api.post(&uri, &hash).await?;
-        let data = match api.json_decode(&result) {
+        let result = Client::new().post(&uri, &hash).await?;
+        let data = match json_decode(&result) {
             Ok(_data) => _data,
             Err(err) => {
                 if let WeChatError::ClientError { errcode, .. } = err {
@@ -102,6 +103,7 @@ impl WechatComponent {
         };
         Ok(pre_auth_code_str)
     }
+
     /// 授权页面
     pub fn component_login_page(
         &self,
@@ -120,5 +122,34 @@ impl WechatComponent {
         let uri=format!("https://mp.weixin.qq.com/{}",format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&auth_type={}&redirect_uri={}",
         self.app_id,pre_auth_code,auth_type,encode_uri));
         uri
+    }
+
+    /// 查询授权
+    pub async fn query_auth(&self, pre_auth_code: &str ) -> WeChatResult<Json> {
+
+        let uri = format!("{}/cgi-bin/component/api_query_auth?component_access_token={}", WECHAT_URI, "");
+
+        let mut hash = HashMap::new();
+        hash.insert("component_appid".to_string(), self.app_id.clone());
+        hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
+        
+        //post
+        let result = Client::new().post(&uri, &hash).await?;
+        let data = match json_decode(&result) {
+            Ok(_data) => _data,
+            Err(err) => {
+                if let WeChatError::ClientError { errcode, .. } = err {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                        self.fetch_access_token().await?;
+                        return Err(err);
+                    } else {
+                        return Err(err);
+                    }
+                } else {
+                    return Err(err);
+                }
+            }
+        };
+        Ok(data)
     }
 }

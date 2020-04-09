@@ -3,13 +3,13 @@ use wechat_sdk::tripartite::{get_ticket, set_ticket, Ticket};
 use super::utils;
 
 use actix_web::http;
-use actix_web::http::{StatusCode};
-use actix_web::{ web, Error, HttpRequest, HttpResponse, Result};
+use actix_web::http::StatusCode;
+use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
+use md5;
 use wechat_sdk::{
     tripartite::{get_tripartite_config, TripartiteConfig, WechatComponent},
-    WeChatResult,
+    xmlutil, WeChatCrypto, WeChatResult,
 };
-use md5;
 /// 第三方ticket推送接收处理
 #[post("/wx/ticket")]
 pub async fn receive_ticket(
@@ -20,7 +20,11 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    println!("url_param: {:?} \n post_str: {:?}", req.query_string(), post_str);
+    println!(
+        "url_param: {:?} \n post_str: {:?}",
+        req.query_string(),
+        post_str
+    );
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
@@ -40,11 +44,11 @@ pub async fn receive_ticket(
 #[get("/auth")]
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
-    let path=format!("/official_auth?{}",query);
-    println!("cctiv={:?}",path);
+    let path = format!("/official_auth?{}", query);
+    println!("cctiv={:?}", path);
     Ok(HttpResponse::build(StatusCode::OK)
-    .content_type("text/html; charset=utf-8")
-    .body(format!("<script>location.href='{}'</script>",path)))
+        .content_type("text/html; charset=utf-8")
+        .body(format!("<script>location.href='{}'</script>", path)))
 }
 #[get("/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
@@ -96,8 +100,9 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
             let s = String::from_utf8(val).unwrap();
 
             let arr: Vec<&str> = s.split("|").collect();
-            let absolute_path=arr[4].to_lowercase();
-            let absolute_path=absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
+            let absolute_path = arr[4].to_lowercase();
+            let absolute_path =
+                absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
             println!("q={:?}", absolute_path);
             if arr.len() == 5 {
                 format!("{}?q={}&auth_code={}", absolute_path, base_query, auth_code)
@@ -125,10 +130,7 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
         None => "".to_owned(),
     };
     //解码
-    let token = percent_decode(token.as_bytes())
-    .decode_utf8()
-    .unwrap();
-  
+    let token = percent_decode(token.as_bytes()).decode_utf8().unwrap();
     // token无效时直接返回空值
     if token.is_empty() {
         return response_error("token 为空");
@@ -137,28 +139,22 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
         Some(t) => t.to_str().unwrap().to_string(),
         None => "".to_owned(),
     };
-    let token_md5=format!(
-        "{:x}",
-        md5::compute(format!("rwxkj:{}", token).as_bytes())
-    );
-   
-    if(md5_value!=token_md5){
+    let token_md5 = format!("{:x}", md5::compute(format!("rwxkj:{}", token).as_bytes()));
+
+    if (md5_value != token_md5) {
         return response_error("校验失败");
     }
     let config: TripartiteConfig = get_tripartite_config();
     let mut ticket = get_ticket();
 
     let token = ticket.get_token(config.clone()).await;
-    
-    if token.is_empty(){
+
+    if token.is_empty() {
         response_error("获取token为空，请检查ticket是否正确推送")
+    } else {
+        response_ok(&token)
     }
-    else{
-       response_ok(&token)
-    }
-
 }
-
 
 /// 微信第三方消息回调处理
 pub async fn callback(
@@ -173,6 +169,31 @@ pub async fn callback(
 
     println!("{:?}", post_str);
 
+    // 对获取的消息内容进行解密
+    let conf: TripartiteConfig = get_tripartite_config();
+    let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
+    match c.decrypt_message(&post_str, dic) {
+        Ok(v) => {
+            println!("{:?}", v);
+            let package = xmlutil::parse(v);
+            let doc = package.as_document();
+            let to_user = xmlutil::evaluate(&doc, "//xml/ToUserName/text()").string();
+            let msg_type = xmlutil::evaluate(&doc, "//xml/MsgType/text()").string();
+            let info_type = xmlutil::evaluate(&doc, "//xml/InfoType/text()").string();
+            if info_type == "unauthorized" {
+                let auth_app_id = xmlutil::evaluate(&doc, "//xml/AuthorizerAppid/text()").string();
+                let ticket = get_ticket();
+                let access_token = ticket.get_token();
+            }
+            // 全网发布时的测试用户
+            if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {}
+            let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
+            //Ok(ticketstr)
+        }
+        Err(e) => {
+            println!("err: {}", e);
+        }
+    }
     // //随机数
     // let nonce = utils::get_hash_value(&dic, "nonce");
     // if nonce.is_empty() {
@@ -199,18 +220,22 @@ pub async fn callback(
         .body(format!("Hello {}!", path.0)))
 }
 ///返回ok
-fn response_ok(content:&str) -> Result<HttpResponse>{
-    
-    let result=format!(r#"{{"Success":true,"Code":200,"Message":"","Content":"{}"}}"#,content);
-    println!("ok={:?}",result);
+fn response_ok(content: &str) -> Result<HttpResponse> {
+    let result = format!(
+        r#"{{"Success":true,"Code":200,"Message":"","Content":"{}"}}"#,
+        content
+    );
+    println!("ok={:?}", result);
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("application/json; charset=utf-8")
         .body(result))
 }
 ///返回error
-fn response_error(msg:&str) -> Result<HttpResponse>{
-   
-    let result=format!(r#"{{"Success":false,"Code":500,"Message":"{}","Content":""}}"#,msg);
+fn response_error(msg: &str) -> Result<HttpResponse> {
+    let result = format!(
+        r#"{{"Success":false,"Code":500,"Message":"{}","Content":""}}"#,
+        msg
+    );
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("application/json; charset=utf-8")
         .body(result))
