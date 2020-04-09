@@ -38,6 +38,15 @@ pub async fn receive_ticket(
 
 /// 发起授权
 #[get("/auth")]
+async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
+    let query = req.query_string();
+    let path=format!("/official_auth?{}",query);
+    println!("cctiv={:?}",path);
+    Ok(HttpResponse::build(StatusCode::OK)
+    .content_type("text/html; charset=utf-8")
+    .body(format!("<script>location.href='{}'</script>",path)))
+}
+#[get("/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
@@ -69,12 +78,11 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         &format!("{}/official_auth_calback?q={}", config.domain, base_query),
         app_type,
     );
-    //println!("path={:?}", path);
+    println!("path={:?}", path);
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
 }
-
 /// 公众号授权回调
 #[get("official_auth_calback")]
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
@@ -88,9 +96,11 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
             let s = String::from_utf8(val).unwrap();
 
             let arr: Vec<&str> = s.split("|").collect();
-            println!("q={:?}", arr[4]);
+            let absolute_path=arr[4].to_lowercase();
+            let absolute_path=absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
+            println!("q={:?}", absolute_path);
             if arr.len() == 5 {
-                format!("{}?p={}&auth_code={}", arr[4], base_query, auth_code)
+                format!("{}?q={}&auth_code={}", absolute_path, base_query, auth_code)
             } else {
                 "".to_owned()
             }

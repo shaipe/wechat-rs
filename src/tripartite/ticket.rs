@@ -1,16 +1,16 @@
 use super::config::TripartiteConfig;
+use crate::errors::WeChatError;
 use crate::tripartite::component::WechatComponent;
-use crate::WeChatResult;
 use crate::wechat_crypto::WeChatCrypto;
 use crate::xmlutil;
+use crate::WeChatResult;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
+use std::sync::{Mutex,Arc};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::errors::WeChatError;
-use std::sync::Mutex;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Ticket {
@@ -32,25 +32,59 @@ impl Default for Ticket {
 }
 
 impl Ticket {
-    
+    /// 加载配置
+    pub fn new(config_path: &str) -> Self {
+        let file_path = if config_path.is_empty() {
+            "ticket.conf"
+        } else {
+            config_path
+        };
+
+        // 打开文件
+        let mut file = match File::open(file_path) {
+            Ok(f) => f,
+            Err(e) => panic!("no such file {} exception: {}", file_path, e),
+        };
+
+        // 读取文件到字符串变量
+        let mut str_val = String::new();
+        match file.read_to_string(&mut str_val) {
+            Ok(s) => s,
+            Err(e) => panic!("Error Reading file:{}", e),
+        };
+        let cnf = serde_json::from_str(&str_val);
+
+        // 第三方配置处理
+        match cnf {
+            Ok(val) => {
+                let t:Ticket=val;
+                set_ticket(t.clone());
+                t
+            }
+            Err(_) => {
+                println!("请配置第三方文件!");
+                Ticket::default()
+            }
+        }
+    }
     /// 解析ticket
     pub fn parse_ticket(
         conf: TripartiteConfig,
         xml: &str,
         query_params: HashMap<String, String>,
-    ) -> WeChatResult<String> {        
+    ) -> WeChatResult<String> {
         let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
         match c.decrypt_message(xml, query_params) {
-            Ok(v) => { 
+            Ok(v) => {
+                println!("{:?}", v);
                 let package = xmlutil::parse(v);
                 let doc = package.as_document();
-                let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
+                let ticketstr =
+                    xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
                 Ok(ticketstr)
             }
-            Err(_) => {
-                Err(WeChatError::InvalidSignature)
-            }
+            Err(_) => Err(WeChatError::InvalidSignature),
         }
     }
 
@@ -88,9 +122,9 @@ impl Ticket {
         if expires_at <= timestamp {
             let c = WechatComponent::new(&conf.app_id, &conf.secret, &self.access_ticket);
             let result = c.fetch_access_token().await;
+            println!("result={:?},access_ticket={:?}", result, self.access_ticket);
             match result {
                 Ok(token) => {
-                    println!("token={:?}", token);
                     self.access_token = token.0.clone();
                     self.at_expired_time = token.1;
                     set_ticket(self.clone());
@@ -107,18 +141,19 @@ impl Ticket {
 
 // 默认加载静态全局
 lazy_static! {
-    pub static ref TRIPARTITE_TICKET_CACHES: Mutex<Ticket> =
-        Mutex::new(Ticket::default());
+    pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>>= Arc::new(Mutex::new(Ticket::default()));
 }
 
 /// 设置ticket
 pub fn set_ticket(cnf: Ticket) {
-    let mut cache = TRIPARTITE_TICKET_CACHES.lock().unwrap();
+    let counter=Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let mut cache = counter.lock().unwrap();
     *cache = cnf;
 }
 
 /// 获取ticket
 pub fn get_ticket() -> Ticket {
-    let cache = TRIPARTITE_TICKET_CACHES.lock().unwrap();
+    let counter=Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let cache = counter.lock().unwrap();
     cache.clone()
 }

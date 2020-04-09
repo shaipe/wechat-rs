@@ -3,10 +3,6 @@
 
 #[macro_use]
 extern crate actix_web;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate md5;
 use std::{env, io};
 use actix_web::http::{StatusCode};
 use actix_web::{
@@ -17,6 +13,7 @@ mod utils;
 mod wx_handler;
 mod config;
 
+use wechat_sdk::tripartite::Ticket;
 
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
@@ -34,6 +31,7 @@ async fn main() -> io::Result<()> {
     env_logger::init();
     
     let conf = config::Config::new("");
+    let tic=Ticket::new("");
     let addr = format!("0.0.0.0:{}", conf.port);
     
     HttpServer::new(|| {
@@ -43,6 +41,7 @@ async fn main() -> io::Result<()> {
             // register simple route, handle all methods
             .service(index_handler)
             .service(wx_handler::receive_ticket)
+            .service(wx_handler::auth_transfer)
             .service(wx_handler::official_auth)
             .service(wx_handler::official_auth_calback)
             .service(wx_handler::fetch_component_token)
