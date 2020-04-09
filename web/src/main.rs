@@ -12,7 +12,7 @@ use actix_web::{
 mod utils;
 mod wx_handler;
 mod config;
-
+mod result_response;
 use wechat_sdk::tripartite::Ticket;
 
 #[get("/")]

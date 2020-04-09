@@ -43,16 +43,16 @@ impl WechatComponent {
             None => Json::Null,
         };
         //过期秒数
-        let expires_in = match data.find("expires_in") {
-            Some(expires) => expires.as_u64().unwrap() as usize,
-            None => 7200usize,
-        };
+        // let expires_in = match data.find("expires_in") {
+        //     Some(expires) => expires.as_u64().unwrap() as usize,
+        //     None => 7000usize,
+        // };
         let current_timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64;
         //过期时间
-        let expires_at = current_timestamp + expires_in as i64;
+        let expires_at = current_timestamp + 7000;
         let token_str = match token {
             Json::String(ref v) => format!("{}", v),
             _ => "".to_string(),
