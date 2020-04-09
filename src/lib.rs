@@ -23,6 +23,8 @@ pub mod tripartite;
 pub use tripartite::{
     get_tripartite_config, set_tripartite_config, Ticket, TripartiteConfig, WechatComponent,
 };
+pub mod official;
+pub use official::WechatAuthorize;
 
 #[macro_use]
 extern crate lazy_static;

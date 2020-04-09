@@ -45,6 +45,8 @@ async fn main() -> io::Result<()> {
             .service(wx_handler::official_auth)
             .service(wx_handler::official_auth_calback)
             .service(wx_handler::fetch_component_token)
+            .service(wx_handler::fetch_auth_url)
+            .service(wx_handler::user_auth_calback)
             // with path parameters
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
             
