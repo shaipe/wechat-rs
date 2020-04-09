@@ -9,9 +9,10 @@ use std::collections::HashMap;
 use wechat_sdk::{
     tripartite::{get_tripartite_config, TripartiteConfig, WechatComponent},
     xmlutil, WeChatCrypto, WeChatResult,
+    official::WechatAuthorize
 };
 use md5;
-use super::result_response::{ResultResponse,get_success_result,get_exception_result};
+use super::result_response::{ResultResponse,get_success_result,get_success_result2,get_exception_result};
 /// 第三方ticket推送接收处理
 #[post("/wx/ticket")]
 pub async fn receive_ticket(
@@ -228,4 +229,61 @@ pub async fn callback(
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(format!("Hello {}!", path.0)))
+}
+///获得授权url
+#[post("fetch_auth_url")]
+pub async fn fetch_auth_url(req: HttpRequest,payload:web::Payload)->Result<HttpResponse>{
+    let config: TripartiteConfig = get_tripartite_config();
+    let query = req.query_string();
+    let post_str = utils::get_request_body(payload).await;
+    //println!("query={:?}",post_str);
+
+    let dic = utils::parse_query(&post_str);
+    //随机数
+    let app_id = utils::get_hash_value(&dic, "app_id");
+    let domain=if config.wap_domain.starts_with("http"){
+        config.wap_domain
+    }
+    else{
+        format!("http://{}", config.wap_domain)
+    };
+    let redirect_uri = format!("{}/user_auth_calback",&domain);
+    let state = utils::get_hash_value(&dic, "state");
+   
+    let authorize=WechatAuthorize::new(&app_id,&config.app_id,"");
+    let mut scopes=Vec::new();
+    scopes.push("snsapi_userinfo");
+    let url=authorize.get_authorize_url(&redirect_uri,&state,&scopes,"code");
+    get_success_result2(&url)
+}
+/// 用户授权回调
+#[get("user_auth_calback")]
+async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
+    let query = req.query_string();
+    let dic = utils::parse_query(query);
+    //随机数
+    let base_query = utils::get_hash_value(&dic, "state");
+    let auth_code = utils::get_hash_value(&dic, "code");
+    let path = match base64::decode(&base_query) {
+        Ok(val) => {
+            let s = String::from_utf8(val).unwrap();
+            let arr: Vec<&str> = s.split("|").collect();
+            if arr.len() == 3 {
+                let hashQuery = arr[0];
+                let fkway = arr[1];
+                let back_domain = arr[2].to_lowercase();
+                let state=base64::encode(&format!("{}|{}|",hashQuery,fkway));
+                format!("{}/authback?code={}&state={}", back_domain, auth_code,state)
+            } else {
+                "".to_owned()
+            }
+        }
+        Err(_) => "".to_owned(),
+    };
+
+    println!("path={:?}", path);
+    // response
+    Ok(HttpResponse::build(StatusCode::FOUND)
+        .header(http::header::LOCATION, path)
+        .body(""))
 }
