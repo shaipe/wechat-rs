@@ -102,6 +102,25 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
+
+    // pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
+    //     let prp = PrpCrypto::new(&self.key);
+    //     let encrypted_msg = try!(prp.encrypt(msg, &self._id));
+    //     let signature = self.get_signature(timestamp, nonce, &encrypted_msg);
+    //     let msg = format!(
+    //         "<xml>\n\
+    //         <Encrypt><![CDATA[{encrypt}]]></Encrypt>\n\
+    //         <MsgSignature><![CDATA[{signature}]]></MsgSignature>\n\
+    //         <TimeStamp>{timestamp}</TimeStamp>\n\
+    //         <Nonce><![CDATA[{nonce}]]></Nonce>\n\
+    //         </xml>",
+    //         encrypt=encrypted_msg,
+    //         signature=signature,
+    //         timestamp=timestamp,
+    //         nonce=nonce,
+    //     );
+    //     Ok(msg)
+    // }
 }
 
 /// 从HashMap中取值
