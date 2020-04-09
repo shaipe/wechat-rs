@@ -172,6 +172,8 @@ pub async fn callback(
     path: web::Path<(String,)>,
     payload: web::Payload,
 ) -> Result<HttpResponse> {
+    use wechat_sdk::message::{Message, MessageParser};
+
     let dic = utils::parse_query(req.query_string());
     println!("{:?}", dic);
     // payload is a stream of Bytes objects
@@ -179,25 +181,23 @@ pub async fn callback(
 
     println!("{:?}", post_str);
 
+
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
     match c.decrypt_message(&post_str, dic) {
         Ok(v) => {
-            println!("{:?}", v);
-            let package = xmlutil::parse(v);
-            let doc = package.as_document();
-            let to_user = xmlutil::evaluate(&doc, "//xml/ToUserName/text()").string();
-            let msg_type = xmlutil::evaluate(&doc, "//xml/MsgType/text()").string();
-            let info_type = xmlutil::evaluate(&doc, "//xml/InfoType/text()").string();
-            if info_type == "unauthorized" {
-                let auth_app_id = xmlutil::evaluate(&doc, "//xml/AuthorizerAppid/text()").string();
-                let mut ticket = get_ticket();
-                let access_token = ticket.get_token(conf);
-            }
+            println!("{:?}", v.clone());
+            
+            let msg = Message::parse(&v);
+            
+            let to_user = msg.get_to_user();
+
             // 全网发布时的测试用户
-            if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {}
-            let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
+            if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
+                // 
+            }
+            // let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
             //Ok(ticketstr)
         }
         Err(e) => {

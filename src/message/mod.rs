@@ -1,6 +1,5 @@
-//! copyright 
-//! 
-
+//! copyright
+//! 微信消息处理
 
 mod parser;
 pub use parser::{parse_message, MessageParser};
@@ -11,17 +10,22 @@ pub use text::TextMessage;
 mod unknown;
 pub use unknown::UnknownMessage;
 
+/// 消息回复
+mod reply;
+pub use reply::{
+    Reply, TextReply
+};
+
 /// 消息枚举
+#[derive(Debug, Clone)]
 pub enum Message {
     TextMessage(TextMessage),
-    UnknownMessage(UnknownMessage)
+    UnknownMessage(UnknownMessage),
 }
 
-
 impl Message {
-
     /// 解析并返回Message对象
-    pub fn parse<S: AsRef<str>>(xml: String) -> Message {
+    pub fn parse<S: AsRef<str>>(xml: S) -> Message {
         parse_message(xml)
     }
 

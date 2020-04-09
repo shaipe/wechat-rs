@@ -1,8 +1,8 @@
 //! copyright
 //! 文本消息处理
 
-use crate::{xmlutil, current_timestamp};
 use super::MessageParser;
+use crate::{current_timestamp, xmlutil};
 
 // use super::WechatMessage;
 
@@ -16,6 +16,7 @@ use super::MessageParser;
 // </xml>
 
 /// 文本消息
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct TextMessage {
     pub to_user: String,
     pub from_user: String,
@@ -26,10 +27,8 @@ pub struct TextMessage {
     pub raw: String,
 }
 
-
 /// 消息解析器实现
 impl MessageParser for TextMessage {
-
     /// 微信消息类型定义
     type WeChatMessage = TextMessage;
 
