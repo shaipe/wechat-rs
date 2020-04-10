@@ -40,20 +40,32 @@ impl Ticket {
             config_path
         };
 
+        // 如果没有配置ticket文件,返回默认值
+        if !std::path::Path::new(file_path).exists() {
+            return Ticket::default();
+        }
+
         // 打开文件
         let mut file = match File::open(file_path) {
             Ok(f) => f,
-            Err(e) => panic!("no such file {} exception: {}", file_path, e),
+            Err(e) => {
+                println!("no such file {} exception: {}", file_path, e);
+                return Ticket::default();
+            }
         };
 
         // 读取文件到字符串变量
         let mut str_val = String::new();
         match file.read_to_string(&mut str_val) {
             Ok(s) => s,
-            Err(e) => panic!("Error Reading file:{}", e),
+            Err(e) => {
+                println!("Error Reading file:{}", e);
+                return Ticket::default();
+            }
         };
-        let cnf = serde_json::from_str(&str_val);
 
+        let cnf = serde_json::from_str(&str_val);
+        // println!("{:?}", cnf);
         // 第三方配置处理
         match cnf {
             Ok(val) => {
@@ -61,12 +73,13 @@ impl Ticket {
                 set_ticket(t.clone());
                 t
             }
-            Err(_) => {
-                println!("请配置第三方文件!");
+            Err(e) => {
+                println!("Ticket文件配置错误! {:?}", e);
                 Ticket::default()
             }
         }
     }
+
     /// 解析ticket
     pub fn parse_ticket(
         conf: TripartiteConfig,
