@@ -13,7 +13,7 @@ pub use unknown::UnknownMessage;
 /// 消息回复
 mod reply;
 pub use reply::{
-    Reply, TextReply
+    Reply, TextReply, ReplyRender
 };
 
 /// 消息枚举

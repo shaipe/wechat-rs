@@ -60,7 +60,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
-    println!("base_query={:?}",base_query);
+    println!("base_query={:?}", base_query);
     let app_type = match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
@@ -83,7 +83,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let code = c.create_preauthcode(&token).await;
     println!("base_query={:?}", base_query);
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-    let base_query=utf8_percent_encode(&base_query,NON_ALPHANUMERIC).to_string();
+    let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
     //println!("base_query={:?}",base_query);
     let path = c.component_login_page(
         &code.unwrap(),
@@ -100,7 +100,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
-    println!("sss{:?}",req.uri().host());
+    println!("sss{:?}", req.uri().host());
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
     let auth_code = utils::get_hash_value(&dic, "auth_code");
@@ -117,7 +117,12 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
                 absolute_path.replace("webzone/social/wechatset.aspx", "WxComponent.axd");
             //println!("q={:?}", absolute_path);
             if arr.len() == 5 {
-                format!("{}?q={}&auth_code={}", absolute_path, utf8_percent_encode(&base_query,NON_ALPHANUMERIC).to_string(), auth_code)
+                format!(
+                    "{}?q={}&auth_code={}",
+                    absolute_path,
+                    utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string(),
+                    auth_code
+                )
             } else {
                 "".to_owned()
             }
@@ -180,7 +185,7 @@ pub async fn callback(
     path: web::Path<(String,)>,
     payload: web::Payload,
 ) -> Result<HttpResponse> {
-    use wechat_sdk::message::{Message, MessageParser, TextReply};
+    use wechat_sdk::message::{Message, MessageParser, TextReply, ReplyRender};
 
     let dic = utils::parse_query(req.query_string());
     // println!("{:?}", dic);
@@ -207,8 +212,10 @@ pub async fn callback(
                             &m.to_user,
                             &format!("{}_callback", &m.content),
                         );
-                        println!("{:?}", tr);
-                    },
+                        return Ok(HttpResponse::build(StatusCode::OK)
+                            .content_type("application/xml; charset=utf-8")
+                            .body(tr.render()));
+                    }
                     Message::UnknownMessage(ref m) => {
                         println!("{:?}", m);
                     }
