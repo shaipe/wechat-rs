@@ -280,6 +280,9 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
                 let fkway = arr[1];
                 let back_domain = arr[2].to_lowercase();
                 let state=base64::encode(&format!("{}|{}|",hashQuery,fkway));
+                use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+                let state=utf8_percent_encode(&state,NON_ALPHANUMERIC).to_string();
+
                 format!("{}/authback?code={}&state={}", back_domain, auth_code,state)
             } else {
                 "".to_owned()
