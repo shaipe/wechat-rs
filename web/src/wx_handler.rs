@@ -48,7 +48,6 @@ pub async fn receive_ticket(
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let path = format!("/official_auth?{}", query);
-    println!("cctiv={:?}", path);
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(format!("<script>location.href='{}'</script>", path)))
@@ -59,6 +58,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
+    println!("base_query={:?}",base_query);
     let app_type = match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
@@ -79,13 +79,16 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     //println!("access_token={:?}", token);
     let c = WechatComponent::new(&config.app_id, &config.secret, &ticket.access_ticket);
     let code = c.create_preauthcode(&token).await;
-    //println!("code={:?}", code);
+    println!("base_query={:?}", base_query);
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    let base_query=utf8_percent_encode(&base_query,NON_ALPHANUMERIC).to_string();
+    //println!("base_query={:?}",base_query);
     let path = c.component_login_page(
         &code.unwrap(),
         &format!("{}/official_auth_calback?q={}", config.domain, base_query),
         app_type,
     );
-    println!("path={:?}", path);
+    //println!("path={:?}", path);
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
@@ -95,9 +98,11 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
+    println!("sss{:?}",req.uri().host());
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
     let auth_code = utils::get_hash_value(&dic, "auth_code");
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let path = match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
@@ -106,9 +111,11 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
             let absolute_path = arr[4].to_lowercase();
             let absolute_path =
                 absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
-            println!("q={:?}", absolute_path);
+            let absolute_path =
+                absolute_path.replace("webzone/social/wechatset.aspx", "WxComponent.axd");
+            //println!("q={:?}", absolute_path);
             if arr.len() == 5 {
-                format!("{}?q={}&auth_code={}", absolute_path, base_query, auth_code)
+                format!("{}?q={}&auth_code={}", absolute_path, utf8_percent_encode(&base_query,NON_ALPHANUMERIC).to_string(), auth_code)
             } else {
                 "".to_owned()
             }

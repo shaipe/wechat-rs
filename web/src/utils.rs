@@ -15,20 +15,19 @@ pub fn parse_query(query_string: &str) -> HashMap<String, String> {
     if query_string.is_empty() {
         return HashMap::new();
     }
-    use percent_encoding::percent_decode;
-    let query_str = percent_decode(query_string.as_bytes())
-        .decode_utf8()
-        .unwrap();
-    let q_a: Vec<&str> = query_str.split("&").collect();
+    let q_a: Vec<&str> = query_string.split("&").collect();
     let mut res: HashMap<String, String> = HashMap::new();
+    use percent_encoding::percent_decode;
     for s in q_a {
         // let ss: &str = s;
         let kv: Vec<&str> = s.split("=").collect();
-        res.insert(kv[0].to_string(), kv[1].to_string());
+        let kvalue = percent_decode(kv[1].as_bytes())
+        .decode_utf8()
+        .unwrap();
+        res.insert(kv[0].to_string(), kvalue.to_string());
     }
     res
 }
-
 /// 获取头部地址栏参数据的值
 /// param1: httpRequest对象
 /// param2: 获取关键字
