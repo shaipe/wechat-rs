@@ -92,6 +92,9 @@ impl WeChatCrypto {
         let b64decoded = base64::decode(ciphertext).unwrap();
         // aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
+
+        // println!("{:?}", text);
+
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];
@@ -137,6 +140,7 @@ pub fn aes256_cbc_decrypt(
     key: &[u8],
     iv: &[u8],
 ) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+    // println!("key: {:?}, iv: {:?}", key, iv);
     let mut decryptor =
         aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
 

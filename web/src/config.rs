@@ -33,9 +33,9 @@ impl Config {
             Err(e) => panic!("Error Reading file:{}", e),
         };
         let cnf: Config = serde_json::from_str(&str_val).unwrap();
-
+        // println!("{:?}", cnf);
         // 第三方配置处理
-        match cnf.clone().tripartite {
+        match cnf.tripartite.clone() {
             Some(val) => {
                 set_tripartite_config(val.clone());
                 val
