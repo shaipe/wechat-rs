@@ -135,7 +135,7 @@ fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
 }
 
 /// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_decrypt(
+pub fn aes256_cbc_decrypt(
     encrypted_data: &[u8],
     key: &[u8],
     iv: &[u8],
