@@ -209,15 +209,21 @@ pub async fn callback(
             if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
                 match msg {
                     Message::TextMessage(ref m) => {
-                        let tr = TextReply::new(
-                            &m.from_user,
-                            &m.to_user,
-                            &format!("{}_callback", &m.content),
-                        );
-                        println!("{}", &m.content);
-                        return Ok(HttpResponse::build(StatusCode::OK)
-                            .content_type("application/xml; charset=utf-8")
-                            .body(tr.render()));
+                        // 进行授权处理
+                        if m.content.starts_with("QUERY_AUTH_CODE:") {
+
+                        }
+                        else{
+                            let tr = TextReply::new(
+                                &m.from_user,
+                                &m.to_user,
+                                &format!("{}_callback", &m.content),
+                            );
+                            // println!("{}", &m.content);
+                            return Ok(HttpResponse::build(StatusCode::OK)
+                                .content_type("application/xml; charset=utf-8")
+                                .body(tr.render()));
+                        }
                     }
                     Message::UnknownMessage(ref m) => {
                         println!("{:?}", m);

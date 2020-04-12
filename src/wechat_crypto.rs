@@ -95,13 +95,15 @@ impl WeChatCrypto {
         // aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
 
-        println!("txt {:?}", text);
+        // println!("txt {:?}", text);
 
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];
         let from_id = &text[content_length + 20..];
-        if from_id != self._id.as_bytes() {
+        // println!("form_id: {:?}  ,, id_ {:?}", from_id, self._id.as_bytes());
+        // 此处取出的formid中包含了回车符,只能取前18位进行判断比较
+        if &from_id[0..18] != self._id.as_bytes() {
             return Err(WeChatError::InvalidAppId);
         }
         let content_string = String::from_utf8(content.to_vec()).unwrap();
@@ -143,8 +145,9 @@ pub fn aes256_cbc_decrypt(
     iv: &[u8],
 ) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
     // println!("key: {:?}, iv: {:?}", key, iv);
+    // 此处的最后一个参数要使用不直充的方式才行
     let mut decryptor =
-        aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
+        aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::NoPadding);
     
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
@@ -171,7 +174,7 @@ pub fn aes256_cbc_decrypt(
             Err(e) => {println!("{:?}",e)}
         }
     }
-    println!("{:?}", "decryptor");
+    // println!("{:?}", "decryptor");
     Ok(final_result)
 }
 
