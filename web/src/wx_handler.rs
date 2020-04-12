@@ -26,7 +26,7 @@ pub async fn receive_ticket(
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
     println!(
-        "url_param: {:?} \n post_str: {:?}",
+        "Ticket Request Start:  url_param: {:?} \n post_str: {:?}",
         req.query_string(),
         post_str
     );
@@ -180,6 +180,8 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 }
 
 /// 微信第三方消息回调处理
+/// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Post_Application_on_the_Entire_Network/releases_instructions.html
+/// 上面是全网发布的资料
 pub async fn callback(
     req: HttpRequest,
     path: web::Path<(String,)>,
@@ -192,14 +194,14 @@ pub async fn callback(
     // payload is a stream of Bytes objects
     let post_str = utils::get_request_body(payload).await;
 
-    // println!("{:?}", post_str);
+    println!("callback {:?}, {:?}", dic,  post_str);
 
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
     match c.decrypt_message(&post_str, dic) {
         Ok(v) => {
-            println!("{:?}", v.clone());
+            println!("decode_msg: {:?}", v.clone());
             let msg = Message::parse(&v);
             let to_user = msg.get_to_user();
 
@@ -212,6 +214,7 @@ pub async fn callback(
                             &m.to_user,
                             &format!("{}_callback", &m.content),
                         );
+                        println!("{}", &m.content);
                         return Ok(HttpResponse::build(StatusCode::OK)
                             .content_type("application/xml; charset=utf-8")
                             .body(tr.render()));

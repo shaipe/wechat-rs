@@ -74,7 +74,7 @@ impl WeChatCrypto {
         let doc = package.as_document();
         let encrypted_msg = xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
         
-        // println!("encrypted_msg={:?}",encrypted_msg);
+        println!("encrypted_msg={:?}",encrypted_msg);
         
         let real_signature = self.get_signature(timestamp, &nonce, &encrypted_msg);
 
@@ -89,11 +89,13 @@ impl WeChatCrypto {
 
     /// 解密 
     pub fn decrypt(&self, ciphertext: &str) -> WeChatResult<String> {
+        // println!("text: {}", ciphertext);
         let b64decoded = base64::decode(ciphertext).unwrap();
+        // println!("base64 decode text: {:?}", b64decoded);
         // aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
 
-        // println!("{:?}", text);
+        println!("txt {:?}", text);
 
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
@@ -143,27 +145,33 @@ pub fn aes256_cbc_decrypt(
     // println!("key: {:?}, iv: {:?}", key, iv);
     let mut decryptor =
         aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
-
+    
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
     let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+    
+    // println!("{:?}   {:?}", read_buffer, write_buffer);
 
     loop {
-        let result = (decryptor.decrypt(&mut read_buffer, &mut write_buffer, true))?;
-        final_result.extend(
-            write_buffer
-                .take_read_buffer()
-                .take_remaining()
-                .iter()
-                .map(|&i| i),
-        );
-        match result {
-            BufferResult::BufferUnderflow => break,
-            BufferResult::BufferOverflow => {}
+        match decryptor.decrypt(&mut read_buffer, &mut write_buffer, true){
+            Ok(result) => {
+                final_result.extend(
+                    write_buffer
+                        .take_read_buffer()
+                        .take_remaining()
+                        .iter()
+                        .map(|&i| i),
+                );
+                match result {
+                    BufferResult::BufferUnderflow => break,
+                    BufferResult::BufferOverflow => {}
+                }
+            }
+            Err(e) => {println!("{:?}",e)}
         }
     }
-
+    println!("{:?}", "decryptor");
     Ok(final_result)
 }
 
