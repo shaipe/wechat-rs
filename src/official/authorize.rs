@@ -4,7 +4,7 @@ const WECHAT_OPEN_URI: &'static str = "https://open.weixin.qq.com";
 pub struct WechatAuthorize {
     app_id: String,
     com_app_id: String,
-    com_access_token: String
+    // com_access_token: String
 }
 impl WechatAuthorize {
     ///
@@ -12,7 +12,7 @@ impl WechatAuthorize {
         WechatAuthorize {
             app_id: _app_id.to_string(),
             com_app_id: _com_app_id.to_string(),
-            com_access_token: _com_access_token.to_string(),
+            // com_access_token: _com_access_token.to_string(),
         }
     }
     /// 授权页面
