@@ -12,7 +12,7 @@ use md5;
 use std::collections::HashMap;
 use wechat_sdk::{
     official::WechatAuthorize,
-    tripartite::{get_tripartite_config, TripartiteConfig, WechatComponent},
+    tripartite::{get_tripartite_config, TripartiteConfig, Component},
     xmlutil, WeChatCrypto, WeChatResult,
 };
 /// 第三方ticket推送接收处理
@@ -54,6 +54,8 @@ async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
         .content_type("text/html; charset=utf-8")
         .body(format!("<script>location.href='{}'</script>", path)))
 }
+
+/// 公众号授权
 #[get("/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
@@ -79,8 +81,10 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let mut ticket = get_ticket();
     let token = ticket.get_token(config.clone()).await;
     //println!("access_token={:?}", token);
-    let c = WechatComponent::new(&config.app_id, &config.secret, &ticket.access_ticket);
+    let c = Component::new(config.clone());
+
     let code = c.create_preauthcode(&token).await;
+
     println!("base_query={:?}", base_query);
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
@@ -201,7 +205,7 @@ pub async fn callback(
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
     match c.decrypt_message(&post_str, dic) {
         Ok(v) => {
-            println!("decode_msg: {:?}", v.clone());
+            // println!("decode_msg: {:?}", v.clone());
             let msg = Message::parse(&v);
             let to_user = msg.get_to_user();
 
@@ -209,12 +213,12 @@ pub async fn callback(
             if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
                 match msg {
                     Message::TextMessage(ref m) => {
-                        // 进行授权处理
+                        // 公网发布的授权消息处理
                         if m.content.starts_with("QUERY_AUTH_CODE:") {
                             let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
                             println!("auth code: {}", auth_code);
                             let config: TripartiteConfig = get_tripartite_config();
-                            let comp = wechat_sdk::tripartite::WechatComponent::builder(config).await;
+                            let comp = Component::new(config);
                             
                             // 根据授权码获取公众号对应的accesstoken
                             match comp.query_auth(&auth_code).await {

@@ -1,6 +1,9 @@
 //! copyright © shaipe 2020 - persent
 //!
 
+#[macro_use]
+extern crate serde_json;
+
 pub mod errors;
 
 pub use errors::WeChatError;
@@ -10,7 +13,8 @@ pub type WeChatResult<T> = Result<T, errors::WeChatError>;
 
 pub mod config;
 
-pub mod client;
+mod client;
+pub(crate) use client::Client;
 
 pub mod message;
 
@@ -21,48 +25,16 @@ pub mod xmlutil;
 
 pub mod tripartite;
 pub use tripartite::{
-    get_tripartite_config, set_tripartite_config, Ticket, TripartiteConfig, WechatComponent,
+    get_tripartite_config, set_tripartite_config, Ticket, TripartiteConfig, Component,
 };
 pub mod official;
 pub use official::WechatAuthorize;
 
 #[macro_use]
 extern crate lazy_static;
-use rustc_serialize::json::Json;
 
 /// 获取当前时间戮
 pub fn current_timestamp() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64
-}
-
-/// Json解码
-#[inline]
-pub fn json_decode(data: &str) -> WeChatResult<Json> {
-    let obj = match Json::from_str(data) {
-        Ok(decoded) => decoded,
-        Err(ref e) => {
-            return Err(WeChatError::ClientError {
-                errcode: -3,
-                errmsg: format!("Json decode error: {}", e),
-            });
-        }
-    };
-    match obj.find("errcode") {
-        Some(code) => {
-            let errcode = code.as_i64().unwrap();
-            if errcode != 0 {
-                let errmsg = match obj.find("errmsg") {
-                    Some(msg) => msg.as_string().unwrap(),
-                    None => "",
-                };
-                return Err(WeChatError::ClientError {
-                    errcode: errcode as i32,
-                    errmsg: errmsg.to_owned(),
-                });
-            }
-        }
-        None => {}
-    };
-    Ok(obj)
 }

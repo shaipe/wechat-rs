@@ -5,7 +5,6 @@
 use std::fmt;
 use std::error;
 use std::io;
-
 use base64::DecodeError;
 
 #[derive(Debug)]
@@ -15,6 +14,7 @@ pub enum WeChatError {
     InvalidBase64(DecodeError),
     ClientError { errcode: i32, errmsg: String },
     IOError(io::Error),
+    InvalidValue
 }
 
 impl fmt::Display for WeChatError {
@@ -25,6 +25,7 @@ impl fmt::Display for WeChatError {
             WeChatError::InvalidBase64(ref err) => err.fmt(f),
             WeChatError::ClientError { errcode, ref errmsg } => write!(f, "Client error code: {}, message: {}", errcode, errmsg),
             WeChatError::IOError(ref err) => err.fmt(f),
+            WeChatError::InvalidValue => write!(f, "Invalid Value of Null")
         }
     }
 }
@@ -39,6 +40,7 @@ impl error::Error for WeChatError {
             WeChatError::InvalidBase64(ref _err) => "Invalid Base64",
             WeChatError::ClientError { ref errmsg, .. } => errmsg,
             WeChatError::IOError(ref _err) => "Invalid IOError",
+            WeChatError::InvalidValue => "Invalid Value Of Empty",
         }
     }
 }

@@ -1,6 +1,6 @@
-use super::config::TripartiteConfig;
+use super::{Component, TripartiteConfig};
 use crate::errors::WeChatError;
-use crate::tripartite::component::WechatComponent;
+
 use crate::wechat_crypto::WeChatCrypto;
 use crate::xmlutil;
 use crate::WeChatResult;
@@ -133,7 +133,7 @@ impl Ticket {
         let expires_at: i64 = self.at_expired_time;
         //比较过期时间
         if expires_at <= timestamp {
-            let c = WechatComponent::new(&conf.app_id, &conf.secret, &self.access_ticket);
+            let c = Component::new(conf);
             let result = c.fetch_access_token().await;
             println!("result={:?},access_ticket={:?}", result, self.access_ticket);
             match result {

@@ -74,15 +74,15 @@ impl WeChatCrypto {
         let doc = package.as_document();
         let encrypted_msg = xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
         
-        println!("encrypted_msg={:?}",encrypted_msg);
+        // println!("encrypted_msg={:?}",encrypted_msg);
         
         let real_signature = self.get_signature(timestamp, &nonce, &encrypted_msg);
 
-        println!("o: {}, new: {}", signature, real_signature);
+        // println!("o: {}, new: {}", signature, real_signature);
 
-        // if signature != real_signature {
-        //     return Err(WeChatError::InvalidSignature);
-        // }
+        if signature != real_signature {
+            return Err(WeChatError::InvalidSignature);
+        }
         let msg = self.decrypt(&encrypted_msg)?;
         Ok(msg)
     }
