@@ -2,9 +2,7 @@ use wechat_sdk::tripartite::{get_ticket, set_ticket, Ticket};
 
 use super::utils;
 
-use super::result_response::{
-    get_exception_result, get_success_result, get_success_result2, ResultResponse,
-};
+use super::result_response::{get_exception_result, get_success_result, get_success_result2};
 use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
@@ -12,8 +10,8 @@ use md5;
 use std::collections::HashMap;
 use wechat_sdk::{
     official::WechatAuthorize,
-    tripartite::{get_tripartite_config, TripartiteConfig, Component},
-    xmlutil, WeChatCrypto, WeChatResult,
+    tripartite::{get_tripartite_config, Component, TripartiteConfig},
+    WeChatCrypto,
 };
 /// 第三方ticket推送接收处理
 #[post("/wx/ticket")]
@@ -162,7 +160,7 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     };
     let token_md5 = format!("{:x}", md5::compute(format!("rwxkj:{}", token).as_bytes()));
 
-    if (md5_value != token_md5) {
+    if md5_value != token_md5 {
         return get_exception_result("校验失败", 500);
     }
     let config: TripartiteConfig = get_tripartite_config();
@@ -191,14 +189,14 @@ pub async fn callback(
     path: web::Path<(String,)>,
     payload: web::Payload,
 ) -> Result<HttpResponse> {
-    use wechat_sdk::message::{Message, MessageParser, TextReply, ReplyRender};
+    use wechat_sdk::message::{Message, ReplyRender, TextReply};
 
     let dic = utils::parse_query(req.query_string());
     // println!("{:?}", dic);
     // payload is a stream of Bytes objects
     let post_str = utils::get_request_body(payload).await;
 
-    println!("callback {:?}, {:?}", dic,  post_str);
+    println!("callback {:?}, {:?}", dic, post_str);
 
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
@@ -219,25 +217,28 @@ pub async fn callback(
                             println!("auth code: {}", auth_code);
                             let config: TripartiteConfig = get_tripartite_config();
                             let comp = Component::new(config);
-                            
                             // 根据授权码获取公众号对应的accesstoken
                             match comp.query_auth(&auth_code).await {
                                 Ok(v) => {
                                     // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
-                                let auth_access_token = match v["authorizer_access_token"].as_str() {
-                                    Some(token) => {
-                                        token.to_string()
-                                    }
-                                    None => "".to_owned(),
-                                };
-                                    let kf = wechat_sdk::message::KFService::new(&auth_access_token);
-                                    kf.send(&m.from_user, &"text".to_string(), &format!("{}_from_api", auth_code)).await;
+                                    let auth_access_token =
+                                        match v["authorizer_access_token"].as_str() {
+                                            Some(token) => token.to_string(),
+                                            None => "".to_owned(),
+                                        };
+                                    let kf =
+                                        wechat_sdk::message::KFService::new(&auth_access_token);
+                                    kf.send(
+                                        &m.from_user,
+                                        &"text".to_string(),
+                                        &format!("{}_from_api", auth_code),
+                                    )
+                                    .await;
                                     println!("{:?}", v);
-                                },
-                                Err(e) => println!("{:?}", e)
+                                }
+                                Err(e) => println!("{:?}", e),
                             };
-                        }
-                        else{
+                        } else {
                             let tr = TextReply::new(
                                 &m.from_user,
                                 &m.to_user,
@@ -288,9 +289,9 @@ pub async fn callback(
 }
 ///获得授权url
 #[post("fetch_auth_url")]
-pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let config: TripartiteConfig = get_tripartite_config();
-    let query = req.query_string();
+    // let query = req.query_string();
     let post_str = utils::get_request_body(payload).await;
     //println!("query={:?}",post_str);
 
@@ -324,14 +325,17 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
             let s = String::from_utf8(val).unwrap();
             let arr: Vec<&str> = s.split("|").collect();
             if arr.len() == 3 {
-                let hashQuery = arr[0];
+                let hash_query = arr[0];
                 let fkway = arr[1];
                 let back_domain = arr[2].to_lowercase();
-                let state=base64::encode(&format!("{}|{}|",hashQuery,fkway));
+                let state = base64::encode(&format!("{}|{}|", hash_query, fkway));
                 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-                let state=utf8_percent_encode(&state,NON_ALPHANUMERIC).to_string();
+                let state = utf8_percent_encode(&state, NON_ALPHANUMERIC).to_string();
 
-                format!("{}/authback?code={}&state={}", back_domain, auth_code,state)
+                format!(
+                    "{}/authback?code={}&state={}",
+                    back_domain, auth_code, state
+                )
             } else {
                 "".to_owned()
             }

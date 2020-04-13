@@ -31,7 +31,7 @@ async fn main() -> io::Result<()> {
     env_logger::init();
     
     let conf = config::Config::new("");
-    let tic=Ticket::new("");
+    Ticket::new("");
     let addr = format!("0.0.0.0:{}", conf.port);
     
     HttpServer::new(|| {

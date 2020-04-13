@@ -48,6 +48,7 @@ impl Component {
             Err(err) => Err(err),
         }
     }
+
     /// 生成预授权码
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/pre_auth_code.html
     pub async fn create_preauthcode(&self, access_token: &str) -> WeChatResult<String> {
@@ -148,19 +149,19 @@ impl Component {
 
     /// 获取授权信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_info.html
-    pub async fn fetch_auth_info(&self, auth_appid: &str) -> WeChatResult<String> {
+    pub async fn fetch_auth_info(&self, _auth_appid: &str) -> WeChatResult<String> {
         Ok("".to_string())
     }
 
     /// 获取授权方的选项信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_option.html
-    pub async fn fetch_auth_option(&self, auth_appid: &str) -> WeChatResult<String> {
+    pub async fn fetch_auth_option(&self, _auth_appid: &str) -> WeChatResult<String> {
         Ok("".to_string())
     }
 
     /// 设置授权方选项信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_set_authorizer_option.html
-    pub async fn set_auth_option(&self, auth_appid: &str) -> WeChatResult<String> {
+    pub async fn set_auth_option(&self, _auth_appid: &str) -> WeChatResult<String> {
         Ok("".to_string())
     }
 

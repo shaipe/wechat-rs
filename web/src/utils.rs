@@ -2,6 +2,7 @@ use actix_web::{web, HttpRequest};
 use std::collections::HashMap;
 
 /// 获取请求对象头的值
+#[allow(dead_code)]
 pub fn get_header_value_str(req: &HttpRequest, key: &str) -> String {
     let some_val = req.head().headers.get(key);
     match some_val {
@@ -31,6 +32,7 @@ pub fn parse_query(query_string: &str) -> HashMap<String, String> {
 /// 获取头部地址栏参数据的值
 /// param1: httpRequest对象
 /// param2: 获取关键字
+#[allow(dead_code)]
 pub fn get_hq_value(req: &HttpRequest, key: &str) -> String {
     let mut val = get_header_value_str(&req, key);
     if val.is_empty() {
@@ -45,6 +47,7 @@ pub fn get_hq_value(req: &HttpRequest, key: &str) -> String {
 }
 
 /// 获取访问者的ip
+#[allow(dead_code)]
 pub fn get_ip(req: &HttpRequest) -> String {
     use std::net::IpAddr::V4;
     // use std::net::SocketAddr::V4;

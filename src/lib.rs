@@ -18,15 +18,18 @@ pub(crate) use client::Client;
 
 pub mod message;
 
-pub mod wechat_crypto;
+mod wechat_crypto;
 pub use wechat_crypto::WeChatCrypto;
 
 pub mod xmlutil;
+
+pub mod weapp;
 
 pub mod tripartite;
 pub use tripartite::{
     get_tripartite_config, set_tripartite_config, Ticket, TripartiteConfig, Component,
 };
+
 pub mod official;
 pub use official::WechatAuthorize;
 
