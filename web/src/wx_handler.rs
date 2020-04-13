@@ -211,7 +211,27 @@ pub async fn callback(
                     Message::TextMessage(ref m) => {
                         // 进行授权处理
                         if m.content.starts_with("QUERY_AUTH_CODE:") {
-
+                            let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
+                            println!("auth code: {}", auth_code);
+                            let config: TripartiteConfig = get_tripartite_config();
+                            let comp = wechat_sdk::tripartite::WechatComponent::builder(config).await;
+                            
+                            // 根据授权码获取公众号对应的accesstoken
+                            match comp.query_auth(&auth_code).await {
+                                Ok(v) => {
+                                    // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                                let auth_access_token = match v["authorizer_access_token"].as_str() {
+                                    Some(token) => {
+                                        token.to_string()
+                                    }
+                                    None => "".to_owned(),
+                                };
+                                    let kf = wechat_sdk::message::KFService::new(&auth_access_token);
+                                    kf.send(&m.from_user, &"text".to_string(), &format!("{}_from_api", auth_code)).await;
+                                    println!("{:?}", v);
+                                },
+                                Err(e) => println!("{:?}", e)
+                            };
                         }
                         else{
                             let tr = TextReply::new(

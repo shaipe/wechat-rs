@@ -1,8 +1,9 @@
 use rustc_serialize::json::Json;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-
+use super::TripartiteConfig;
 use crate::{ json_decode, client::Client, errors::WeChatError, WeChatResult};
+use serde_json::{Result, Value};
 
 const WECHAT_URI: &'static str = "https://api.weixin.qq.com";
 const REFETCH_ACCESS_TOKEN_ERRCODES: [i32; 3] = [40001, 40014, 42001];
@@ -19,6 +20,18 @@ impl WechatComponent {
             app_id: _app_id.to_string(),
             secret: _secret.to_string(),
             ticket: _ticket.to_string(),
+        }
+    }
+
+    /// 生成一个微信三方组件处理器
+    pub async fn builder(conf: TripartiteConfig) -> Self {
+        use super::get_ticket;
+        let mut ticket = get_ticket();
+        let token = ticket.get_token(conf.clone()).await;
+        WechatComponent {
+            app_id: conf.app_id,
+            secret: conf.secret,
+            ticket: token
         }
     }
 
@@ -125,7 +138,7 @@ impl WechatComponent {
     }
 
     /// 查询授权
-    pub async fn query_auth(&self, pre_auth_code: &str ) -> WeChatResult<Json> {
+    pub async fn query_auth(&self, pre_auth_code: &str ) -> WeChatResult<Value> {
 
         let uri = format!("{}/cgi-bin/component/api_query_auth?component_access_token={}", WECHAT_URI, "");
 
@@ -134,22 +147,36 @@ impl WechatComponent {
         hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
         
         //post
-        let result = Client::new().post(&uri, &hash).await?;
-        let data = match json_decode(&result) {
-            Ok(_data) => _data,
-            Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
+        match Client::new().post(&uri, &hash).await {
+            Ok(v) => {
+                // Parse the string of data into serde_json::Value.
+                match serde_json::from_str(&v){
+                    Ok(v) => {
+                        return Ok(v);
                     }
-                } else {
-                    return Err(err);
-                }
-            }
+                    Err(e) => println!("{:?}", e)
+                };
+            },
+            Err(e) => println!("{:?}", e)
         };
-        Ok(data)
+
+
+
+        // let data = match json_decode(&result) {
+        //     Ok(_data) => _data,
+        //     Err(err) => {
+        //         if let WeChatError::ClientError { errcode, .. } = err {
+        //             if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+        //                 self.fetch_access_token().await?;
+        //                 return Err(err);
+        //             } else {
+        //                 return Err(err);
+        //             }
+        //         } else {
+        //             return Err(err);
+        //         }
+        //     }
+        // };
+        Err(WeChatError::InvalidSignature)
     }
 }
