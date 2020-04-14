@@ -75,7 +75,6 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         }
         Err(_) => 1,
     };
-    
     let config: TripartiteConfig = get_tripartite_config();
     let mut ticket = get_ticket();
     let token = ticket.get_token(config.clone()).await;
