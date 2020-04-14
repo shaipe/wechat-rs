@@ -66,7 +66,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
             let s = String::from_utf8(val).unwrap();
 
             let arr: Vec<&str> = s.split("|").collect();
-            println!("q={:?}", arr[3]);
+            // println!("q={:?}", arr[3]);
             if arr.len() == 5 {
                 arr[3].parse::<u32>().unwrap()
             } else {
@@ -75,6 +75,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         }
         Err(_) => 1,
     };
+    
     let config: TripartiteConfig = get_tripartite_config();
     let mut ticket = get_ticket();
     let token = ticket.get_token(config.clone()).await;
@@ -83,7 +84,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 
     let code = c.create_preauthcode(&token).await;
 
-    println!("base_query={:?}", base_query);
+    println!("code={:?}", code);
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
     //println!("base_query={:?}",base_query);

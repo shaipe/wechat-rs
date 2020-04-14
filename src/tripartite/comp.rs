@@ -2,6 +2,7 @@ use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};
 use crate::{current_timestamp, Client, WeChatError, WeChatResult};
+use serde_json::Value;
 use std::collections::HashMap;
 
 // 定义接口请求域名
@@ -36,15 +37,18 @@ impl Component {
         );
 
         match Client::new().post(&url, &hash).await {
-            Ok(res) => {
-                let v = json!(&res);
-                if let Some(token) = v["component_access_token"].as_str() {
-                    let expires_at: i64 = current_timestamp() + 7000;
-                    Ok((token.to_string(), expires_at))
-                } else {
-                    Err(WeChatError::InvalidValue)
+            Ok(res) => match serde_json::from_str(&res) {
+                Ok(v) => {
+                    let dic: Value = v;
+                    if let Some(token) = dic["component_access_token"].as_str() {
+                        let expires_at: i64 = current_timestamp() + 7000;
+                        Ok((token.to_string(), expires_at))
+                    } else {
+                        Err(WeChatError::InvalidValue)
+                    }
                 }
-            }
+                Err(_) => Err(WeChatError::InvalidValue),
+            },
             Err(err) => Err(err),
         }
     }
@@ -60,19 +64,23 @@ impl Component {
                 access_token
             )
         );
+        println!("uri::: {}", uri);
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
 
         match Client::new().post(&uri, &hash).await {
-            Ok(res) => {
-                let v = json!(&res);
-                if let Some(code) = v["pre_auth_code"].as_str() {
-                    Ok(code.to_string())
-                } else {
-                    Err(WeChatError::InvalidValue)
+            Ok(res) => match serde_json::from_str(&res) {
+                Ok(v) => {
+                    let v: Value = v;
+                    if let Some(code) = v["pre_auth_code"].as_str() {
+                        Ok(code.to_string())
+                    } else {
+                        Err(WeChatError::InvalidValue)
+                    }
                 }
-            }
+                Err(_) => Err(WeChatError::InvalidValue),
+            },
             Err(err) => {
                 if let WeChatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
@@ -105,7 +113,13 @@ impl Component {
         hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
         //post
         match Client::new().post(&uri, &hash).await {
-            Ok(res) => Ok(json!(&res)),
+            Ok(res) => match serde_json::from_str(&res) {
+                Ok(v) => {
+                    let v: Value = v;
+                    Ok(v)
+                }
+                Err(_) => Err(WeChatError::InvalidValue),
+            },
             Err(e) => Err(e),
         }
     }
@@ -131,18 +145,21 @@ impl Component {
         );
 
         match Client::new().post(&url, &hash).await {
-            Ok(res) => {
-                let v = json!(&res);
-                let acc_token = match v["authorizer_access_token"].as_str() {
-                    Some(v) => v,
-                    None => "",
-                };
-                let ref_token = match v["authorizer_refresh_token"].as_str() {
-                    Some(v) => v,
-                    None => "",
-                };
-                Ok((acc_token.to_string(), ref_token.to_string()))
-            }
+            Ok(res) => match serde_json::from_str(&res) {
+                Ok(v) => {
+                    let v: Value = v;
+                    let acc_token = match v["authorizer_access_token"].as_str() {
+                        Some(v) => v,
+                        None => "",
+                    };
+                    let ref_token = match v["authorizer_refresh_token"].as_str() {
+                        Some(v) => v,
+                        None => "",
+                    };
+                    Ok((acc_token.to_string(), ref_token.to_string()))
+                }
+                Err(_) => Err(WeChatError::InvalidValue),
+            },
             Err(e) => Err(e),
         }
     }

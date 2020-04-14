@@ -18,11 +18,11 @@ pub struct ResultResponse<T> {
 }
 
 ///成功返回
-pub fn get_success_result(_content: &HashMap<String, String>) -> Result<HttpResponse> {
+pub fn get_success_result(content: &HashMap<String, String>) -> Result<HttpResponse> {
     let result = ResultResponse {
         success: true,
         code: 200,
-        content: _content.to_owned(),
+        content: content.to_owned(),
         message: String::from(""),
     };
     let str_val = json!(result).to_string();
@@ -31,11 +31,11 @@ pub fn get_success_result(_content: &HashMap<String, String>) -> Result<HttpResp
         .body(str_val))
 }
 
-pub fn get_success_result2(_content: &str) -> Result<HttpResponse> {
+pub fn get_success_result2(content: &str) -> Result<HttpResponse> {
     let result = ResultResponse {
         success: true,
         code: 200,
-        content: _content.to_owned(),
+        content: content.to_owned(),
         message: String::from(""),
     };
     let str_val = json!(result).to_string();
