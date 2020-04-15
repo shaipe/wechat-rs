@@ -240,11 +240,11 @@ pub async fn callback(
                             };
                         } else {
                             let tr = TextReply::new(
-                                &m.from_user,
                                 &m.to_user,
+                                &m.from_user,
                                 &format!("{}_callback", &m.content),
                             );
-                            // println!("{}", &m.content);
+                            println!("sendxml:{:?}", tr.render());
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("html/text; charset=utf-8")
                                 .body(tr.render()));
