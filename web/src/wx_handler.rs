@@ -44,7 +44,7 @@ pub async fn receive_ticket(
 }
 
 /// 发起授权
-#[get("/auth")]
+#[get("/wx/auth")]
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let path = format!("/official_auth?{}", query);
@@ -54,7 +54,7 @@ async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
 }
 
 /// 公众号授权
-#[get("/official_auth")]
+#[get("/wx/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
@@ -98,7 +98,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         .body(""))
 }
 /// 公众号授权回调
-#[get("official_auth_calback")]
+#[get("/wx/official_auth_calback")]
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
@@ -140,7 +140,7 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
 }
 
 /// 获取第三方的token
-#[post("fetch_component_token")]
+#[post("/wx/fetch_component_token")]
 async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     use percent_encoding::percent_decode;
     // 获取token
@@ -293,7 +293,7 @@ pub async fn callback(
         .body("success"))
 }
 ///获得授权url
-#[post("fetch_auth_url")]
+#[post("/wx/fetch_auth_url")]
 pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let config: TripartiteConfig = get_tripartite_config();
     // let query = req.query_string();
@@ -318,7 +318,7 @@ pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<
     get_success_result2(&url)
 }
 /// 用户授权回调
-#[get("user_auth_calback")]
+#[get("/wx/user_auth_calback")]
 async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
