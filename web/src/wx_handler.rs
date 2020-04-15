@@ -203,7 +203,7 @@ pub async fn callback(
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
     match c.decrypt_message(&post_str, dic) {
         Ok(v) => {
-            // println!("decode_msg: {:?}", v.clone());
+            println!("decode_msg: {:?}", v.clone());
             let msg = Message::parse(&v);
             let to_user = msg.get_to_user();
 
@@ -246,7 +246,7 @@ pub async fn callback(
                             );
                             // println!("{}", &m.content);
                             return Ok(HttpResponse::build(StatusCode::OK)
-                                .content_type("application/xml; charset=utf-8")
+                                .content_type("html/text; charset=utf-8")
                                 .body(tr.render()));
                         }
                     }
@@ -285,7 +285,7 @@ pub async fn callback(
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
-        .body(format!("Hello {}!", path.0)))
+        .body("success"))
 }
 ///获得授权url
 #[post("fetch_auth_url")]

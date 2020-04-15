@@ -1,6 +1,6 @@
 use crate::errors::WeChatError;
 use crate::WeChatResult;
-use base64;
+use base64::*;
 use byteorder::{NativeEndian, ReadBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
@@ -22,6 +22,12 @@ impl WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
         let key = base64::decode(&aes_key).unwrap();
+        // println!("{:?}",encoding_aes_key);
+        // let c= Config::new(CharacterSet::Crypt,true);
+        // c.decode_allow_trailing_bits(true);
+
+        // let key = base64::decode_config(&aes_key,c).unwrap();
+        println!("{:?}",key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
@@ -163,23 +169,25 @@ pub fn aes256_cbc_decrypt(
     Ok(final_result)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::WeChatCrypto;
+#[cfg(test)]
+mod tests {
+    use super::WeChatCrypto;
 
-//     #[test]
-//     fn test_decrypt_message() {
-//         let xml = "<xml>
-//         <AppId><![CDATA[wx618efe0d63406d44]]></AppId>
-//         <Encrypt><![CDATA[tagEspEdU70sKGIbPihMWdsqVLV4CvGWJXCWEDBNhMdqCfXRlZQD4nFOu+uG691BUPSrikWd93XUAWNffDwm0qH32lsyaJxAdV95cnbzxf7uT3IFUG3tP/PIB8B7s2jZenkszrC+L/Mg/7QjUxPEHEIstOtLpyvwxolwzLAde9+s1DiE0psXTFnc/tg3tnMyJ9lJZWtith9QsSl1phcij0ErVnta4OHCe93yUyMVscPCPp7gzQfYNaygYRmsr/btDJ7ImoKw+7EduncXQGcmCcpjBpwfczNsPqVoVOaITUPMpODse+dCRLvvoYN7zr57rJ4E8+yjR9x7ct2jC5GbueDu0IbPbB1hdDKmBhX1KyJBqtt3hS4hLOkJcGQqIjeLqayJsHWhFnBGsNkBGSg1P+b9HpQjXjcYtWK1JmDinHvS90lmylSPn0eSW3918Gt9n8EM2Wxw7ZjL1yH76/wFHw==]]></Encrypt>
-//         </xml>";
-//         let signature = "0d8ff959477e33dc3a35dbf4add625edac87bba3";
-//         let timestamp = 1585977998;
-//         let nonce = "27b1461bc5b9926a8b7ba1dc62f514a9fb385fd3";
-//         let crypto = WeChatCrypto::new("tokenkm323", "", "wx618efe0d63406d44");
-//         let decrypted = crypto
-//             .decrypt_message(xml, signature, timestamp, nonce)
-//             .unwrap();
-//         println!("decrypted={:?}", decrypted);
-//     }
-// }
+    #[test]
+    fn test_decrypt_message() {
+        let xml = "<xml>
+        <AppId><![CDATA[wxce775970ff046a47]]></AppId>
+        <Encrypt><![CDATA[hcks7uOOFfE5iw2PAYnf5uSboGVxG4YPL+1M+eKcW53YFSpwXk4T/0qiLTQjeIzNxfC6kTFEo0Ti8vVF4D+3A/ORcDLL6SAeZu1Cvzh0NQ0JZBfP5scSMYFl97EqDDNfR9aQjoA/3zM4wnGq0FPcpNjrtcNcVRUMtMOiMBaWyb3Lh1ZbtSMtvRPDJgjiGjB3BOeqlImQj9nBz5XiVeHiXFGbyo57WtWQO4s+UTWh0UR3uWh4dPIwgKax/39nrbmOH6I87vfZyi2JZLai8TyWupm76rkg/ATOcdegyREzbYzJLJOvc5C53H6Vre0sxvM8FM2+vL0+DrLew8taPi2iRA==]]>
+        </Encrypt></xml>";
+        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczip", "wxce775970ff046a47");
+        use std::collections::HashMap;
+        let mut dic=HashMap::new();
+        dic.insert("msg_signature".to_owned(),"6be15b5bf237498acd65b70d4532aa7cdcfdeab7".to_owned());
+        dic.insert("nonce".to_owned(),"1525763395".to_owned());
+        dic.insert("timestamp".to_owned(),"1586832708".to_owned());
+        let decrypted = crypto
+            .decrypt_message(xml, dic)
+            .unwrap();
+        println!("decrypted={:?}", decrypted);
+    }
+}
