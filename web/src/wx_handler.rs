@@ -228,6 +228,9 @@ pub async fn callback(
                                         };
                                     let kf =
                                         wechat_sdk::message::KFService::new(&auth_access_token);
+                                    HttpResponse::build(StatusCode::OK)
+                                        .content_type("text/html; charset=utf-8")
+                                        .body("");
                                     kf.send(
                                         &m.from_user,
                                         &"text".to_string(),
@@ -244,11 +247,11 @@ pub async fn callback(
                                 &m.from_user,
                                 &format!("{}_callback", &m.content),
                             );
-                            let txt=tr.render();
-                            let timestamp=wechat_sdk::current_timestamp();
-                            let nonce=format!("{}",timestamp);
-                            let encrypt_text=c.encrypt_message(&txt,timestamp,&nonce);
-                            println!("sendxml:{:?},{}", encrypt_text,timestamp);
+                            let txt = tr.render();
+                            let timestamp = wechat_sdk::current_timestamp();
+                            let nonce = format!("{}", timestamp);
+                            let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+                            println!("sendxml:{:?},{}", encrypt_text, timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("html/text; charset=utf-8")
                                 .body(encrypt_text.unwrap()));
