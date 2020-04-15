@@ -196,12 +196,12 @@ pub async fn callback(
     // payload is a stream of Bytes objects
     let post_str = utils::get_request_body(payload).await;
 
-    println!("callback {:?}, {:?}", dic, post_str);
+    //println!("callback {:?}, {:?}", dic, post_str);
 
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
-    match c.decrypt_message(&post_str, dic) {
+    match c.decrypt_message(&post_str, &dic) {
         Ok(v) => {
             println!("decode_msg: {:?}", v.clone());
             let msg = Message::parse(&v);
@@ -244,10 +244,14 @@ pub async fn callback(
                                 &m.from_user,
                                 &format!("{}_callback", &m.content),
                             );
-                            println!("sendxml:{:?}", tr.render());
+                            let txt=tr.render();
+                            let timestamp=wechat_sdk::current_timestamp();
+                            let nonce=format!("{}",timestamp);
+                            let encrypt_text=c.encrypt_message(&txt,timestamp,&nonce);
+                            println!("sendxml:{:?},{}", encrypt_text,timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("html/text; charset=utf-8")
-                                .body(tr.render()));
+                                .body(encrypt_text.unwrap()));
                         }
                     }
                     Message::UnknownMessage(ref m) => {
@@ -262,6 +266,7 @@ pub async fn callback(
             println!("err: {}", e);
         }
     }
+    println!("callback {:?}, {:?}", dic, post_str);
     // //随机数
     // let nonce = utils::get_hash_value(&dic, "nonce");
     // if nonce.is_empty() {

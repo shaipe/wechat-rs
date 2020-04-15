@@ -1,13 +1,16 @@
 use crate::errors::WeChatError;
 use crate::WeChatResult;
 use base64::*;
-use byteorder::{NativeEndian, ReadBytesExt};
+use byteorder::{NativeEndian, WriteBytesExt, ReadBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 use crypto::{aes, blockmodes, buffer, symmetriccipher};
 use std::collections::HashMap;
 use std::io::Cursor;
+
+use rand::thread_rng;
+use rand::Rng;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct WeChatCrypto {
@@ -60,17 +63,17 @@ impl WeChatCrypto {
     pub fn decrypt_message(
         &self,
         xml: &str,
-        query_params: HashMap<String, String>,
+        query_params: &HashMap<String, String>,
     ) -> WeChatResult<String> {
         //随机数
-        let nonce = get_hash_value(&query_params, "nonce");
+        let nonce = get_hash_value(query_params, "nonce");
         //时间缀
-        let timestamp = match get_hash_value(&query_params, "timestamp").parse::<i64>() {
+        let timestamp = match get_hash_value(query_params, "timestamp").parse::<i64>() {
             Ok(v) => v,
             Err(_e) => 0,
         };
         //签名信息
-        let signature = get_hash_value(&query_params, "msg_signature");
+        let signature = get_hash_value(query_params, "msg_signature");
 
         use super::xmlutil;
         let package = xmlutil::parse(xml);
@@ -106,25 +109,38 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
+    fn get_random_string(&self) -> String {
+        if cfg!(test) {
+            "1234567890123456".to_owned()
+        } else {
+           thread_rng().gen_ascii_chars().take(16).collect()
+        }
+    }
+    pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
+        let mut wtr = self.get_random_string().into_bytes();
+        wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
+        wtr.extend(msg.bytes());
+        wtr.extend(self._id.bytes());
 
-    // pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
-    //     let prp = PrpCrypto::new(&self.key);
-    //     let encrypted_msg = try!(prp.encrypt(msg, &self._id));
-    //     let signature = self.get_signature(timestamp, nonce, &encrypted_msg);
-    //     let msg = format!(
-    //         "<xml>\n\
-    //         <Encrypt><![CDATA[{encrypt}]]></Encrypt>\n\
-    //         <MsgSignature><![CDATA[{signature}]]></MsgSignature>\n\
-    //         <TimeStamp>{timestamp}</TimeStamp>\n\
-    //         <Nonce><![CDATA[{nonce}]]></Nonce>\n\
-    //         </xml>",
-    //         encrypt=encrypted_msg,
-    //         signature=signature,
-    //         timestamp=timestamp,
-    //         nonce=nonce,
-    //     );
-    //     Ok(msg)
-    // }
+        let encrypted = aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
+        //let content_string = String::from_utf8(text).unwrap();
+        let b64encoded = base64::encode(&encrypted);
+        //let encrypted_msg = try!(prp.encrypt(msg, &self._id));
+        let signature = self.get_signature(timestamp, nonce, &b64encoded);
+        let msg = format!(
+            "<xml>\n\
+            <Encrypt><![CDATA[{encrypt}]]></Encrypt>\n\
+            <MsgSignature><![CDATA[{signature}]]></MsgSignature>\n\
+            <TimeStamp>{timestamp}</TimeStamp>\n\
+            <Nonce><![CDATA[{nonce}]]></Nonce>\n\
+            </xml>",
+            encrypt=b64encoded,
+            signature=signature,
+            timestamp=timestamp,
+            nonce=nonce,
+        );
+        Ok(msg)
+    }
 }
 
 /// 从HashMap中取值
@@ -168,6 +184,32 @@ pub fn aes256_cbc_decrypt(
     }
     Ok(final_result)
 }
+// Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
+fn aes256_cbc_encrypt(data: &[u8],key: &[u8], iv: &[u8])->Result<Vec<u8>,symmetriccipher::SymmetricCipherError>{
+    let mut encryptor=aes::cbc_encryptor(
+        aes::KeySize::KeySize256,
+        key,
+        iv,
+        blockmodes::NoPadding);
+
+    let mut final_result=Vec::<u8>::new();
+    let mut read_buffer=buffer::RefReadBuffer::new(data);
+    let mut buffer=[0;4096];
+    let mut write_buffer=buffer::RefWriteBuffer::new(&mut buffer);
+
+    loop{
+        let result=(encryptor.encrypt(&mut read_buffer,&mut write_buffer,true))?;
+
+        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+
+        match result {
+            BufferResult::BufferUnderflow=>break,
+            BufferResult::BufferOverflow=>{},
+        }
+    }
+
+    Ok(final_result)
+}
 
 #[cfg(test)]
 mod tests {
@@ -186,7 +228,7 @@ mod tests {
         dic.insert("nonce".to_owned(),"1525763395".to_owned());
         dic.insert("timestamp".to_owned(),"1586832708".to_owned());
         let decrypted = crypto
-            .decrypt_message(xml, dic)
+            .decrypt_message(xml, &dic)
             .unwrap();
         println!("decrypted={:?}", decrypted);
     }

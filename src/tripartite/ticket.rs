@@ -88,7 +88,7 @@ impl Ticket {
     ) -> WeChatResult<String> {
         let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
-        match c.decrypt_message(xml, query_params) {
+        match c.decrypt_message(xml, &query_params) {
             Ok(v) => {
                 println!("{:?}", v);
                 let package = xmlutil::parse(v);
