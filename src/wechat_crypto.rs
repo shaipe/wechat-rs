@@ -121,7 +121,6 @@ impl WeChatCrypto {
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
-
         let encrypted = aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
         //let content_string = String::from_utf8(text).unwrap();
         let b64encoded = base64::encode(&encrypted);
@@ -190,13 +189,12 @@ fn aes256_cbc_encrypt(data: &[u8],key: &[u8], iv: &[u8])->Result<Vec<u8>,symmetr
         aes::KeySize::KeySize256,
         key,
         iv,
-        blockmodes::NoPadding);
+        blockmodes::PkcsPadding);
 
     let mut final_result=Vec::<u8>::new();
     let mut read_buffer=buffer::RefReadBuffer::new(data);
     let mut buffer=[0;4096];
     let mut write_buffer=buffer::RefWriteBuffer::new(&mut buffer);
-
     loop{
         let result=(encryptor.encrypt(&mut read_buffer,&mut write_buffer,true))?;
 
@@ -218,18 +216,36 @@ mod tests {
     #[test]
     fn test_decrypt_message() {
         let xml = "<xml>
-        <AppId><![CDATA[wxce775970ff046a47]]></AppId>
-        <Encrypt><![CDATA[hcks7uOOFfE5iw2PAYnf5uSboGVxG4YPL+1M+eKcW53YFSpwXk4T/0qiLTQjeIzNxfC6kTFEo0Ti8vVF4D+3A/ORcDLL6SAeZu1Cvzh0NQ0JZBfP5scSMYFl97EqDDNfR9aQjoA/3zM4wnGq0FPcpNjrtcNcVRUMtMOiMBaWyb3Lh1ZbtSMtvRPDJgjiGjB3BOeqlImQj9nBz5XiVeHiXFGbyo57WtWQO4s+UTWh0UR3uWh4dPIwgKax/39nrbmOH6I87vfZyi2JZLai8TyWupm76rkg/ATOcdegyREzbYzJLJOvc5C53H6Vre0sxvM8FM2+vL0+DrLew8taPi2iRA==]]>
-        </Encrypt></xml>";
-        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczip", "wxce775970ff046a47");
+        <Encrypt><![CDATA[zx9TFkPBdRzgd5WzEk69P/kXUTgTagYs8Q1cUc2Hn2GMD2mJj7tqKA46gxAcexRbwXbsBMk9nBi86Hp/IhjgxnH60ppOT5apysAB2dMnT40AtEVHcP26XWhTDa0YCHYS08as9r3A+pCmAf4bzsFvVZG2VJoejZxH0S0tgMExAt5BOtFc8T7dNLAYNEUBfC+YW/tHMqTp2EaJdbp8I1sSDzvbbP0+Le+TjGXt57Fl2AXwfeNgVi3H+sbT39uNXQscvSKw2zl5AZ9V/6VSkPydCgvFZuM6nujZDEMeqnRckPibuLavfZlX210ebSYWNu+h6rz0G5IKxnmO4bSxAGjMB6yBASKwNk+Ne/lcxdrZNoWtGo7KhCMUWBM39P+3cLlOiEguXD9Z+DXfLjiQBauwk6b0J6fEPF/qxXsx4VqURugCRM8NvgsxDLFbpIuG+MB0SQ1CpLp1m/nXqWf8bVMGF23yoIW1VxvXf56b09S12MM=]]></Encrypt>
+        <MsgSignature><![CDATA[7c6b47b57a7608b2d37fd15fa2acd31e14946909]]></MsgSignature>
+        <TimeStamp>1586949687</TimeStamp>
+        <Nonce><![CDATA[1586949687]]></Nonce>
+        </xml>";
+        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio", "wxce775970ff046a47");
         use std::collections::HashMap;
         let mut dic=HashMap::new();
-        dic.insert("msg_signature".to_owned(),"6be15b5bf237498acd65b70d4532aa7cdcfdeab7".to_owned());
-        dic.insert("nonce".to_owned(),"1525763395".to_owned());
-        dic.insert("timestamp".to_owned(),"1586832708".to_owned());
+        dic.insert("msg_signature".to_owned(),"7c6b47b57a7608b2d37fd15fa2acd31e14946909".to_owned());
+        dic.insert("nonce".to_owned(),"1586949687".to_owned());
+        dic.insert("timestamp".to_owned(),"1586949687".to_owned());
         let decrypted = crypto
             .decrypt_message(xml, &dic)
             .unwrap();
         println!("decrypted={:?}", decrypted);
+    }
+
+    #[test]
+    fn test_encrypt_message(){
+        let msg=r#"<xml>
+        <ToUserName><![CDATA[ozy4qt5QUADNXORxCVipKMV9dss0]]></ToUserName>
+        <FromUserName><![CDATA[gh_3c884a361561]]></FromUserName>
+        <CreateTime>1586937584</CreateTime>
+        <MsgType><![CDATA[text]]></MsgType>
+        <Content><![CDATA[TESTCOMPONENT_MSG_TYPE_TEXT_callback]]></Content>
+        </xml>"#;
+        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio", "wxce775970ff046a47");
+        let timestamp = crate::current_timestamp();
+        let nonce = format!("{}", timestamp);
+        let encrypt_text = crypto.encrypt_message(msg, timestamp, &nonce);
+        println!("{:?}",encrypt_text);
     }
 }
