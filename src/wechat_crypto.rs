@@ -1,6 +1,6 @@
 use crate::errors::WeChatError;
 use crate::WeChatResult;
-use base64::*;
+// use base64::*;
 use byteorder::{NativeEndian, ReadBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
@@ -27,7 +27,7 @@ impl WeChatCrypto {
         // c.decode_allow_trailing_bits(true);
 
         // let key = base64::decode_config(&aes_key,c).unwrap();
-        println!("{:?}",key);
+        // println!("{:?}",key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
