@@ -23,11 +23,11 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    println!(
-        "Ticket Request Start:  url_param: {:?} \n post_str: {:?}",
-        req.query_string(),
-        post_str
-    );
+    // println!(
+    //     "Ticket Request Start:  url_param: {:?} \n post_str: {:?}",
+    //     req.query_string(),
+    //     post_str
+    // );
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
@@ -62,7 +62,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let dic = utils::parse_query(query);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
-    println!("base_query={:?}", base_query);
+    // println!("base_query={:?}", base_query);
     let app_type = match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
@@ -85,7 +85,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 
     let code = c.create_preauthcode(&token).await;
 
-    println!("code={:?}", code);
+    // println!("code={:?}", code);
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
     //println!("base_query={:?}",base_query);
@@ -104,7 +104,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
-    println!("sss{:?}", req.uri().host());
+    // println!("sss{:?}", req.uri().host());
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
     let auth_code = utils::get_hash_value(&dic, "auth_code");
@@ -134,7 +134,7 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
         Err(_) => "".to_owned(),
     };
 
-    println!("path={:?}", path);
+    // println!("path={:?}", path);
     // response
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
@@ -205,7 +205,7 @@ pub async fn callback(
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
     match c.decrypt_message(&post_str, &dic) {
         Ok(v) => {
-            println!("decode_msg: {:?}", v.clone());
+            // println!("decode_msg: {:?}", v.clone());
             let msg = Message::parse(&v);
             let to_user = msg.get_to_user();
 
@@ -216,7 +216,7 @@ pub async fn callback(
                         // 公网发布的授权消息处理
                         if m.content.starts_with("QUERY_AUTH_CODE:") {
                             let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-                            println!("auth code: {}", auth_code);
+                            // println!("auth code: {}", auth_code);
                             let config: TripartiteConfig = get_tripartite_config();
                             let comp = Component::new(config);
                             // 根据授权码获取公众号对应的accesstoken
@@ -246,7 +246,7 @@ pub async fn callback(
                                         )
                                         .await;
                                     }
-                                    println!("{:?}", v);
+                                    // println!("{:?}", v);
                                 }
                                 Err(e) => println!("{:?}", e),
                             };
@@ -260,14 +260,14 @@ pub async fn callback(
                             let timestamp = wechat_sdk::current_timestamp();
                             let nonce = format!("{}", timestamp);
                             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            println!("sendxml:{:?},{}", encrypt_text, timestamp);
+                            // println!("sendxml:{:?},{}", encrypt_text, timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("html/text; charset=utf-8")
                                 .body(encrypt_text.unwrap()));
                         }
                     }
-                    Message::UnknownMessage(ref m) => {
-                        println!("{:?}", m);
+                    Message::UnknownMessage(ref _m) => {
+                        // println!("{:?}", m);
                     }
                 }
             }
@@ -278,7 +278,7 @@ pub async fn callback(
             println!("err: {}", e);
         }
     }
-    println!("callback {:?}, {:?}", dic, post_str);
+    // println!("callback {:?}, {:?}", dic, post_str);
     // //随机数
     // let nonce = utils::get_hash_value(&dic, "nonce");
     // if nonce.is_empty() {
@@ -320,7 +320,7 @@ pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<
     } else {
         format!("http://{}", config.wap_domain)
     };
-    let redirect_uri = format!("{}/user_auth_calback", &domain);
+    let redirect_uri = format!("{}/wx/user_auth_calback", &domain);
     let state = utils::get_hash_value(&dic, "state");
 
     let authorize = WechatAuthorize::new(&app_id, &config.app_id, "");
@@ -360,7 +360,7 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
         Err(_) => "".to_owned(),
     };
 
-    println!("path={:?}", path);
+    // println!("path={:?}", path);
     // response
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
