@@ -2,7 +2,7 @@ use wechat_sdk::tripartite::{get_ticket, set_ticket, Ticket};
 
 use super::utils;
 
-use super::result_response::{get_exception_result, get_success_result, get_success_result2};
+use super::result_response::{get_exception_result, get_success_result};
 use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
@@ -327,7 +327,7 @@ pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<
     let mut scopes = Vec::new();
     scopes.push("snsapi_userinfo");
     let url = authorize.get_authorize_url(&redirect_uri, &state, &scopes, "code");
-    get_success_result2(&url)
+    get_success_result(&url)
 }
 /// 用户授权回调
 #[get("/wx/user_auth_calback")]
