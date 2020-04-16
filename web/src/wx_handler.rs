@@ -188,7 +188,7 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 /// 上面是全网发布的资料
 pub async fn callback(
     req: HttpRequest,
-    path: web::Path<(String,)>,
+    _path: web::Path<(String,)>,
     payload: web::Payload,
 ) -> Result<HttpResponse> {
     use wechat_sdk::message::{Message, ReplyRender, TextReply};

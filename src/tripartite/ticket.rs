@@ -1,3 +1,6 @@
+//! copyright 
+//! 微信第三方平台的ticket获取存储
+
 use super::{Component, TripartiteConfig};
 use crate::errors::WeChatError;
 
@@ -12,6 +15,7 @@ use std::io::prelude::*;
 use std::sync::{Mutex,Arc};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Ticket {
     pub access_ticket: String,

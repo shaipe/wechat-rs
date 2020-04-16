@@ -1,8 +1,10 @@
+//! copyright
+//! 微信对接结果输出对象
+
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::HashMap;
 
 ///返回的结构封装
 #[derive(Debug, Clone, Deserialize, Serialize)]

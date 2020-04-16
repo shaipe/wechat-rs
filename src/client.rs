@@ -1,4 +1,5 @@
 //! copyright © shaipe 2020 - persent
+//! 微信对接的网络请求客户端
 
 use crate::errors::WeChatError;
 use crate::WeChatResult;

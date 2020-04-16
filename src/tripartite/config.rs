@@ -1,3 +1,6 @@
+//! copyright
+//! 微信三方信息配置
+
 use serde_derive::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -39,11 +42,13 @@ lazy_static! {
         Mutex::new(TripartiteConfig::default());
 }
 
+/// 将配置写入缓存
 pub fn set_tripartite_config(cnf: TripartiteConfig) {
     let mut cache = TRIPARTITE_CACHES.lock().unwrap();
     *cache = cnf;
 }
 
+/// 从缓存中取出第三方配置信息
 pub fn get_tripartite_config() -> TripartiteConfig {
     let cache = TRIPARTITE_CACHES.lock().unwrap();
     cache.clone()
