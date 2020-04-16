@@ -111,6 +111,7 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
+    //随机数
     fn get_random_string(&self) -> String {
         if cfg!(test) {
             "1234567890123456".to_owned()
@@ -120,13 +121,15 @@ impl WeChatCrypto {
     }
     pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
         let mut wtr = self.get_random_string().into_bytes();
+        //采用低位编址
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
+        //aes 加密
         let encrypted = aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
-        //let content_string = String::from_utf8(text).unwrap();
+        //base64 编码
         let b64encoded = base64::encode(&encrypted);
-        //let encrypted_msg = try!(prp.encrypt(msg, &self._id));
+        //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
             "<xml>\n\
