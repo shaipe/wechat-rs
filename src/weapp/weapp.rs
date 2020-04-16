@@ -1,3 +1,5 @@
+//! copyright
+//! 微信小程序接口对接
 
 use crate::WeChatResult;
 

@@ -1,3 +1,6 @@
+//! copyright
+//! 微信第三方平台基础接口对接
+
 use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};

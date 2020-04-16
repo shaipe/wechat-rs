@@ -1,5 +1,5 @@
 //! copyright
-//! 第三方平台
+//! 微信第三方平台
 
 
 pub mod ticket;
