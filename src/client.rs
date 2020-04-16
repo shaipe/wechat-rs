@@ -4,7 +4,8 @@ use crate::errors::WeChatError;
 use crate::WeChatResult;
 use reqwest::Client as HttpClient;
 use std::time::Duration;
-use std::collections::HashMap;
+// use std::collections::HashMap;
+use serde::Serialize;
 
 /// 请求客户端
 pub(crate) struct Client {
@@ -25,7 +26,7 @@ impl Client {
      * url
      * params
      */
-    pub async fn post(&self, url: &str, params: &HashMap<String, String>) -> WeChatResult<String> {
+    pub async fn post<T: Serialize + ?Sized>(&self, url: &str, params: &T) -> WeChatResult<String> {
         match self.client.post(url).json(params).send().await {
             Ok(res) => {
                 if res.status() == 200 {

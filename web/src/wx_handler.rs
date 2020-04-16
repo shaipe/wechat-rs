@@ -31,10 +31,12 @@ pub async fn receive_ticket(
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
-        let mut ticket = get_ticket();
-        ticket.access_ticket = t;
-        ticket.save("");
-        set_ticket(ticket);
+        if !t.is_empty() {
+            let mut ticket = get_ticket();
+            ticket.access_ticket = t;
+            ticket.save("");
+            set_ticket(ticket);
+        }
     };
 
     // 告诉服务器接收成功
@@ -220,23 +222,30 @@ pub async fn callback(
                             // 根据授权码获取公众号对应的accesstoken
                             match comp.query_auth(&auth_code).await {
                                 Ok(v) => {
-                                    // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
-                                    let auth_access_token =
-                                        match v["authorizer_access_token"].as_str() {
-                                            Some(token) => token.to_string(),
-                                            None => "".to_owned(),
-                                        };
-                                    let kf =
-                                        wechat_sdk::message::KFService::new(&auth_access_token);
                                     HttpResponse::build(StatusCode::OK)
                                         .content_type("text/html; charset=utf-8")
                                         .body("");
-                                    kf.send(
-                                        &m.from_user,
-                                        &"text".to_string(),
-                                        &format!("{}_from_api", auth_code),
-                                    )
-                                    .await;
+                                    // .flush();
+
+                                    // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                                    if v["authorization_info"].is_object() {
+                                        let auth_access_token = match v["authorization_info"]
+                                            ["authorizer_access_token"]
+                                            .as_str()
+                                        {
+                                            Some(token) => token.to_string(),
+                                            None => "".to_owned(),
+                                        };
+                                        let kf =
+                                            wechat_sdk::message::KFService::new(&auth_access_token);
+
+                                        kf.send(
+                                            &m.from_user,
+                                            &"text".to_string(),
+                                            &format!("{}_from_api", auth_code),
+                                        )
+                                        .await;
+                                    }
                                     println!("{:?}", v);
                                 }
                                 Err(e) => println!("{:?}", e),

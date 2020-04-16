@@ -1,6 +1,8 @@
+//! copyright
+//! 微信加解密码处理
+
 use crate::errors::WeChatError;
 use crate::WeChatResult;
-use base64::*;
 use byteorder::{NativeEndian, WriteBytesExt, ReadBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
