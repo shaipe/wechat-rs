@@ -1,9 +1,9 @@
 //! copyright
 //! 事件消息
-
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct EventMessage {
-    pub to_user_name: String,
-    pub from_user_name: String,
+    pub to_user: String,
+    pub from_user: String,
     pub create_time: u64,
     pub msg_type: String,
     pub event: String,
@@ -17,8 +17,8 @@ impl EventMessage {
         <CreateTime>{create_time}</CreateTime>
         <MsgType><![CDATA[event]]></MsgType>
         <Content><![CDATA[{content}]]></Content>"#,
-            to_user = self.to_user_name,
-            from_user = self.from_user_name,
+            to_user = self.to_user,
+            from_user = self.from_user,
             create_time = 3434,
             content = "sdds"
         )

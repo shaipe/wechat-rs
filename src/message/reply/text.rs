@@ -28,12 +28,12 @@ impl ReplyRender for TextReply {
     #[inline]
     fn render(&self) -> String {
         format!(
-            "<xml>\n\
-            <ToUserName><![CDATA[{to_user}]]></ToUserName>\n\
-            <FromUserName><![CDATA[{from_user}]]></FromUserName>\n\
-            <CreateTime>{time}</CreateTime>\n\
-            <MsgType><![CDATA[text]]></MsgType>\n\
-            <Content><![CDATA[{content}]]></Content>\n\
+            "<xml>
+            <ToUserName><![CDATA[{to_user}]]></ToUserName>
+            <FromUserName><![CDATA[{from_user}]]></FromUserName>
+            <CreateTime>{time}</CreateTime>
+            <MsgType><![CDATA[text]]></MsgType>
+            <Content><![CDATA[{content}]]></Content>
             </xml>",
             to_user = self.to_user,
             from_user = self.from_user,

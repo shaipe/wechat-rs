@@ -205,6 +205,8 @@ pub async fn callback(
     use wechat_sdk::message::{Message, ReplyRender, TextReply};
 
     let dic = utils::parse_query(req.query_string());
+
+    let nonce = utils::get_hash_value(&dic, "nonce");
     // println!("{:?}", dic);
     // payload is a stream of Bytes objects
     let post_str = utils::get_request_body(payload).await;
@@ -271,17 +273,30 @@ pub async fn callback(
                             );
                             let txt = tr.render();
                             let timestamp = wechat_sdk::current_timestamp();
-                            let nonce = format!("{}", timestamp);
                             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            println!("sendxml:{:?},{}", encrypt_text, timestamp);
+                            println!("sendtext xml:{:?},{}", encrypt_text, timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("text/html; charset=utf-8")
                                 .body(encrypt_text.unwrap()));
                         } else {
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("text/html; charset=utf-8")
-                                .body("success"))
+                                .body("success"));
                         }
+                    }
+                    Message::EventMessage(ref m)=>{
+                        let tr = TextReply::new(
+                            &m.to_user,
+                            &m.from_user,
+                            &format!("{}from_callback", &m.event),
+                        );
+                        let txt = tr.render();
+                        let timestamp = wechat_sdk::current_timestamp();
+                        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+                        println!("send eventxml:{:?},{}", encrypt_text, timestamp);
+                        return Ok(HttpResponse::build(StatusCode::OK)
+                            .content_type("text/html; charset=utf-8")
+                            .body(encrypt_text.unwrap()));
                     }
                     Message::UnknownMessage(ref _m) => {
                         println!("未知message:{:?}", _m);

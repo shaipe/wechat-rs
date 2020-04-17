@@ -7,6 +7,9 @@ pub use parser::{parse_message, MessageParser};
 mod text;
 pub use text::TextMessage;
 
+mod event;
+pub use event::EventMessage;
+
 mod unknown;
 pub use unknown::UnknownMessage;
 
@@ -23,6 +26,7 @@ pub use kf::KFService;
 #[derive(Debug, Clone)]
 pub enum Message {
     TextMessage(TextMessage),
+    EventMessage(EventMessage),
     UnknownMessage(UnknownMessage),
 }
 
@@ -36,6 +40,7 @@ impl Message {
     pub fn get_from_user(&self) -> String {
         match *self {
             Message::TextMessage(ref msg) => msg.from_user.to_owned(),
+            Message::EventMessage(ref msg) => msg.from_user.to_owned(),
             Message::UnknownMessage(ref msg) => msg.from_user.to_owned(),
         }
     }
@@ -44,6 +49,7 @@ impl Message {
     pub fn get_to_user(&self) -> String {
         match *self {
             Message::TextMessage(ref msg) => msg.to_user.to_owned(),
+            Message::EventMessage(ref msg) => msg.to_user.to_owned(),
             Message::UnknownMessage(ref msg) => msg.to_user.to_owned(),
         }
     }
