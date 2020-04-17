@@ -222,17 +222,17 @@ mod tests {
     #[test]
     fn test_decrypt_message() {
         let xml = "<xml>
-        <Encrypt><![CDATA[zx9TFkPBdRzgd5WzEk69P/kXUTgTagYs8Q1cUc2Hn2GMD2mJj7tqKA46gxAcexRbwXbsBMk9nBi86Hp/IhjgxnH60ppOT5apysAB2dMnT40AtEVHcP26XWhTDa0YCHYS08as9r3A+pCmAf4bzsFvVZG2VJoejZxH0S0tgMExAt5BOtFc8T7dNLAYNEUBfC+YW/tHMqTp2EaJdbp8I1sSDzvbbP0+Le+TjGXt57Fl2AXwfeNgVi3H+sbT39uNXQscvSKw2zl5AZ9V/6VSkPydCgvFZuM6nujZDEMeqnRckPibuLavfZlX210ebSYWNu+h6rz0G5IKxnmO4bSxAGjMB6yBASKwNk+Ne/lcxdrZNoWtGo7KhCMUWBM39P+3cLlOiEguXD9Z+DXfLjiQBauwk6b0J6fEPF/qxXsx4VqURugCRM8NvgsxDLFbpIuG+MB0SQ1CpLp1m/nXqWf8bVMGF23yoIW1VxvXf56b09S12MM=]]></Encrypt>
-        <MsgSignature><![CDATA[7c6b47b57a7608b2d37fd15fa2acd31e14946909]]></MsgSignature>
-        <TimeStamp>1586949687</TimeStamp>
-        <Nonce><![CDATA[1586949687]]></Nonce>
+        <Encrypt><![CDATA[vtVuL2vCakdSsoeEIieqx4CBzJLNdZQd3YishL1Qx70/C3pSKJdLVZcBkwpYZM4FvAh38eGo7CJ5GPSm9/sLU4O+zP9HRz5k1ltvw5fHUdmBDSAVZHvxRHTMxgXVoTr04JAMoSw3InJWrkU5hQIzO8mtgs3ypOOE1cNCSwblwqh690mHi+XExtDRL+OC8DJnhuH2b46k7BpwPWh9z1OP2INoQMYsa6HLfrOfobvRI3HQwjMKCrLG3dfK0j7nWbqLHsmKlaoTcrYfqzvuBCVkbvP+KOr2xo97c+JdKVBafrWc5h4VY2oM6xk83imVkkg7yQGfqvEua3milUeo0aX0sIcz2PZCVK8qc1NG/cFYz9SiQGBMPm0Hvf5fLSAgP2EzQVZNapWBk4cVZkzNFHWuODz0g8Z2mwKBrqF9oIFJX55uoRqAHQf39OLvl0VTVUMx0kzEHN3F8Qydz9d5Kh3/JJz6rwbRYpJZOMxWPVJecw4MWfG/iE4XG7u7AzEV7bbeBgg53JASoVCj2Nd7j70sUw==]]></Encrypt>
+        <MsgSignature><![CDATA[b135f073fee09b86d9a0b83fcbea58a0e6569299]]></MsgSignature>
+        <TimeStamp>1587121403</TimeStamp>
+        <Nonce><![CDATA[1661748508]]></Nonce>
         </xml>";
-        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio", "wxce775970ff046a47");
+        let crypto = WeChatCrypto::new("tokenkm323", "khEda6IkyCedf2pbl7kKGX2N42bhOWLbkyBDgkkmpfs", "wx618efe0d63406d44");
         use std::collections::HashMap;
         let mut dic=HashMap::new();
-        dic.insert("msg_signature".to_owned(),"7c6b47b57a7608b2d37fd15fa2acd31e14946909".to_owned());
-        dic.insert("nonce".to_owned(),"1586949687".to_owned());
-        dic.insert("timestamp".to_owned(),"1586949687".to_owned());
+        dic.insert("msg_signature".to_owned(),"b135f073fee09b86d9a0b83fcbea58a0e6569299".to_owned());
+        dic.insert("nonce".to_owned(),"1661748508".to_owned());
+        dic.insert("timestamp".to_owned(),"1587121403".to_owned());
         let decrypted = crypto
             .decrypt_message(xml, &dic)
             .unwrap();

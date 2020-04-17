@@ -24,15 +24,15 @@ impl ImageReply {
 impl ReplyRender for ImageReply {
     #[inline]
     fn render(&self) -> String {
-        format!("<xml>\n\
-            <ToUserName><![CDATA[{to_user}]]></ToUserName>\n\
-            <FromUserName><![CDATA[{from_user}]]></FromUserName>\n\
-            <CreateTime>{time}</CreateTime>\n\
-            <MsgType><![CDATA[image]]></MsgType>\n\
-            <Image>\n\
-            <MediaId><![CDATA[{media_id}]]></MediaId>\n\
-            </Image>\n\
-            </xml>",
+        format!(r#"<xml>
+            <ToUserName><![CDATA[{to_user}]]></ToUserName>
+            <FromUserName><![CDATA[{from_user}]]></FromUserName>
+            <CreateTime>{time}</CreateTime>
+            <MsgType><![CDATA[image]]></MsgType>
+            <Image>
+            <MediaId><![CDATA[{media_id}]]></MediaId>
+            </Image>
+            </xml>"#,
             to_user=self.to_user,
             from_user=self.from_user,
             time=self.time,

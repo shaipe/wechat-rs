@@ -74,12 +74,12 @@ impl Article {
     }
 
     fn render(&self) -> String {
-        format!("<item>\n
-            <Title><![CDATA[{title}]]></Title>\n\
-            <Description><![CDATA[{description}]]></Description>\n\
-            <PicUrl><![CDATA[{picurl}]]></PicUrl>\n\
-            <Url><![CDATA[{url}]]></Url>\n\
-            </item>",
+        format!(r#"<item>
+            <Title><![CDATA[{title}]]></Title>
+            <Description><![CDATA[{description}]]></Description>
+            <PicUrl><![CDATA[{picurl}]]></PicUrl>
+            <Url><![CDATA[{url}]]></Url>
+            </item>"#,
             title=self.title,
             description=self.description,
             picurl=self.image,
@@ -126,14 +126,14 @@ impl ReplyRender for ArticlesReply {
             articles.push(article.render());
         }
         let articles_str = articles.join("\n");
-        format!("<xml>\n\
-            <ToUserName><![CDATA[{to_user}]]></ToUserName>\n\
-            <FromUserName><![CDATA[{from_user}]]></FromUserName>\n\
-            <CreateTime>{time}</CreateTime>\n\
-            <MsgType><![CDATA[news]]></MsgType>\n\
-            <ArticleCount>{count}</ArticleCount>\n\
-            <Articles>{articles}</Articles>\n\
-            </xml>",
+        format!(r#"<xml>
+            <ToUserName><![CDATA[{to_user}]]></ToUserName>
+            <FromUserName><![CDATA[{from_user}]]></FromUserName>
+            <CreateTime>{time}</CreateTime>
+            <MsgType><![CDATA[news]]></MsgType>
+            <ArticleCount>{count}</ArticleCount>
+            <Articles>{articles}</Articles>
+            </xml>"#,
             to_user=self.to_user,
             from_user=self.from_user,
             time=self.time,
