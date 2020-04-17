@@ -90,6 +90,7 @@ impl WeChatCrypto {
             return Err(WeChatError::InvalidSignature);
         }
         let msg = self.decrypt(&encrypted_msg)?;
+        println!("{:?}",msg);
         Ok(msg)
     }
 
@@ -103,7 +104,7 @@ impl WeChatCrypto {
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];
         let from_id = &text[content_length + 20..];
-        // println!("form_id: {:?}  ,, id_ {:?}", from_id, self._id.as_bytes());
+        //println!("form_id: {:?}  ,, id_ {:?}", from_id, self._id.as_bytes());
         // 此处取出的formid中包含了回车符,只能取前18位进行判断比较
         if &from_id[0..18] != self._id.as_bytes() {
             return Err(WeChatError::InvalidAppId);
@@ -240,12 +241,12 @@ mod tests {
 
     #[test]
     fn test_encrypt_message(){
-        let msg=r#"<xml>
-        <ToUserName><![CDATA[ozy4qt5QUADNXORxCVipKMV9dss0]]></ToUserName>
-        <FromUserName><![CDATA[gh_3c884a361561]]></FromUserName>
-        <CreateTime>1586937584</CreateTime>
+        let msg=r#"<xml><ToUserName><![CDATA[gh_3c884a361561]]></ToUserName>
+        <FromUserName><![CDATA[ozy4qt5QUADNXORxCVipKMV9dss0]]></FromUserName>
+        <CreateTime>1587087558</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
-        <Content><![CDATA[TESTCOMPONENT_MSG_TYPE_TEXT_callback]]></Content>
+        <Content><![CDATA[QUERY_AUTH_CODE:queryauthcode@@@S46RZzudLRYEjxbNd5rzokMIybrsHw8a-Bm1gNX1PWyx_PFOhyilIHnnT6PKgdTkSOFAkQgosaogCOB-ZV62vg]]></Content>
+        <MsgId>6816489157906572969</MsgId>
         </xml>"#;
         let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio", "wxce775970ff046a47");
         let timestamp = crate::current_timestamp();

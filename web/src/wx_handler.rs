@@ -49,7 +49,7 @@ pub async fn receive_ticket(
 #[get("/wx/auth")]
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
-    let path = format!("/official_auth?{}", query);
+    let path = format!("/wx/official_auth?{}", query);
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(format!("<script>location.href='{}'</script>", path)))
@@ -198,7 +198,7 @@ pub async fn callback(
     // payload is a stream of Bytes objects
     let post_str = utils::get_request_body(payload).await;
 
-    //println!("callback {:?}, {:?}", dic, post_str);
+    println!("callback {:?}, {:?}", dic, post_str);
 
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
@@ -215,18 +215,18 @@ pub async fn callback(
                     Message::TextMessage(ref m) => {
                         // 公网发布的授权消息处理
                         if m.content.starts_with("QUERY_AUTH_CODE:") {
+                            HttpResponse::build(StatusCode::OK)
+                            .content_type("text/html; charset=utf-8")
+                            .finish();
+                            println!("返回空!");
+                            //.body();
                             let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-                            // println!("auth code: {}", auth_code);
+
                             let config: TripartiteConfig = get_tripartite_config();
                             let comp = Component::new(config);
                             // 根据授权码获取公众号对应的accesstoken
                             match comp.query_auth(&auth_code).await {
                                 Ok(v) => {
-                                    HttpResponse::build(StatusCode::OK)
-                                        .content_type("text/html; charset=utf-8")
-                                        .body("");
-                                    // .flush();
-
                                     // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
                                     if v["authorization_info"].is_object() {
                                         let auth_access_token = match v["authorization_info"]
@@ -260,45 +260,27 @@ pub async fn callback(
                             let timestamp = wechat_sdk::current_timestamp();
                             let nonce = format!("{}", timestamp);
                             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            // println!("sendxml:{:?},{}", encrypt_text, timestamp);
+                            println!("sendxml:{:?},{}", encrypt_text, timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
                                 .content_type("html/text; charset=utf-8")
                                 .body(encrypt_text.unwrap()));
                         }
                     }
                     Message::UnknownMessage(ref _m) => {
-                        // println!("{:?}", m);
+                        println!("未知message:{:?}", _m);
                     }
                 }
             }
-            // let ticketstr = xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
-            //Ok(ticketstr)
+            else{
+                println!("减密失败！");
+            }
         }
         Err(e) => {
             println!("err: {}", e);
         }
     }
-    // println!("callback {:?}, {:?}", dic, post_str);
-    // //随机数
-    // let nonce = utils::get_hash_value(&dic, "nonce");
-    // if nonce.is_empty() {
-    //     return Ok(HttpResponse::build(StatusCode::OK)
-    //         .content_type("text/html; charset=utf-8")
-    //         .body("error"));
-    // }
-    // //时间缀
-    // let timestamp = utils::get_hash_value(&dic, "timestamp")
-    //     .parse::<i64>()
-    //     .unwrap();
-    // //签名信息
-    // let signature = utils::get_hash_value(&dic, "msg_signature");
-
-    // use wechat_sdk::message::Message;
-    // let config: TripartiteConfig = get_tripartite_config();
-    // let t = Message::new(&config.token, &config.encoding_aes_key, &config.app_id);
-    // let result: WeChatResult<String> = t.parse(&post_str, &signature, timestamp, &nonce);
-
-    // println!("{:?}", result);
+   
+    println!("方法结束！");
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
