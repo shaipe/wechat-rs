@@ -141,6 +141,17 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
         .body(""))
 }
 
+#[post("/wx/test")]
+async fn test(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+    let dic = utils::parse_query(req.query_string());
+    println!("{:?}", req);
+    // payload is a stream of Bytes objects
+    let post_str = utils::get_request_body(payload).await;
+
+    println!("callback {:?}, {:?}", dic, post_str);
+    get_success_result("sd")
+}
+
 /// 获取第三方的token
 #[post("/wx/fetch_component_token")]
 async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
@@ -209,16 +220,18 @@ pub async fn callback(
             let msg = Message::parse(&v);
             let to_user = msg.get_to_user();
 
+            println!("{:?}", msg);
+
             // 全网发布时的测试用户
             if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
                 match msg {
                     Message::TextMessage(ref m) => {
                         // 公网发布的授权消息处理
                         if m.content.starts_with("QUERY_AUTH_CODE:") {
-                            HttpResponse::build(StatusCode::OK)
-                            .content_type("text/html; charset=utf-8")
-                            .finish();
-                            println!("返回空!");
+                            // HttpResponse::build(StatusCode::OK)
+                            // .content_type("text/html; charset=utf-8")
+                            // .finish();
+                            // println!("返回空!");
                             //.body();
                             let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
 
@@ -250,7 +263,7 @@ pub async fn callback(
                                 }
                                 Err(e) => println!("{:?}", e),
                             };
-                        } else {
+                        } else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
                             let tr = TextReply::new(
                                 &m.to_user,
                                 &m.from_user,
@@ -262,16 +275,19 @@ pub async fn callback(
                             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
                             println!("sendxml:{:?},{}", encrypt_text, timestamp);
                             return Ok(HttpResponse::build(StatusCode::OK)
-                                .content_type("html/text; charset=utf-8")
+                                .content_type("text/html; charset=utf-8")
                                 .body(encrypt_text.unwrap()));
+                        } else {
+                            return Ok(HttpResponse::build(StatusCode::OK)
+                                .content_type("text/html; charset=utf-8")
+                                .body("success"))
                         }
                     }
                     Message::UnknownMessage(ref _m) => {
                         println!("未知message:{:?}", _m);
                     }
                 }
-            }
-            else{
+            } else {
                 println!("减密失败！");
             }
         }
@@ -279,7 +295,6 @@ pub async fn callback(
             println!("err: {}", e);
         }
     }
-   
     println!("方法结束！");
 
     Ok(HttpResponse::build(StatusCode::OK)
