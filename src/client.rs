@@ -17,8 +17,8 @@ impl Client {
     pub fn new() -> Self {
         Client {
             client: HttpClient::builder()
-                .timeout(Duration::from_secs(5))
-                .connect_timeout(Duration::from_secs(5))
+                .timeout(Duration::from_secs(300))
+                .connect_timeout(Duration::from_secs(300))
                 .build()
                 .unwrap(),
         }

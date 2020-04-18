@@ -90,7 +90,7 @@ impl WeChatCrypto {
             return Err(WeChatError::InvalidSignature);
         }
         let msg = self.decrypt(&encrypted_msg)?;
-        println!("{:?}",msg);
+        println!("######### decode message ########## \n{}",msg);
         Ok(msg)
     }
 
@@ -120,6 +120,8 @@ impl WeChatCrypto {
            thread_rng().gen_ascii_chars().take(16).collect()
         }
     }
+
+    /// 对消息进行加密
     pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
         let mut wtr = self.get_random_string().into_bytes();
         //采用低位编址
@@ -133,17 +135,19 @@ impl WeChatCrypto {
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
-            "<xml>\n\
-            <Encrypt><![CDATA[{encrypt}]]></Encrypt>\n\
-            <MsgSignature><![CDATA[{signature}]]></MsgSignature>\n\
-            <TimeStamp>{timestamp}</TimeStamp>\n\
-            <Nonce><![CDATA[{nonce}]]></Nonce>\n\
+            "<xml>
+            <Encrypt><![CDATA[{encrypt}]]></Encrypt>
+            <MsgSignature><![CDATA[{signature}]]></MsgSignature>
+            <TimeStamp>{timestamp}</TimeStamp>
+            <Nonce><![CDATA[{nonce}]]></Nonce>
             </xml>",
             encrypt=b64encoded,
             signature=signature,
             timestamp=timestamp,
             nonce=nonce,
         );
+
+        println!("#################### encode message #####################\n{}", msg);
         Ok(msg)
     }
 }

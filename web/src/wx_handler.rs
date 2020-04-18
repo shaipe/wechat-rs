@@ -1,16 +1,22 @@
-use wechat_sdk::tripartite::{get_ticket, set_ticket, Ticket};
-
-use super::utils;
+//! copyright
+//!
 
 use super::result_response::{get_exception_result, get_success_result};
+use super::utils;
 use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use md5;
 use std::collections::HashMap;
 use wechat_sdk::{
+    current_timestamp,
+    message::{
+        EventMessage, KFService, Message, ReplyRender, TextMessage, TextReply, UnknownMessage,
+    },
     official::WechatAuthorize,
-    tripartite::{get_tripartite_config, Component, TripartiteConfig},
+    tripartite::{
+        get_ticket, get_tripartite_config, set_ticket, Component, Ticket, TripartiteConfig,
+    },
     WeChatCrypto,
 };
 // use std::thread;
@@ -26,11 +32,11 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    // println!(
-    //     "Ticket Request Start:  url_param: {:?} \n post_str: {:?}",
-    //     req.query_string(),
-    //     post_str
-    // );
+    println!(
+        " ^^^^^^^^^^^ Ticket :  url_param: {:?} \n post_str: {:?}",
+        req.query_string(),
+        post_str
+    );
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
@@ -202,182 +208,6 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     }
 }
 
-/// 微信第三方消息回调处理
-/// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Post_Application_on_the_Entire_Network/releases_instructions.html
-/// 上面是全网发布的资料
-pub async fn callback(
-    req: HttpRequest,
-    _path: web::Path<(String,)>,
-    payload: web::Payload,
-) -> Result<HttpResponse> {
-    use wechat_sdk::message::{Message, ReplyRender, TextReply};
-
-    let dic = utils::parse_query(req.query_string());
-
-    let nonce = utils::get_hash_value(&dic, "nonce");
-    // println!("{:?}", dic);
-    // payload is a stream of Bytes objects
-    let post_str = utils::get_request_body(payload).await;
-
-    println!("callback {:?}, {:?}", dic, post_str);
-
-    // 对获取的消息内容进行解密
-    let conf: TripartiteConfig = get_tripartite_config();
-    let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
-    match c.decrypt_message(&post_str, &dic) {
-        Ok(v) => {
-            // println!("decode_msg: {:?}", v.clone());
-            let msg = Message::parse(&v);
-            let to_user = msg.get_to_user();
-
-            println!("{:?}", msg);
-            // thread::sleep(Duration::from_secs(1));
-            // 全网发布时的测试用户
-            // if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
-                match msg {
-                    Message::TextMessage(ref m) => {
-                        // 公网发布的授权消息处理
-                        if m.content.starts_with("QUERY_AUTH_CODE:") {
-                            HttpResponse::build(StatusCode::OK)
-                            // .content_type("text/html; charset=utf-8")
-                            .finish();
-                            // println!("返回空!");
-                            //.body();
-                            let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-
-                            let config: TripartiteConfig = get_tripartite_config();
-                            let comp = Component::new(config);
-                            // 根据授权码获取公众号对应的accesstoken
-                            match comp.query_auth(&auth_code).await {
-                                Ok(v) => {
-                                    // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
-                                    if v["authorization_info"].is_object() {
-                                        let auth_access_token = match v["authorization_info"]
-                                            ["authorizer_access_token"]
-                                            .as_str()
-                                        {
-                                            Some(token) => token.to_string(),
-                                            None => "".to_owned(),
-                                        };
-                                        let kf =
-                                            wechat_sdk::message::KFService::new(&auth_access_token);
-
-                                        kf.send(
-                                            &m.from_user,
-                                            &"text".to_string(),
-                                            &format!("{}_from_api", auth_code),
-                                        )
-                                        .await;
-                                    }
-                                    // println!("{:?}", v);
-                                }
-                                Err(e) => println!("{:?}", e),
-                            };
-                        } else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
-                            let tr = TextReply::new(
-                                &m.to_user,
-                                &m.from_user,
-                                &format!("{}_callback", &m.content),
-                            );
-                            let txt = tr.render();
-                            let timestamp = wechat_sdk::current_timestamp();
-                            let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            println!("send content xml:{:?},{}", encrypt_text, timestamp);
-                            return Ok(HttpResponse::build(StatusCode::OK)
-                                // .content_type("text/xml; charset=utf-8")
-                                .body(encrypt_text.unwrap()));
-                        } else {
-                            let tr = TextReply::new(
-                                &m.to_user,
-                                &m.from_user,
-                                &format!(" {}", &m.content),
-                            );
-                            let txt = tr.render();
-                            let timestamp = wechat_sdk::current_timestamp();
-                            let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            println!("send content xml:{:?},{}", encrypt_text, timestamp);
-                            return Ok(HttpResponse::build(StatusCode::OK)
-                                // .content_type("text/xml; charset=utf-8")
-                                .body(encrypt_text.unwrap()));
-                        }
-                    }
-                    Message::EventMessage(ref m) => {
-                        let tr = TextReply::new(
-                            &m.to_user,
-                            &m.from_user,
-                            &format!("{}from_callback", &m.event),
-                        );
-                        let txt = tr.render();
-                        let timestamp = wechat_sdk::current_timestamp();
-                        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                        println!("send eventxml:{:?},{}", encrypt_text, timestamp);
-                        return Ok(HttpResponse::build(StatusCode::OK)
-                            // .content_type("text/html; charset=utf-8")
-                            .body(encrypt_text.unwrap()));
-                    }
-                    Message::UnknownMessage(ref _m) => {
-                        println!("未知message:{:?}", _m);
-                    }
-                }
-            // } else {
-            //     match msg {
-            //         Message::TextMessage(ref m) => {
-            //             // let kf =
-            //             //     wechat_sdk::message::KFService::new(&auth_access_token);
-
-            //             // kf.send(
-            //             //     &m.from_user,
-            //             //     &"text".to_string(),
-            //             //     &format!("{}_from_api", auth_code),
-            //             // )
-            //             // .await;
-
-            //             let tr = TextReply::new(
-            //                 &m.to_user,
-            //                 &m.from_user,
-            //                 &format!("{}_callback", &m.content),
-            //             );
-            //             let txt = tr.render();
-
-            //             println!("txt======, {}", txt);
-            //             let timestamp = wechat_sdk::current_timestamp();
-            //             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-            //             println!("sendtext xml:{:?},{}", encrypt_text, timestamp);
-            //             return Ok(HttpResponse::build(StatusCode::OK)
-            //                 .content_type("text/html; charset=utf-8")
-            //                 .body(encrypt_text.unwrap()));
-            //         }
-            //         Message::EventMessage(ref m) => {
-            //             let tr = TextReply::new(
-            //                 &m.to_user,
-            //                 &m.from_user,
-            //                 &format!("{}from_callback", &m.event),
-            //             );
-            //             let txt = tr.render();
-            //             let timestamp = wechat_sdk::current_timestamp();
-            //             let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-            //             println!("send eventxml:{:?},{}", encrypt_text, timestamp);
-            //             return Ok(HttpResponse::build(StatusCode::OK)
-            //                 .content_type("text/html; charset=utf-8")
-            //                 .body(encrypt_text.unwrap()));
-            //         }
-            //         Message::UnknownMessage(ref _m) => {
-            //             println!("未知  message:{:?}", _m);
-            //         }
-            //     }
-            // }
-        }
-        Err(e) => {
-            println!("err: {}", e);
-        }
-    }
-    println!("方法结束！");
-
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body("success"))
-}
-
 ///获得授权url
 #[post("/wx/fetch_auth_url")]
 pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
@@ -439,4 +269,179 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
+}
+
+/// 微信第三方消息回调处理
+/// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Post_Application_on_the_Entire_Network/releases_instructions.html
+/// 上面是全网发布的资料
+pub async fn callback(
+    req: HttpRequest,
+    _path: web::Path<(String,)>,
+    payload: web::Payload,
+) -> Result<HttpResponse> {
+    let dic = utils::parse_query(req.query_string());
+    let post_str = utils::get_request_body(payload).await;
+    println!("--- callback ---- {:?}, {:?}", dic, post_str);
+
+    let nonce = utils::get_hash_value(&dic, "nonce");
+    // 对获取的消息内容进行解密
+    let conf: TripartiteConfig = get_tripartite_config();
+    let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
+
+    // 对接收的消息进行解码判断
+    if let Ok(decode_msg) = c.decrypt_message(&post_str, &dic) {
+        // println!("=== decode message === {}", decode_msg);
+        let msg = Message::parse(&decode_msg);
+        let to_user = msg.get_to_user();
+
+        // 全网发布时的测试用户
+        if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
+            match msg {
+                Message::TextMessage(ref m) => {
+                    // 公网发布的授权消息处理
+                    if m.content.starts_with("QUERY_AUTH_CODE:") {
+                        let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
+
+                        let comp = Component::new(conf);
+                        // 根据授权码获取公众号对应的accesstoken
+                        match comp.query_auth(&auth_code).await {
+                            Ok(v) => {
+                                // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                                if v["authorization_info"].is_object() {
+                                    let auth_access_token = match v["authorization_info"]
+                                        ["authorizer_access_token"]
+                                        .as_str()
+                                    {
+                                        Some(token) => token.to_string(),
+                                        None => "".to_owned(),
+                                    };
+                                    let kf = KFService::new(&auth_access_token);
+
+                                    kf.send(
+                                        &m.from_user,
+                                        &"text".to_string(),
+                                        &format!("{}_from_api", auth_code),
+                                    )
+                                    .await;
+                                }
+                            }
+                            Err(e) => println!("{:?}", e),
+                        };
+                    }
+                    // 文本消息回复处理
+                    else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
+                        let tr = TextReply::new(
+                            &m.to_user,
+                            &m.from_user,
+                            &format!("{}_callback", &m.content),
+                        );
+                        let txt = tr.render();
+                        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+                        let timestamp = current_timestamp();
+                        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+
+                        return Ok(HttpResponse::build(StatusCode::OK)
+                            .content_type("text/html; charset=utf-8")
+                            .body(encrypt_text.unwrap()));
+                    }
+                    //其他消息
+                    else {
+                        let tr = TextReply::new(
+                            &m.to_user,
+                            &m.from_user,
+                            &format!("{}_callback", &m.content),
+                        );
+                        let txt = tr.render();
+                        let timestamp = current_timestamp();
+                        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+                        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+                        return Ok(HttpResponse::build(StatusCode::OK)
+                            .content_type("text/xml; charset=utf-8")
+                            .body(encrypt_text.unwrap()));
+                    }
+                }
+                Message::EventMessage(ref m) => {
+                    println!("**** EVENT *** {:?}", m);
+                }
+                Message::UnknownMessage(ref m) => {
+                    println!("**** Unknown *** {:?}", m);
+                }
+            }
+        }
+    }
+
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("success"))
+}
+
+/// 全网发布处理
+async fn publish_deal(
+    config: TripartiteConfig,
+    c: WeChatCrypto,
+    m: &TextMessage,
+    nonce: String,
+) -> HttpResponse {
+    // 公网发布的授权消息处理
+    if m.content.starts_with("QUERY_AUTH_CODE:") {
+        let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
+
+        let comp = Component::new(config);
+        // 根据授权码获取公众号对应的accesstoken
+        match comp.query_auth(&auth_code).await {
+            Ok(v) => {
+                // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                if v["authorization_info"].is_object() {
+                    let auth_access_token =
+                        match v["authorization_info"]["authorizer_access_token"].as_str() {
+                            Some(token) => token.to_string(),
+                            None => "".to_owned(),
+                        };
+                    let kf = KFService::new(&auth_access_token);
+
+                    kf.send(
+                        &m.from_user,
+                        &"text".to_string(),
+                        &format!("{}_from_api", auth_code),
+                    )
+                    .await;
+                }
+            }
+            Err(e) => println!("{:?}", e),
+        };
+    }
+    // 文本消息回复处理
+    else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
+        let tr = TextReply::new(
+            &m.to_user,
+            &m.from_user,
+            &format!("{}_callback", &m.content),
+        );
+        let txt = tr.render();
+        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+        let timestamp = current_timestamp();
+        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+        return HttpResponse::build(StatusCode::OK)
+            .content_type("text/html; charset=utf-8")
+            .body(encrypt_text.unwrap());
+    }
+    //其他消息
+    else {
+        let tr = TextReply::new(
+            &m.to_user,
+            &m.from_user,
+            &format!("{}_callback", &m.content),
+        );
+        let txt = tr.render();
+        let timestamp = current_timestamp();
+        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
+        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+        return HttpResponse::build(StatusCode::OK)
+            .content_type("text/xml; charset=utf-8")
+            .body(encrypt_text.unwrap());
+    }
+
+    return HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("success");
 }

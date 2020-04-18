@@ -94,7 +94,7 @@ impl Ticket {
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
         match c.decrypt_message(xml, &query_params) {
             Ok(v) => {
-                println!("{:?}", v);
+                // println!("{:?}", v);
                 let package = xmlutil::parse(v);
                 let doc = package.as_document();
                 let ticketstr =
