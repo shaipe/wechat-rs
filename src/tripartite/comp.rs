@@ -43,7 +43,7 @@ impl Component {
             Ok(res) => match serde_json::from_str(&res) {
                 Ok(v) => {
                     let dic: Value = v;
-                    println!("component access {:?}, ticket: {:?}", dic, self.ticket.access_ticket.clone());
+                    logs!(format!("component access {:?}, ticket: {:?}", dic, self.ticket.access_ticket.clone()));
                     if let Some(token) = dic["component_access_token"].as_str() {
                         let expires_at: i64 = current_timestamp() + 7000;
                         Ok((token.to_string(), expires_at))
@@ -68,7 +68,7 @@ impl Component {
                 access_token
             )
         );
-        println!("uri::: {}", uri);
+        logs!(format!("uri::: {}", uri));
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
@@ -112,7 +112,7 @@ impl Component {
             API_DOMAIN, acc_token
         );
 
-        println!("query auth {}", uri);
+        // println!("query auth {}", uri);
 
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
@@ -122,7 +122,7 @@ impl Component {
             Ok(res) => match serde_json::from_str(&res) {
                 Ok(v) => {
                     let dic: Value = v;
-                    println!("auth ::: ==== {:?}", dic);
+                    // println!("auth ::: ==== {:?}", dic);
                     Ok(dic)
                 }
                 Err(_) => Err(WeChatError::InvalidValue),

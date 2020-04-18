@@ -3,6 +3,10 @@
 
 #[macro_use]
 extern crate actix_web;
+
+#[macro_use]
+extern crate wechat_sdk;
+
 use std::{env, io};
 use actix_web::http::{StatusCode};
 use actix_web::{
@@ -10,9 +14,11 @@ use actix_web::{
 };
 
 mod utils;
+mod wx_msg;
 mod wx_handler;
 mod config;
 mod result_response;
+
 use wechat_sdk::tripartite::Ticket;
 
 #[get("/")]

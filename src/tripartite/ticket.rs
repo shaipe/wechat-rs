@@ -94,7 +94,6 @@ impl Ticket {
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
         match c.decrypt_message(xml, &query_params) {
             Ok(v) => {
-                // println!("{:?}", v);
                 let package = xmlutil::parse(v);
                 let doc = package.as_document();
                 let ticketstr =
@@ -139,7 +138,7 @@ impl Ticket {
         if expires_at <= timestamp {
             let c = Component::new(conf);
             let result = c.fetch_access_token().await;
-            println!("result={:?},access_ticket={:?}", result, self.access_ticket);
+            // println!("result={:?},access_ticket={:?}", result, self.access_ticket);
             match result {
                 Ok(token) => {
                     self.access_token = token.0.clone();

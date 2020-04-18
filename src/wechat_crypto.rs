@@ -11,8 +11,8 @@ use crypto::{aes, blockmodes, buffer, symmetriccipher};
 use std::collections::HashMap;
 use std::io::Cursor;
 
-use rand::thread_rng;
-use rand::Rng;
+// use rand::thread_rng;
+// use rand::Rng;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct WeChatCrypto {
@@ -90,7 +90,7 @@ impl WeChatCrypto {
             return Err(WeChatError::InvalidSignature);
         }
         let msg = self.decrypt(&encrypted_msg)?;
-        println!("######### decode message ########## \n{}",msg);
+        logs!(format!("######### decode message ########## \n{}",msg));
         Ok(msg)
     }
 
@@ -112,18 +112,23 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
-    //随机数
-    fn get_random_string(&self) -> String {
-        if cfg!(test) {
-            "1234567890123456".to_owned()
-        } else {
-           thread_rng().gen_ascii_chars().take(16).collect()
-        }
-    }
+
+    // //随机数
+    // fn get_random_string(&self) -> String {
+    //     if cfg!(test) {
+    //         "1234567890123456".to_owned()
+    //     } else {
+    //        thread_rng().gen_ascii_chars().take(16).collect()
+    //     }
+    // }
 
     /// 对消息进行加密
     pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
-        let mut wtr = self.get_random_string().into_bytes();
+        let rnd_str = get_random_string(16);
+        let mut wtr = rnd_str.clone().into_bytes();
+
+        logs!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
+
         //采用低位编址
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
         wtr.extend(msg.bytes());
@@ -135,11 +140,11 @@ impl WeChatCrypto {
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
-            "<xml>
-            <Encrypt><![CDATA[{encrypt}]]></Encrypt>
-            <MsgSignature><![CDATA[{signature}]]></MsgSignature>
-            <TimeStamp>{timestamp}</TimeStamp>
-            <Nonce><![CDATA[{nonce}]]></Nonce>
+            "<xml>\n\
+            <Encrypt><![CDATA[{encrypt}]]></Encrypt>\n\
+            <MsgSignature><![CDATA[{signature}]]></MsgSignature>\n\
+            <TimeStamp>{timestamp}</TimeStamp>\n\
+            <Nonce><![CDATA[{nonce}]]></Nonce>\n\
             </xml>",
             encrypt=b64encoded,
             signature=signature,
@@ -147,9 +152,29 @@ impl WeChatCrypto {
             nonce=nonce,
         );
 
-        println!("#################### encode message #####################\n{}", msg);
+        logs!(format!("#################### encode message #####################\n{}", msg));
         Ok(msg)
     }
+}
+
+/// 获取随机字符串
+fn get_random_string(length: usize) -> String {
+    use rand::Rng;
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                            abcdefghijklmnopqrstuvwxyz\
+                            0123456789"; // )(*&^%$#@!~
+    let rnd_len: usize = length;
+    let mut rng = rand::thread_rng();
+
+    let rnd_string: String = (0..rnd_len)
+        .map(|_| {
+            let idx = rng.gen_range(0, CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect();
+    
+    rnd_string
+    
 }
 
 /// 从HashMap中取值

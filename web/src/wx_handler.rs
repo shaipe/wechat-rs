@@ -32,11 +32,11 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    println!(
+    logs!(format!(
         " ^^^^^^^^^^^ Ticket :  url_param: {:?} \n post_str: {:?}",
         req.query_string(),
         post_str
-    );
+    ));
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
@@ -281,7 +281,7 @@ pub async fn callback(
 ) -> Result<HttpResponse> {
     let dic = utils::parse_query(req.query_string());
     let post_str = utils::get_request_body(payload).await;
-    println!("--- callback ---- {:?}, {:?}", dic, post_str);
+    logs!(format!("--- callback ---- {:?}, {:?}", dic, post_str));
 
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密
@@ -336,7 +336,7 @@ pub async fn callback(
                             &format!("{}_callback", &m.content),
                         );
                         let txt = tr.render();
-                        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+                        logs!(format!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt));
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
 
@@ -354,94 +354,27 @@ pub async fn callback(
                         let txt = tr.render();
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
+                        logs!(format!("---- send OTHER xml :{}", txt));
                         return Ok(HttpResponse::build(StatusCode::OK)
                             .content_type("text/xml; charset=utf-8")
                             .body(encrypt_text.unwrap()));
                     }
                 }
                 Message::EventMessage(ref m) => {
-                    println!("**** EVENT *** {:?}", m);
+                    logs!(format!("**** EVENT *** {:?}", m));
                 }
                 Message::UnknownMessage(ref m) => {
-                    println!("**** Unknown *** {:?}", m);
+                    logs!(format!("**** Unknown *** {:?}", m));
                 }
             }
+        }
+        else{
+            use super::wx_msg;
+            return wx_msg::message_reply(&msg).await;
         }
     }
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body("success"))
-}
-
-/// 全网发布处理
-async fn publish_deal(
-    config: TripartiteConfig,
-    c: WeChatCrypto,
-    m: &TextMessage,
-    nonce: String,
-) -> HttpResponse {
-    // 公网发布的授权消息处理
-    if m.content.starts_with("QUERY_AUTH_CODE:") {
-        let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-
-        let comp = Component::new(config);
-        // 根据授权码获取公众号对应的accesstoken
-        match comp.query_auth(&auth_code).await {
-            Ok(v) => {
-                // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
-                if v["authorization_info"].is_object() {
-                    let auth_access_token =
-                        match v["authorization_info"]["authorizer_access_token"].as_str() {
-                            Some(token) => token.to_string(),
-                            None => "".to_owned(),
-                        };
-                    let kf = KFService::new(&auth_access_token);
-
-                    kf.send(
-                        &m.from_user,
-                        &"text".to_string(),
-                        &format!("{}_from_api", auth_code),
-                    )
-                    .await;
-                }
-            }
-            Err(e) => println!("{:?}", e),
-        };
-    }
-    // 文本消息回复处理
-    else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
-        let tr = TextReply::new(
-            &m.to_user,
-            &m.from_user,
-            &format!("{}_callback", &m.content),
-        );
-        let txt = tr.render();
-        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
-        let timestamp = current_timestamp();
-        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-        return HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(encrypt_text.unwrap());
-    }
-    //其他消息
-    else {
-        let tr = TextReply::new(
-            &m.to_user,
-            &m.from_user,
-            &format!("{}_callback", &m.content),
-        );
-        let txt = tr.render();
-        let timestamp = current_timestamp();
-        let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-        println!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
-        return HttpResponse::build(StatusCode::OK)
-            .content_type("text/xml; charset=utf-8")
-            .body(encrypt_text.unwrap());
-    }
-
-    return HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body("success");
 }

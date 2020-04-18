@@ -40,11 +40,11 @@ impl KFService {
         msg_type.as_ref().to_string(),
         content.as_ref().to_string());
         
-        println!("send kf url:: {} content :: {:?}", api_url, params);
+        logs!(format!("send kf url:: {} content :: {:?}", api_url, params));
         
         match Client::new().post(&api_url, &params).await {
             Ok(v) => {
-                println!("success {:?}", v);
+                logs!(format!("success {:?}", v));
             }
             Err(e) => println!("error {:?}", e)
         }
