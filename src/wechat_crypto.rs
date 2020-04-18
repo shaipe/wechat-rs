@@ -125,9 +125,9 @@ impl WeChatCrypto {
     /// 对消息进行加密
     pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
         let rnd_str = get_random_string(16);
-        let mut wtr = rnd_str.clone().into_bytes();
+        let mut wtr = rnd_str.into_bytes();
 
-        logs!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
+        // logs!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
 
         //采用低位编址
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
@@ -158,6 +158,7 @@ impl WeChatCrypto {
 }
 
 /// 获取随机字符串
+#[allow(dead_code)]
 fn get_random_string(length: usize) -> String {
     use rand::Rng;
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

@@ -325,7 +325,7 @@ pub async fn callback(
                                     .await;
                                 }
                             }
-                            Err(e) => println!("{:?}", e),
+                            Err(e) => logs!(format!("query auth_code error: {:?}", e)),
                         };
                     }
                     // 文本消息回复处理
