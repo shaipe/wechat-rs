@@ -24,21 +24,21 @@ impl KFService {
         // params.insert("touser".to_string(), to_user.as_ref().to_string());
         // params.insert("msgtype".to_string(), msg_type.as_ref().to_string());
         // params.insert(msg_type.as_ref().to_string(), content.as_ref().to_string());
-        // let params = json!({
-        //     "touser": to_user.as_ref().to_string(),
-        //     "msgtype": msg_type.as_ref().to_string(),
-        //     msg_type.as_ref().to_string(): {
-        //         "content": content.as_ref().to_string()
-        //     }
-        // });
-        let params=format!(r#"{{
-            "touser":"{}",
-            "msgtype":"{}",
-            "{}":{{"content":"{}"}}
-        }}"#,to_user.as_ref().to_string(),
-        msg_type.as_ref().to_string(),
-        msg_type.as_ref().to_string(),
-        content.as_ref().to_string());
+        let params = json!({
+            "touser": to_user.as_ref().to_string(),
+            "msgtype": msg_type.as_ref().to_string(),
+            msg_type.as_ref().to_string(): {
+                "content": content.as_ref().to_string()
+            }
+        });
+        // let params=format!(r#"{{
+        //     "touser":"{}",
+        //     "msgtype":"{}",
+        //     "{}":{{"content":"{}"}}
+        // }}"#,to_user.as_ref().to_string(),
+        // msg_type.as_ref().to_string(),
+        // msg_type.as_ref().to_string(),
+        // content.as_ref().to_string());
         
         logs!(format!("send kf url:: {} content :: {:?}", api_url, params));
         
