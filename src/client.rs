@@ -7,6 +7,7 @@ use reqwest::Client as HttpClient;
 use std::time::Duration;
 // use std::collections::HashMap;
 use serde::Serialize;
+use serde_json::Value;
 
 /// 请求客户端
 pub(crate) struct Client {
@@ -81,4 +82,20 @@ impl Client {
             }),
         }
     }
+    #[inline]
+    pub fn json_decode(&self,data:&str) -> WeChatResult<serde_json::Value> {
+        let obj:serde_json::Value = match serde_json::from_str(data) {
+            Ok(decoded) => { decoded },
+            Err(ref e) => {
+                return Err(WeChatError::ClientError { errcode: -3, errmsg: format!("Json decode error: {}", e) });
+            }
+        };
+        let errcode = obj["errcode"].as_i64().unwrap(); 
+        if errcode != 0 {
+            let errmsg:String = obj["errmsg"].to_string();
+            return Err(WeChatError::ClientError { errcode: errcode as i32, errmsg: errmsg });
+        }
+        Ok(obj)
+    }
+
 }

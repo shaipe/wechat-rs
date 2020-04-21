@@ -38,24 +38,18 @@ impl Component {
             "component_verify_ticket".to_string(),
             self.ticket.access_ticket.clone(),
         );
-
-        match Client::new().post(&url, &hash).await {
-            Ok(res) => match serde_json::from_str(&res) {
-                Ok(v) => {
-                    let dic: Value = v;
-                    logs!(format!(
-                        "component access {:?}, ticket: {:?}",
-                        dic,
-                        self.ticket.access_ticket.clone()
-                    ));
-                    if let Some(token) = dic["component_access_token"].as_str() {
-                        let expires_at: i64 = current_timestamp() + 7000;
-                        Ok((token.to_string(), expires_at))
-                    } else {
-                        Err(WeChatError::InvalidValue)
-                    }
-                }
-                Err(_) => Err(WeChatError::InvalidValue),
+        let api=Client::new();
+        match api.post(&url, &hash).await {
+            Ok(res) =>{
+                let data = match api.json_decode(&res) {
+                    Ok(_data) => _data,
+                    Err(err) => {
+                        return Err(err);
+                    },
+                };
+                 //asscess_token
+                let token = data["component_access_token"].to_string();
+                Ok((token,7000))
             },
             Err(err) => Err(err),
         }
@@ -76,32 +70,31 @@ impl Component {
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
-
-        match Client::new().post(&uri, &hash).await {
+        let api=Client::new();
+        match api.post(&uri, &hash).await {
             Ok(res) => {
-                match serde_json::from_str(&res) {
-                Ok(v) => {
-                    let v: Value = v;
-                    if let Some(code) = v["pre_auth_code"].as_str() {
-                        Ok(code.to_string())
-                    } else {
-                        Err(WeChatError::InvalidValue)
-                    }
-                }
-                Err(_) => Err(WeChatError::InvalidValue),
-            }
-        },
+                let data = match api.json_decode(&res) {
+                    Ok(_data) => _data,
+                    Err(err) => {
+                        if let WeChatError::ClientError { errcode, .. } = err {
+                            if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                                self.fetch_access_token().await?;
+                                return Err(err);
+                            } else {
+                                return Err(err);
+                            }
+                        } else {
+                            return Err(err);
+                        }
+                    },
+                };
+        
+                 //pre_auth_code
+                 let pre_auth_code =data["pre_auth_code"].to_string();
+                 Ok(pre_auth_code)
+            },
             Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
+                return Err(err);
             }
         }
     }
@@ -124,17 +117,35 @@ impl Component {
         hash.insert("component_appid".to_string(), conf.app_id.clone());
         hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
         //post
-        match Client::new().post(&uri, &hash).await {
-            Ok(res) => match serde_json::from_str(&res) {
-                Ok(v) => {
-                    let dic: Value = v;
-                    // println!("auth ::: ==== {:?}", dic);
-                    Ok(dic)
+        let api=Client::new();
+        let res=api.post(&uri, &hash).await?;
+        let data = match api.json_decode(&res) {
+            Ok(_data) => _data,
+            Err(err) => {
+                if let WeChatError::ClientError { errcode, .. } = err {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                        self.fetch_access_token().await?;
+                        return Err(err);
+                    } else {
+                        return Err(err);
+                    }
+                } else {
+                    return Err(err);
                 }
-                Err(_) => Err(WeChatError::InvalidValue),
             },
-            Err(e) => Err(e),
-        }
+        };
+        Ok(data)
+        // match api.post(&uri, &hash).await {
+        //     Ok(res) => match serde_json::from_str(&res) {
+        //         Ok(v) => {
+        //             let dic: Value = v;
+        //             // println!("auth ::: ==== {:?}", dic);
+        //             Ok(dic)
+        //         }
+        //         Err(_) => Err(WeChatError::InvalidValue),
+        //     },
+        //     Err(e) => Err(e),
+        // }
     }
 
     /// 获取或者刷新指定小程序或公众号的授权token
@@ -156,28 +167,45 @@ impl Component {
             "authorizer_refresh_token".to_string(),
             refresh_token.to_string(),
         );
-
-        match Client::new().post(&url, &hash).await {
-            Ok(res) => {
-                println!("====res === {:?}", res);
-                match serde_json::from_str(&res) {
-                    Ok(v) => {
-                        let v: Value = v;
-                        let acc_token = match v["authorizer_access_token"].as_str() {
-                            Some(v) => v,
-                            None => "",
-                        };
-                        let ref_token = match v["authorizer_refresh_token"].as_str() {
-                            Some(v) => v,
-                            None => "",
-                        };
-                        Ok((acc_token.to_string(), ref_token.to_string()))
+        let api=Client::new();
+        let res=api.post(&url, &hash).await?;
+        let data = match api.json_decode(&res) {
+            Ok(_data) => _data,
+            Err(err) => {
+                if let WeChatError::ClientError { errcode, .. } = err {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                        self.fetch_access_token().await?;
+                        return Err(err);
+                    } else {
+                        return Err(err);
                     }
-                    Err(_) => Err(WeChatError::InvalidValue),
+                } else {
+                    return Err(err);
                 }
-            }
-            Err(e) => Err(e),
-        }
+            },
+        };
+        let acc_token=data["authorizer_access_token"].to_string();
+        let ref_token = data["authorizer_refresh_token"].to_string();
+        Ok((acc_token.to_string(), ref_token.to_string()))
+
+        // match Client::new().post(&url, &hash).await {
+        //     Ok(res) => match serde_json::from_str(&res) {
+        //         Ok(v) => {
+        //             let v: Value = v;
+        //             let acc_token = match v["authorizer_access_token"].as_str() {
+        //                 Some(v) => v,
+        //                 None => "",
+        //             };
+        //             let ref_token = match v["authorizer_refresh_token"].as_str() {
+        //                 Some(v) => v,
+        //                 None => "",
+        //             };
+        //             Ok((acc_token.to_string(), ref_token.to_string()))
+        //         }
+        //         Err(_) => Err(WeChatError::InvalidValue),
+        //     },
+        //     Err(e) => Err(e),
+        // }
     }
 
     /// 获取授权信息
