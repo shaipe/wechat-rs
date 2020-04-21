@@ -90,5 +90,14 @@ component_access_token	第三方平台 access_token
 -- api 请求域名
 alter table   soc_tripartite add APIDomain VARCHAR(200) not Null
 2）、更新extjson并保存第三方配置
-3、布署时，布署几套快马，而且每套服务器分布式布署，主要是检测第三方access_token是否共用，授权后供应商迁移后，是否授权客户能正常使用；
+3、布署时，布署几套快马，而且每套服务器分布式布署
+
+需要测试的点
+
+检测第三方access_token是否共用，已经授权过的客户能正常使用；
+后台公众号/小程序授权；
+小程序发布；
+网页授权；
+以及检测h5微信相关的操作；
+
 ```
