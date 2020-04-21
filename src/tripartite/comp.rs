@@ -4,7 +4,7 @@
 use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};
-use crate::{current_timestamp, Client, WeChatError, WeChatResult};
+use crate::{Client, WeChatError, WeChatResult};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -38,19 +38,19 @@ impl Component {
             "component_verify_ticket".to_string(),
             self.ticket.access_ticket.clone(),
         );
-        let api=Client::new();
+        let api = Client::new();
         match api.post(&url, &hash).await {
-            Ok(res) =>{
+            Ok(res) => {
                 let data = match api.json_decode(&res) {
                     Ok(_data) => _data,
                     Err(err) => {
                         return Err(err);
-                    },
+                    }
                 };
-                 //asscess_token
+                //asscess_token
                 let token = data["component_access_token"].to_string();
-                Ok((token,7000))
-            },
+                Ok((token, 7000))
+            }
             Err(err) => Err(err),
         }
     }
@@ -70,7 +70,7 @@ impl Component {
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
-        let api=Client::new();
+        let api = Client::new();
         match api.post(&uri, &hash).await {
             Ok(res) => {
                 let data = match api.json_decode(&res) {
@@ -86,13 +86,13 @@ impl Component {
                         } else {
                             return Err(err);
                         }
-                    },
+                    }
                 };
-        
-                 //pre_auth_code
-                 let pre_auth_code =data["pre_auth_code"].to_string();
-                 Ok(pre_auth_code)
-            },
+
+                //pre_auth_code
+                let pre_auth_code = data["pre_auth_code"].to_string();
+                Ok(pre_auth_code)
+            }
             Err(err) => {
                 return Err(err);
             }
@@ -117,8 +117,8 @@ impl Component {
         hash.insert("component_appid".to_string(), conf.app_id.clone());
         hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
         //post
-        let api=Client::new();
-        let res=api.post(&uri, &hash).await?;
+        let api = Client::new();
+        let res = api.post(&uri, &hash).await?;
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
@@ -132,7 +132,7 @@ impl Component {
                 } else {
                     return Err(err);
                 }
-            },
+            }
         };
         Ok(data)
         // match api.post(&uri, &hash).await {
@@ -167,8 +167,8 @@ impl Component {
             "authorizer_refresh_token".to_string(),
             refresh_token.to_string(),
         );
-        let api=Client::new();
-        let res=api.post(&url, &hash).await?;
+        let api = Client::new();
+        let res = api.post(&url, &hash).await?;
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
@@ -182,9 +182,9 @@ impl Component {
                 } else {
                     return Err(err);
                 }
-            },
+            }
         };
-        let acc_token=data["authorizer_access_token"].to_string();
+        let acc_token = data["authorizer_access_token"].to_string();
         let ref_token = data["authorizer_refresh_token"].to_string();
         Ok((acc_token.to_string(), ref_token.to_string()))
 
