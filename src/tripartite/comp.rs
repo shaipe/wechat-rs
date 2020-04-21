@@ -43,7 +43,11 @@ impl Component {
             Ok(res) => match serde_json::from_str(&res) {
                 Ok(v) => {
                     let dic: Value = v;
-                    logs!(format!("component access {:?}, ticket: {:?}", dic, self.ticket.access_ticket.clone()));
+                    logs!(format!(
+                        "component access {:?}, ticket: {:?}",
+                        dic,
+                        self.ticket.access_ticket.clone()
+                    ));
                     if let Some(token) = dic["component_access_token"].as_str() {
                         let expires_at: i64 = current_timestamp() + 7000;
                         Ok((token.to_string(), expires_at))
@@ -74,7 +78,8 @@ impl Component {
         hash.insert("component_appid".to_string(), conf.app_id.clone());
 
         match Client::new().post(&uri, &hash).await {
-            Ok(res) => match serde_json::from_str(&res) {
+            Ok(res) => {
+                match serde_json::from_str(&res) {
                 Ok(v) => {
                     let v: Value = v;
                     if let Some(code) = v["pre_auth_code"].as_str() {
@@ -84,7 +89,8 @@ impl Component {
                     }
                 }
                 Err(_) => Err(WeChatError::InvalidValue),
-            },
+            }
+        },
             Err(err) => {
                 if let WeChatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
@@ -152,21 +158,24 @@ impl Component {
         );
 
         match Client::new().post(&url, &hash).await {
-            Ok(res) => match serde_json::from_str(&res) {
-                Ok(v) => {
-                    let v: Value = v;
-                    let acc_token = match v["authorizer_access_token"].as_str() {
-                        Some(v) => v,
-                        None => "",
-                    };
-                    let ref_token = match v["authorizer_refresh_token"].as_str() {
-                        Some(v) => v,
-                        None => "",
-                    };
-                    Ok((acc_token.to_string(), ref_token.to_string()))
+            Ok(res) => {
+                println!("====res === {:?}", res);
+                match serde_json::from_str(&res) {
+                    Ok(v) => {
+                        let v: Value = v;
+                        let acc_token = match v["authorizer_access_token"].as_str() {
+                            Some(v) => v,
+                            None => "",
+                        };
+                        let ref_token = match v["authorizer_refresh_token"].as_str() {
+                            Some(v) => v,
+                            None => "",
+                        };
+                        Ok((acc_token.to_string(), ref_token.to_string()))
+                    }
+                    Err(_) => Err(WeChatError::InvalidValue),
                 }
-                Err(_) => Err(WeChatError::InvalidValue),
-            },
+            }
             Err(e) => Err(e),
         }
     }
@@ -192,7 +201,11 @@ impl Component {
     /// 拉取所有已授权的帐号信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_list.html
     /// returns: (count, vec<appid, refresh_token, auth_time>)
-    pub async fn fetch_auth_list(&self, offset: i64, count: i64) -> WeChatResult<(i64, Vec<(String, String, i64)>)> {
+    pub async fn fetch_auth_list(
+        &self,
+        offset: i64,
+        count: i64,
+    ) -> WeChatResult<(i64, Vec<(String, String, i64)>)> {
         let conf = self.config.clone();
         let mut ticket = get_ticket();
         let acc_token = ticket.get_token(conf.clone()).await;
@@ -200,7 +213,6 @@ impl Component {
             "{}/cgi-bin/component/api_get_authorizer_list?component_access_token={}",
             API_DOMAIN, acc_token
         );
-        
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
         hash.insert("offset".to_string(), offset.to_string());
@@ -220,7 +232,7 @@ impl Component {
                                 let auth_time = x["auth_time"].as_i64().unwrap();
                                 list.push((appid.to_string(), ref_token.to_string(), auth_time))
                             }
-                        },
+                        }
                         None => {}
                     }
                     // println!("{:?}", v);

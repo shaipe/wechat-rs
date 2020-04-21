@@ -100,7 +100,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
             //println!("base_query={:?}",base_query);
             let path = c.component_login_page(
                 &code,
-                &format!("{}/official_auth_calback?q={}", config.domain, base_query),
+                &format!("{}/wx/official_auth_calback?q={}", config.domain, base_query),
                 app_type,
             );
             //println!("path={:?}", path);
@@ -110,7 +110,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         }
         Err(e) => Ok(HttpResponse::build(StatusCode::OK)
             .content_type("text/html; charset=utf-8")
-            .body(format!("{}", e))),
+            .body(format!("error {}", e))),
     }
 }
 /// 公众号授权回调

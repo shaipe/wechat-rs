@@ -32,7 +32,10 @@ impl Client {
             Ok(res) => {
                 if res.status() == 200 {
                     match res.text().await {
-                        Ok(txt) => Ok(txt),
+                        Ok(txt) => {
+                            println!("--- {} ----", txt);
+                            Ok(txt)
+                        }
                         Err(e) => Err(WeChatError::ClientError {
                             errcode: -1,
                             errmsg: format!("Send request error: {}", e),
@@ -78,5 +81,4 @@ impl Client {
             }),
         }
     }
-
 }
