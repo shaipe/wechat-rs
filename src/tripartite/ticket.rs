@@ -119,7 +119,7 @@ impl Ticket {
 
         // 读取文件到字符串变量
         let str_val = json!(self).to_string();
-        println!("path={:?}", str_val);
+        // println!("path={:?}", str_val);
         match file.write_all(str_val.as_bytes()) {
             Ok(s) => {
                 set_ticket(self.clone());
@@ -146,8 +146,6 @@ impl Ticket {
                 Ok(token) => {
                     self.access_token = token.0.clone();
                     self.at_expired_time = token.1;
-                    set_ticket(self.clone());
-                    self.save("");
                     token.0
                 }
                 Err(_) => "".to_owned(),

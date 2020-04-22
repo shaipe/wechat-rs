@@ -44,7 +44,6 @@ pub async fn receive_ticket(
             let mut ticket = get_ticket();
             ticket.access_ticket = t;
             ticket.save("");
-            set_ticket(ticket);
         }
     };
 
