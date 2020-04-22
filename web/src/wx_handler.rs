@@ -91,27 +91,33 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let token = ticket.get_token(config.clone()).await;
     //println!("access_token={:?}", token);
     let c = Component::new(config.clone());
-
-    match c.create_preauthcode(&token).await {
-        Ok(code) => {
-            // println!("code={:?}", code);
-            use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-            let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
-            //println!("base_query={:?}",base_query);
-            let path = c.component_login_page(
-                &code,
-                &format!("{}/wx/official_auth_calback?q={}", config.domain, base_query),
-                app_type,
-            );
-            //println!("path={:?}", path);
-            Ok(HttpResponse::build(StatusCode::FOUND)
-                .header(http::header::LOCATION, path)
-                .body(""))
+    let result_code=match c.create_preauthcode(&token).await { 
+        Ok(code) => {code},
+        Err(e)=>{
+            match c.create_preauthcode(&token).await { 
+                Ok(code) => {code},
+                Err(e)=>{
+                    return  Ok(HttpResponse::build(StatusCode::OK)
+                    .content_type("text/html; charset=utf-8")
+                    .body(format!("error {}", e)))
+                }
+            }
         }
-        Err(e) => Ok(HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(format!("error {}", e))),
-    }
+    };
+
+    // println!("code={:?}", code);
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
+    //println!("base_query={:?}",base_query);
+    let path = c.component_login_page(
+        &result_code,
+        &format!("{}/wx/official_auth_calback?q={}", config.domain, base_query),
+        app_type,
+    );
+    //println!("path={:?}", path);
+    Ok(HttpResponse::build(StatusCode::FOUND)
+        .header(http::header::LOCATION, path)
+        .body(""))
 }
 /// 公众号授权回调
 #[get("/wx/official_auth_calback")]

@@ -104,6 +104,7 @@ impl Client {
                 errmsg: errmsg,
             });
         }
+        println!("obj====={:?}",obj);
         Ok(obj)
     }
 }

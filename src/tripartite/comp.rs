@@ -47,7 +47,11 @@ impl Component {
             }
         };
         //asscess_token
-        let token = data["component_access_token"].to_string();
+        let token = match data["component_access_token"].as_str(){
+            Some(v)=>v.to_owned(),
+            None=>"".to_owned()
+        };
+        println!("{:?}",data);
         let mut t=self.ticket.clone();
         t.access_token=token.clone();
         t.at_expired_time=current_timestamp() + 7000;
