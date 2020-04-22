@@ -39,20 +39,20 @@ impl Component {
             self.ticket.access_ticket.clone(),
         );
         let api = Client::new();
-        match api.post(&url, &hash).await {
-            Ok(res) => {
-                let data = match api.json_decode(&res) {
-                    Ok(_data) => _data,
-                    Err(err) => {
-                        return Err(err);
-                    }
-                };
-                //asscess_token
-                let token = data["component_access_token"].to_string();
-                Ok((token, current_timestamp() + 7000))
+        let res= api.post(&url, &hash).await?;
+        let data = match api.json_decode(&res) {
+            Ok(_data) => _data,
+            Err(err) => {
+                return Err(err);
             }
-            Err(err) => Err(err),
-        }
+        };
+        //asscess_token
+        let token = data["component_access_token"].to_string();
+        let mut t=self.ticket.clone();
+        t.access_token=token.clone();
+        t.at_expired_time=current_timestamp() + 7000;
+        t.save("");
+        Ok((token, t.at_expired_time))
     }
 
     /// 生成预授权码
@@ -67,36 +67,32 @@ impl Component {
             )
         );
         logs!(format!("uri::: {}", uri));
+
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
         let api = Client::new();
-        match api.post(&uri, &hash).await {
-            Ok(res) => {
-                let data = match api.json_decode(&res) {
-                    Ok(_data) => _data,
-                    Err(err) => {
-                        if let WeChatError::ClientError { errcode, .. } = err {
-                            if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                                self.fetch_access_token().await?;
-                                return Err(err);
-                            } else {
-                                return Err(err);
-                            }
-                        } else {
-                            return Err(err);
-                        }
-                    }
-                };
-
-                //pre_auth_code
-                let pre_auth_code = data["pre_auth_code"].to_string();
-                Ok(pre_auth_code)
-            }
+        let res = api.post(&uri, &hash).await?;
+        println!("uri::: {:?}", res);
+        let data = match api.json_decode(&res) {
+            Ok(_data) => _data,
             Err(err) => {
-                return Err(err);
+                if let WeChatError::ClientError { errcode, .. } = err {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                        self.fetch_access_token().await?;
+                        return Err(err);
+                    } else {
+                        return Err(err);
+                    }
+                } else {
+                    return Err(err);
+                }
             }
-        }
+        };
+
+        //pre_auth_code
+        let pre_auth_code = data["pre_auth_code"].to_string();
+        Ok(pre_auth_code)
     }
 
     /// 查询授权
