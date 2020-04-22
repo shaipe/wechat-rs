@@ -95,8 +95,12 @@ impl Component {
         };
 
         //pre_auth_code
-        let pre_auth_code = data["pre_auth_code"].to_string();
-        Ok(pre_auth_code)
+        let pre_auth_code = match data["pre_auth_code"].as_str(){
+            Some(v)=>v,
+            None=>""
+        };
+
+        Ok(pre_auth_code.to_owned())
     }
 
     /// 查询授权
@@ -184,8 +188,16 @@ impl Component {
                 }
             }
         };
-        let acc_token = data["authorizer_access_token"].to_string();
-        let ref_token = data["authorizer_refresh_token"].to_string();
+        let acc_token = match data["authorizer_access_token"].as_str(){
+            Some(v)=>v,
+            None=>""
+        };
+        let ref_token = match data["authorizer_refresh_token"].as_str(){
+            Some(v)=>v,
+            None=>""
+        };
+        // let acc_token = data["authorizer_access_token"].to_string();
+        // let ref_token = data["authorizer_refresh_token"].to_string();
         Ok((acc_token.to_string(), ref_token.to_string()))
 
         // match Client::new().post(&url, &hash).await {
