@@ -121,7 +121,10 @@ impl Ticket {
         let str_val = json!(self).to_string();
         println!("path={:?}", str_val);
         match file.write_all(str_val.as_bytes()) {
-            Ok(s) => s,
+            Ok(s) => {
+                set_ticket(self.clone());
+                s
+            },
             Err(e) => panic!("Error Reading file:{}", e),
         };
     }

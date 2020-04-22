@@ -94,6 +94,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let result_code=match c.create_preauthcode(&token).await { 
         Ok(code) => {code},
         Err(e)=>{
+            let mut ticket = get_ticket();
             let token = ticket.get_token(config.clone()).await;
             match c.create_preauthcode(&token).await { 
                 Ok(code) => {code},
