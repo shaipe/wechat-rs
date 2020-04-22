@@ -22,3 +22,4 @@ serde_derive = "1.0.106"
 base64 = "0.12.0"
 wechat-sdk={path="../", version="0.1.0"}
 json = "0.12.4"
+url = "2.1.1"
