@@ -23,10 +23,9 @@ impl Client {
                 .unwrap(),
         }
     }
-    
     /// post方式提交数据
-    /// url: 
-    /// param: 
+    /// url:
+    /// param:
     pub async fn post<T: Serialize + ?Sized>(&self, url: &str, params: &T) -> WeChatResult<String> {
         match self.client.post(url).json(params).send().await {
             Ok(res) => {
@@ -82,7 +81,7 @@ impl Client {
         }
     }
 
-    /// 
+    ///
     #[inline]
     pub fn json_decode(&self, data: &str) -> WeChatResult<serde_json::Value> {
         let obj: serde_json::Value = match serde_json::from_str(data) {
@@ -94,7 +93,10 @@ impl Client {
                 });
             }
         };
-        let errcode = obj["errcode"].as_i64().unwrap();
+        let errcode = match obj["errcode"].as_i64() {
+            Some(v) => v,
+            None => 0,
+        };
         if errcode != 0 {
             let errmsg: String = obj["errmsg"].to_string();
             return Err(WeChatError::ClientError {
