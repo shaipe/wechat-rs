@@ -4,7 +4,7 @@
 use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};
-use crate::{Client, WeChatError, WeChatResult};
+use crate::{current_timestamp, Client, WeChatError, WeChatResult};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -49,7 +49,7 @@ impl Component {
                 };
                 //asscess_token
                 let token = data["component_access_token"].to_string();
-                Ok((token, 7000))
+                Ok((token, current_timestamp() + 7000))
             }
             Err(err) => Err(err),
         }
