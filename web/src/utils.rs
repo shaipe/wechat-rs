@@ -60,6 +60,7 @@ pub fn get_ip(req: &HttpRequest) -> String {
     "127.0.0.1".to_owned()
 }
 
+/// 从Hashmap中取值
 pub fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
     match query_params.get(key) {
         Some(val) => val.clone(),

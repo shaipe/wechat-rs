@@ -161,6 +161,18 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
         .body(""))
 }
 
+/// 业务系统在完成授权以后把appid和对应的服务器机组域名回传
+#[post("/wx/offical")]
+async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+    use crate::cluster::{add_domain};
+    let post_str = utils::get_request_body(payload).await;
+    let dic = utils::parse_query(&post_str);
+    let app_id = utils::get_hash_value(&dic, "appid");
+    let domain = utils::get_hash_value(&dic, "domain");
+    add_domain(app_id, domain);
+    get_success_result("success")
+}
+
 #[post("/wx/test")]
 async fn test(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let dic = utils::parse_query(req.query_string());
@@ -289,14 +301,14 @@ pub async fn callback(
 ) -> Result<HttpResponse> {
     use super::wx_msg;
     let app_id = &path.0;
-    println!(" === app_id ===  {}", app_id);
+    // println!(" === app_id ===  {}", app_id);
     // 全网发布
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
         let dic = utils::parse_query(req.query_string());
         let post_str = utils::get_request_body(payload).await;
         wx_msg::global_publish(dic, post_str).await
     } else { // 业务系统处理
-        println!("proxy");
+        // println!("proxy");
         wx_msg::proxy_reply(app_id, req, body, client).await
     }
 }

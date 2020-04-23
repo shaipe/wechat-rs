@@ -7,6 +7,9 @@ extern crate actix_web;
 #[macro_use]
 extern crate wechat_sdk;
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::{env, io};
 use actix_web::http::{StatusCode};
 use actix_web::client::Client;
@@ -15,10 +18,12 @@ use actix_web::{
 };
 
 mod utils;
+mod cluster;
 mod wx_msg;
 mod wx_handler;
 mod config;
 mod result_response;
+use cluster::load_cluster;
 
 use wechat_sdk::tripartite::Ticket;
 
@@ -36,6 +41,9 @@ async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
 async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
+
+    // 加载应用id与域名的映射信息
+    load_cluster("");
     
     let conf = config::Config::new("");
     Ticket::new("");
@@ -52,6 +60,7 @@ async fn main() -> io::Result<()> {
             .service(wx_handler::auth_transfer)
             .service(wx_handler::official_auth)
             .service(wx_handler::official_auth_calback)
+            .service(wx_handler::offical_back)
             .service(wx_handler::fetch_component_token)
             .service(wx_handler::fetch_auth_url)
             .service(wx_handler::user_auth_calback)

@@ -4,20 +4,15 @@
 //!
 
 use super::utils;
-use actix_web::http::StatusCode;
 use actix_web::client::Client;
+use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use std::collections::HashMap;
 use url::Url;
 use wechat_sdk::{
     current_timestamp,
-    message::{
-        EventMessage, KFService, Message, ReplyRender, TextMessage, TextReply, UnknownMessage,
-    },
-    official::WechatAuthorize,
-    tripartite::{
-        get_ticket, get_tripartite_config, set_ticket, Component, Ticket, TripartiteConfig,
-    },
+    message::{KFService, Message, ReplyRender, TextReply},
+    tripartite::{get_tripartite_config, Component, TripartiteConfig},
     WeChatCrypto,
 };
 
@@ -56,20 +51,20 @@ pub async fn proxy_reply(
     body: web::Bytes,
     client: web::Data<Client>,
 ) -> Result<HttpResponse> {
+    use crate::cluster::get_domain;
+    let mut domain = get_domain(app_id.to_owned());
 
-    // let new_url = "http://eweew.dsd";
-    // 设置请求的路径,并去掉代理目录前缀
-    // new_url.set_path("/");
-    // new_url.set_query(req.uri().query());
-    // let mut new_url = url.get_ref().clone();
-    // new_url.set_path(req.uri().path());
-    // new_url.set_query(req.uri().query());
-
-    // http://www.366kmpf.com/$APPID$/WxCallback.axd
-    println!("{:?}", req);
+    if domain.is_empty(){
+        domain = "http://366kmpf.com".to_owned();
+    }
 
     // 创建一个可变的url地址
-    let mut new_url = Url::parse(&format!("http://b2b3231.366ec.net/{}/WxCallback.axd", app_id)).unwrap();
+    let mut new_url = Url::parse(&format!(
+        "{}/{}/WxCallback.axd",
+        domain,
+        app_id
+    ))
+    .unwrap();
     new_url.set_query(req.uri().query());
 
     println!("==== url ===={:?}", new_url);
