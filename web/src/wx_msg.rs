@@ -4,7 +4,6 @@
 //!
 
 use super::utils;
-use actix_web::client::Client;
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use std::collections::HashMap;
@@ -34,8 +33,12 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
             //     .content_type("text/xml; charset=utf-8")
             //     .body(encrypt_text.unwrap()));
         }
-        Message::EventMessage(ref m) => {}
-        Message::UnknownMessage(ref m) => {}
+        Message::EventMessage(ref m) => {
+            println!("{:?}", m)
+        }
+        Message::UnknownMessage(ref m) => {
+            println!("{:?}", m)
+        }
     }
 
     Ok(HttpResponse::build(StatusCode::OK)
@@ -80,7 +83,7 @@ pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
 ) -> Result<HttpResponse> {
-    logs!(format!("--- callback ---- {:?}, {:?}", dic, post_str));
+    logs!(format!("--- callback --- {:?}, {:?}", dic, post_str));
 
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密

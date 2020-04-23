@@ -10,9 +10,11 @@ extern crate wechat_sdk;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate log;
+
 use std::{env, io};
 use actix_web::http::{StatusCode};
-use actix_web::client::Client;
 use actix_web::{
     middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result,
 };
@@ -53,7 +55,7 @@ async fn main() -> io::Result<()> {
         App::new()
             // enable logger - always register actix-web Logger middleware last
             .wrap(middleware::Logger::default())
-            .data(Client::new())
+            // .data(Client::new())
             // register simple route, handle all methods
             .service(index_handler)
             .service(wx_handler::receive_ticket)
