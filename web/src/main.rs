@@ -10,9 +10,6 @@ extern crate wechat_sdk;
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
-extern crate log;
-
 use std::{env, io};
 use actix_web::http::{StatusCode};
 use actix_web::{

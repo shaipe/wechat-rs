@@ -12,7 +12,7 @@ macro_rules! logs {
         let now = SystemTime::now();
 
         let file_path = "./logs.log";
-        let content = format!("[{:?}] {}\n", now, $e);
+        let content = format!("[{:?}]\n {}\n", now, $e);
 
         // 以读,写,创建,追加的方式打开文件
         let file = OpenOptions::new()

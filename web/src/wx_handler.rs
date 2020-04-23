@@ -9,10 +9,7 @@ use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use md5;
 use std::collections::HashMap;
 use wechat_sdk::{
-    WeChatCrypto,
     official::WechatAuthorize,
-    current_timestamp,
-    message::{KFService, Message, ReplyRender, TextReply},
     tripartite::{get_ticket, get_tripartite_config, Component, Ticket, TripartiteConfig},
 };
 // use std::thread;
@@ -88,7 +85,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let c = Component::new(config.clone());
     let result_code = match c.create_preauthcode(&token).await {
         Ok(code) => code,
-        Err(e) => {
+        Err(_) => {
             let mut ticket = get_ticket();
             let token = ticket.get_token(config.clone()).await;
             match c.create_preauthcode(&token).await {
@@ -300,8 +297,6 @@ pub async fn callback(
     use super::wx_msg;
     let app_id = &path.0;
 
-    // println!("{:?}", body);
-    // println!(" === app_id ===  {}", app_id);
     // 全网发布
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
         let dic = utils::parse_query(req.query_string());
@@ -310,107 +305,12 @@ pub async fn callback(
             Err(_e) => "",
         };
         logs!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
-
-        let nonce = utils::get_hash_value(&dic, "nonce");
-        // 对获取的消息内容进行解密
-        let conf: TripartiteConfig = get_tripartite_config();
-        let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
-
-        // 对接收的消息进行解码判断
-        if let Ok(decode_msg) = c.decrypt_message(&post_str, &dic) {
-            // println!("=== decode message === {}", decode_msg);
-            let msg = Message::parse(&decode_msg);
-            let to_user = msg.get_to_user();
-
-            // 全网发布时的测试用户
-            if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
-                match msg {
-                    Message::TextMessage(ref m) => {
-                        // 公网发布的授权消息处理
-                        if m.content.starts_with("QUERY_AUTH_CODE:") {
-                            let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-
-                            let comp = Component::new(conf);
-                            // 根据授权码获取公众号对应的accesstoken
-                            match comp.query_auth(&auth_code).await {
-                                Ok(v) => {
-                                    // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
-                                    if v["authorization_info"].is_object() {
-                                        let auth_access_token = match v["authorization_info"]
-                                            ["authorizer_access_token"]
-                                            .as_str()
-                                        {
-                                            Some(token) => token.to_string(),
-                                            None => "".to_owned(),
-                                        };
-                                        let kf = KFService::new(&auth_access_token);
-
-                                        kf.send(
-                                            &m.from_user,
-                                            &"text".to_string(),
-                                            &format!("{}_from_api", auth_code),
-                                        )
-                                        .await;
-                                    }
-                                }
-                                Err(e) => logs!(format!("query auth_code error: {:?}", e)),
-                            };
-                        }
-                        // 文本消息回复处理
-                        else if m.content == "TESTCOMPONENT_MSG_TYPE_TEXT" {
-                            let tr = TextReply::new(
-                                &m.to_user,
-                                &m.from_user,
-                                &format!("{}_callback", &m.content),
-                            );
-                            let txt = tr.render();
-                            logs!(format!(
-                                "---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}",
-                                txt
-                            ));
-                            let timestamp = current_timestamp();
-                            let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-
-                            return Ok(HttpResponse::build(StatusCode::OK)
-                                .content_type("text/html; charset=utf-8")
-                                .body(encrypt_text.unwrap()));
-                        }
-                        //其他消息
-                        else {
-                            let tr = TextReply::new(
-                                &m.to_user,
-                                &m.from_user,
-                                &format!("{}_callback", &m.content),
-                            );
-                            let txt = tr.render();
-                            let timestamp = current_timestamp();
-                            let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                            logs!(format!("---- send OTHER xml :{}", txt));
-                            return Ok(HttpResponse::build(StatusCode::OK)
-                                .content_type("text/xml; charset=utf-8")
-                                .body(encrypt_text.unwrap()));
-                        }
-                    }
-                    Message::EventMessage(ref m) => {
-                        logs!(format!("**** EVENT *** {:?}", m));
-                    }
-                    Message::UnknownMessage(ref m) => {
-                        logs!(format!("**** Unknown *** {:?}", m));
-                    }
-                }
-            } else {
-                use super::wx_msg;
-                return wx_msg::message_reply(&msg).await;
-            }
-        }
-
-        Ok(HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body("success"))
-    // watch_time!("global" ,wx_msg::global_publish(dic, post_str.to_owned()).await)
+        watch_time!(
+            "global",
+            wx_msg::global_publish(dic, post_str.to_owned()).await
+        )
     } else {
         // 业务系统处理
-        // println!("proxy");
         wx_msg::proxy_reply(app_id, req, body).await
     }
 }

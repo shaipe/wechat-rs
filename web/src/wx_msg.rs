@@ -79,6 +79,7 @@ pub async fn proxy_reply(
 }
 
 /// 全网发布
+#[allow(dead_code)]
 pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
