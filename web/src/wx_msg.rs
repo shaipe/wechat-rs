@@ -6,7 +6,7 @@
 use super::utils;
 use actix_web::client::Client;
 use actix_web::http::StatusCode;
-use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
+use actix_web::{web, HttpRequest, HttpResponse, Result};
 use std::collections::HashMap;
 use url::Url;
 use wechat_sdk::{
@@ -47,49 +47,32 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 pub async fn proxy_reply(
     app_id: &str,
     req: HttpRequest,
-    // payload: web::Payload,
-    body: web::Bytes,
-    client: web::Data<Client>,
+    body: web::Bytes
 ) -> Result<HttpResponse> {
     use crate::cluster::get_domain;
+    use wechat_sdk::Client;
     let mut domain = get_domain(app_id.to_owned());
 
-    if domain.is_empty(){
+    if domain.is_empty() {
         domain = "http://366kmpf.com".to_owned();
     }
 
     // 创建一个可变的url地址
-    let mut new_url = Url::parse(&format!(
-        "{}/{}/WxCallback.axd",
-        domain,
-        app_id
-    ))
-    .unwrap();
+    let mut new_url = Url::parse(&format!("{}/WxCallback.axd", domain)).unwrap();
     new_url.set_query(req.uri().query());
 
-    println!("==== url ===={:?}", new_url);
-
-    // TODO: This forwarded implementation is incomplete as it only handles the inofficial
-    // X-Forwarded-For header but not the official Forwarded one.
-    let forwarded_req = client
-        .request_from(new_url.as_str(), req.head())
-        .no_decompress();
-    let forwarded_req = if let Some(addr) = req.head().peer_addr {
-        forwarded_req.header("x-forwarded-for", format!("{}", addr.ip()))
-    } else {
-        forwarded_req
+    match Client::new().post_betyes(new_url.as_str(), body).await {
+        Ok(res) => {
+            return Ok(HttpResponse::build(StatusCode::OK)
+                .content_type("text/html; charset=utf-8")
+                .body(res))
+        }
+        Err(err) => println!("{:?}", err),
     };
 
-    let mut res = forwarded_req.send_body(body).await.map_err(Error::from)?;
-
-    let mut client_resp = HttpResponse::build(res.status());
-    // Remove `Connection` as per
-    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection#Directives
-    for (header_name, header_value) in res.headers().iter().filter(|(h, _)| *h != "connection") {
-        client_resp.header(header_name.clone(), header_value.clone());
-    }
-
-    Ok(client_resp.body(res.body().await?))
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body("success"))
 }
 
 /// 全网发布

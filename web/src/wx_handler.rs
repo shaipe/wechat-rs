@@ -295,20 +295,24 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
 pub async fn callback(
     req: HttpRequest,
     path: web::Path<(String,)>,
-    payload: web::Payload,
     body: web::Bytes,
     client: web::Data<Client>,
 ) -> Result<HttpResponse> {
     use super::wx_msg;
     let app_id = &path.0;
+
+    // println!("{:?}", body);
     // println!(" === app_id ===  {}", app_id);
     // 全网发布
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
         let dic = utils::parse_query(req.query_string());
-        let post_str = utils::get_request_body(payload).await;
-        wx_msg::global_publish(dic, post_str).await
+        let post_str = match std::str::from_utf8(&body) {
+            Ok(s) => s,
+            Err(_e) => "",
+        };
+        wx_msg::global_publish(dic, post_str.to_owned()).await
     } else { // 业务系统处理
         // println!("proxy");
-        wx_msg::proxy_reply(app_id, req, body, client).await
+        wx_msg::proxy_reply(app_id, req, body).await
     }
 }

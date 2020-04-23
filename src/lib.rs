@@ -20,7 +20,7 @@ mod wechat_crypto;
 pub use wechat_crypto::WeChatCrypto;
 
 mod client;
-pub(crate) use client::Client;
+pub use client::Client;
 
 pub mod config;
 

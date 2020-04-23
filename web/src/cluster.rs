@@ -1,7 +1,6 @@
 //! copyright
 //! 用于记录微信appid与域名的对应关系
 
-use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;

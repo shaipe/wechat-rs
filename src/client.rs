@@ -7,18 +7,29 @@ use reqwest::Client as HttpClient;
 use std::time::Duration;
 // use std::collections::HashMap;
 use serde::Serialize;
+use reqwest::header;
+use bytes::Bytes;
+
+const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3534.4 Safari/537.36";
 
 /// 请求客户端
-pub(crate) struct Client {
+pub struct Client {
     pub(crate) client: HttpClient,
 }
 
 impl Client {
     pub fn new() -> Self {
+        let mut headers = header::HeaderMap::new();
+        headers.insert(
+            header::USER_AGENT,
+            header::HeaderValue::from_static(DEFAULT_USER_AGENT),
+        );
+
         Client {
             client: HttpClient::builder()
                 .timeout(Duration::from_secs(300))
                 .connect_timeout(Duration::from_secs(300))
+                .default_headers(headers)
                 .build()
                 .unwrap(),
         }
@@ -33,6 +44,34 @@ impl Client {
                     match res.text().await {
                         Ok(txt) => {
                             // println!("--- {} ----", txt);
+                            Ok(txt)
+                        }
+                        Err(e) => Err(WeChatError::ClientError {
+                            errcode: -1,
+                            errmsg: format!("Send request error: {}", e),
+                        }),
+                    }
+                } else {
+                    Err(WeChatError::ClientError {
+                        errcode: 500,
+                        errmsg: format!("status={}", res.status()),
+                    })
+                }
+            }
+            Err(e) => Err(WeChatError::ClientError {
+                errcode: 500,
+                errmsg: format!("Send request error: {}", e),
+            }),
+        }
+    }
+
+    /// 发送二进制文件
+    pub async fn post_betyes(&self, url: &str, body: Bytes) -> WeChatResult<String> {
+        match self.client.post(url).body(body).send().await {
+            Ok(res) => {
+                if res.status() == 200 {
+                    match res.text().await {
+                        Ok(txt) => {
                             Ok(txt)
                         }
                         Err(e) => Err(WeChatError::ClientError {
