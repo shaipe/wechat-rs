@@ -61,6 +61,12 @@ async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
+    let mut scheme = utils::get_hq_value(&req, "x-scheme");
+    if scheme.is_empty() {
+        scheme = "http".to_owned();
+    }
+
+    println!(" === scheme === {:?}", scheme);
     //随机数
     let base_query = utils::get_hash_value(&dic, "q");
     // println!("base_query={:?}", base_query);
@@ -106,12 +112,12 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let path = c.component_login_page(
         &result_code,
         &format!(
-            "{}/wx/official_auth_calback?q={}",
-            config.domain, base_query
+            "{}://{}/wx/official_auth_calback?q={}",
+            scheme, config.domain, base_query
         ),
         app_type,
     );
-    //println!("path={:?}", path);
+    println!("path={:?}", path);
     Ok(HttpResponse::build(StatusCode::FOUND)
         .header(http::header::LOCATION, path)
         .body(""))
@@ -225,22 +231,30 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 
 ///获得授权url
 #[post("/wx/fetch_auth_url")]
-pub async fn fetch_auth_url(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let config: TripartiteConfig = get_tripartite_config();
     // let query = req.query_string();
     let post_str = utils::get_request_body(payload).await;
     //println!("query={:?}",post_str);
-
+    let mut scheme = utils::get_hq_value(&req, "x-scheme");
+    if scheme.is_empty() {
+        scheme = "http".to_owned();
+    }
     let dic = utils::parse_query(&post_str);
     //随机数
     let app_id = utils::get_hash_value(&dic, "app_id");
     let domain = if config.wap_domain.starts_with("http") {
         config.wap_domain
     } else {
-        format!("http://{}", config.wap_domain)
+        format!("{}://{}", scheme, config.wap_domain)
     };
+
+   
+
     let redirect_uri = format!("{}/wx/user_auth_calback", &domain);
     let state = utils::get_hash_value(&dic, "state");
+
+    println!(" === redirect_uri === {:?}", redirect_uri);
 
     let authorize = WechatAuthorize::new(&app_id, &config.app_id, "");
     let mut scopes = Vec::new();
