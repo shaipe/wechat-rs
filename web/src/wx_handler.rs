@@ -230,6 +230,7 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
 }
 
 ///获得授权url
+/// x-scheme: 是在nginx的反向代理时使用, proxy_set_header X-Scheme $scheme 把请求的真实协议给定到请求头中
 #[post("/wx/fetch_auth_url")]
 pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let config: TripartiteConfig = get_tripartite_config();
