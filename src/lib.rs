@@ -17,7 +17,7 @@ mod errors;
 pub use errors::WeChatError;
 
 mod wechat_crypto;
-pub use wechat_crypto::WeChatCrypto;
+pub use wechat_crypto::{WeChatCrypto,aes256_cbc_decrypt,aes128_cbc_decrypt};
 
 mod client;
 pub use client::Client;
@@ -36,6 +36,7 @@ pub mod tripartite;
 /// 公众号对接模块
 pub mod official;
 
+pub use weapp::WeApp;
 
 /// 获取当前时间戮
 pub fn current_timestamp() -> i64 {
