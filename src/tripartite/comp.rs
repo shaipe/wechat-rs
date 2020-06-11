@@ -159,9 +159,12 @@ impl Component {
         authorizer_appid: &str,
         refresh_token: &str,
     ) -> WeChatResult<(String, String)> {
+        let conf = self.config.clone();
+        let mut t = self.ticket.clone();
+        let acc_token = t.get_token(conf.clone()).await;
         let url = format!(
             "{}/cgi-bin/component/api_authorizer_token?component_access_token={}",
-            API_DOMAIN, ""
+            API_DOMAIN, acc_token
         );
         let mut hash = HashMap::new();
         let conf = self.config.clone();

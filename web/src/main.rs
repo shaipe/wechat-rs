@@ -23,7 +23,7 @@ mod wx_handler;
 mod config;
 mod result_response;
 use cluster::load_cluster;
-
+mod official;
 use wechat_sdk::tripartite::Ticket;
 
 #[get("/")]
@@ -60,6 +60,7 @@ async fn main() -> io::Result<()> {
             .service(wx_handler::official_auth)
             .service(wx_handler::official_auth_calback)
             .service(wx_handler::offical_back)
+            .service(wx_handler::fetch_common_official)
             .service(wx_handler::fetch_component_token)
             .service(wx_handler::fetch_auth_url)
             .service(wx_handler::user_auth_calback)

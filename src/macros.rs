@@ -61,8 +61,7 @@ macro_rules! watch_time {
             let start = Instant::now();
             let res = $x;
             let end = start.elapsed();
-            let msg=format!("=== excute({}) === use time: {}.{:03}s", $t, end.as_secs(), end.subsec_millis());
-            println!(msg);
+            println!("=== excute({}) === use time: {}.{:03}s", $t, end.as_secs(), end.subsec_millis());
             res
         }
     };

@@ -172,10 +172,59 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
     let dic = utils::parse_query(&post_str);
     let app_id = utils::get_hash_value(&dic, "appid");
     let domain = utils::get_hash_value(&dic, "domain");
-    add_domain(app_id, domain);
+    let authorizer_access_token = utils::get_hash_value(&dic, "authorizer_access_token");
+    let authorizer_refresh_token = utils::get_hash_value(&dic, "authorizer_refresh_token");
+    let is_common = match utils::get_hash_value(&dic, "is_common").parse::<bool>() {
+        Ok(v) => v,
+        Err(_) => false,
+    };
+    add_domain(app_id.clone(), domain.clone());
+    if is_common {
+        use crate::official::Official;
+        let mut conf = Official::new("");
+        conf.appid = app_id;
+        conf.authorizer_access_token = authorizer_access_token;
+        conf.authorizer_refresh_token = authorizer_refresh_token;
+        conf.expires_in = 7000 + utils::current_timestamp();
+        conf.save("");
+    }
     get_success_result("success")
 }
+// 业务系统在完成授权以后把appid和对应的服务器机组域名回传
+#[post("/wx/common_official")]
+async fn fetch_common_official(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+    use crate::official::{get_common_official, Official};
+    let empty_dic: HashMap<String, String> = HashMap::new();
+    let mut conf: Official = get_common_official();
 
+ 
+    let current_expires_in = utils::current_timestamp();
+    let expires_in = conf.expires_in;
+    if conf.authorizer_refresh_token.is_empty() || conf.appid.is_empty() {
+        
+        conf=Official::new("");     
+        println!("{:?}",conf)  ;
+    }
+    if conf.authorizer_refresh_token.is_empty() || conf.appid.is_empty() {
+        return get_success_result(&empty_dic);
+    }
+    if current_expires_in > expires_in {
+        let config: TripartiteConfig = get_tripartite_config();
+        let c = Component::new(config.clone());
+        let auth_token: String = match c.fetch_auth_token(&conf.appid, &conf.authorizer_refresh_token).await {
+            Ok(v) => v.0.clone(),
+            Err(_) => "".to_owned(),
+        };
+        if !auth_token.is_empty() {
+            conf.expires_in = utils::current_timestamp() + 7000;
+            conf.authorizer_access_token = auth_token;
+            conf.save("");
+        } else {
+            return get_success_result(&empty_dic);
+        }
+    }
+    get_success_result(&conf)
+}
 #[post("/wx/test")]
 async fn test(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
     let dic = utils::parse_query(req.query_string());
@@ -250,8 +299,8 @@ pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<H
         format!("{}://{}", scheme, config.wap_domain)
     };
 
-   
 
+    
     let redirect_uri = format!("{}/wx/user_auth_calback", &domain);
     let state = utils::get_hash_value(&dic, "state");
 
@@ -320,6 +369,7 @@ pub async fn callback(
             Err(_e) => "",
         };
         logs!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
+        //wx_msg::global_publish(dic, post_str.to_owned()).await
         watch_time!(
             "global",
             wx_msg::global_publish(dic, post_str.to_owned()).await

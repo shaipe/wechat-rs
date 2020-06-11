@@ -92,3 +92,10 @@ pub async fn get_request_body(mut payload: web::Payload) -> String {
     };
     post_str.to_owned()
 }
+pub fn current_timestamp() -> i64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64
+}
