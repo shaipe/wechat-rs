@@ -33,7 +33,9 @@ impl Official {
         // 打开文件
         let mut file = match File::open(file_path) {
             Ok(f) => f,
-            Err(e) => panic!("no such file {} exception: {}", file_path, e),
+            Err(e) =>{
+                return Official::default();
+            },
         };
 
         // 读取文件到字符串变量
