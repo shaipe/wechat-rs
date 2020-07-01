@@ -15,6 +15,7 @@ use actix_web::http::{StatusCode};
 use actix_web::{
     middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result,
 };
+use actix_files as afs;
 
 mod utils;
 mod cluster;
@@ -67,7 +68,10 @@ async fn main() -> io::Result<()> {
             .service(wx_handler::test)
             // with path parameters
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
-            
+            .service(
+                // static files
+                afs::Files::new("/", "www").index_file("index.html"),
+            )
     })
     .bind(addr)?
     .run()

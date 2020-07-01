@@ -2,12 +2,15 @@ use serde_derive::{Deserialize,Serialize};
 use std::fs::File;
 use std::io::prelude::*;
 use wechat_sdk::tripartite::{set_tripartite_config, TripartiteConfig};
+
+
 // 业务配置信息
 #[derive(Debug, Clone, Deserialize,Serialize)]
 pub struct Config {
     pub name: String,
     pub port: i32,
     pub tripartite: Option<TripartiteConfig>,
+    // pub static_dir: Option<String>
 }
 
 impl Config {
