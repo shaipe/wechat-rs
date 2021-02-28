@@ -3,3 +3,6 @@
 
 mod weapp;
 pub use weapp::WeApp;
+
+mod auth;
+pub use auth::Auth;

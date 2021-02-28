@@ -23,6 +23,12 @@ impl WeApp {
     }
 
     /// 获取session_key
+    /// GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code
+    /// 登录凭证校验。通过 wx.login 接口获得临时登录凭证 code 后传到开发者服务器调用此接口完成登录流程。
+    /// DOC: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+    /// @param1: 小程序appid
+    /// @param2: wx.login()获取的code
+    /// @param3: 
     pub async fn get_session_key(
         &self,
         appid: &str,
@@ -40,14 +46,17 @@ impl WeApp {
         let api = Client::new();
         let res = api.get(&url).await?;
         match api.json_decode(&res) {
-            Ok(_data) => Ok(_data),
+            Ok(data) => Ok(data),
             Err(err) => {
                 return Err(err);
             }
         }
     }
 
-    ///获取手机号
+    /// 获取手机号
+    /// @param1: 上一步获取的sessionKey
+    /// @param2: 解密向量
+    /// @param3: 加密数据，将对此数据进行解密使用
     pub fn get_phone_num(
         &self,
         session_key: &str,
