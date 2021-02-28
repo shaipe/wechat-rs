@@ -27,14 +27,14 @@ pub mod config;
 pub mod message;
 pub mod xmlutil;
 
-/// 小程序功能对接模块
-pub mod weapp;
+// /// 小程序功能对接模块
+// pub mod weapp;
 
-/// 第三方开发平台模块
-pub mod tripartite;
+// /// 第三方开发平台模块
+// pub mod tripartite;
 
-/// 公众号对接模块
-pub mod official;
+// /// 公众号对接模块
+// pub mod official;
 
 pub use weapp::WeApp;
 
