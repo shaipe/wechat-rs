@@ -1,5 +1,6 @@
-//! copyright
-
+//! copyright © shaipe 2021 - present
+//! 宏处理
+//! created by shaipe 20210228
 
 /// 获取错误信息对象
 #[macro_export]

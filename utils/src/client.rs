@@ -3,12 +3,11 @@
 
 use crate::errors::WeChatError;
 use crate::WeChatResult;
-use reqwest::Client as HttpClient;
-use std::time::Duration;
-// use std::collections::HashMap;
-use serde::Serialize;
-use reqwest::header;
 use bytes::Bytes;
+use reqwest::header;
+use reqwest::Client as HttpClient;
+use serde::Serialize;
+use std::time::Duration;
 
 const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3534.4 Safari/537.36";
 
@@ -71,9 +70,7 @@ impl Client {
             Ok(res) => {
                 if res.status() == 200 {
                     match res.text().await {
-                        Ok(txt) => {
-                            Ok(txt)
-                        }
+                        Ok(txt) => Ok(txt),
                         Err(e) => Err(WeChatError::ClientError {
                             errcode: -1,
                             errmsg: format!("Send request error: {}", e),
@@ -143,7 +140,7 @@ impl Client {
                 errmsg: errmsg,
             });
         }
-        println!("obj====={:?}",obj);
+        println!("obj====={:?}", obj);
         Ok(obj)
     }
 }

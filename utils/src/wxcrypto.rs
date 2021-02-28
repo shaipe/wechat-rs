@@ -3,7 +3,7 @@
 
 use crate::errors::WeChatError;
 use crate::WeChatResult;
-use byteorder::{NativeEndian, WriteBytesExt, ReadBytesExt};
+use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
@@ -90,7 +90,7 @@ impl WeChatCrypto {
             return Err(WeChatError::InvalidSignature);
         }
         let msg = self.decrypt(&encrypted_msg)?;
-        logs!(format!("######### decode message ########## \n{}",msg));
+        logs!(format!("######### decode message ########## \n{}", msg));
         Ok(msg)
     }
 
@@ -130,7 +130,8 @@ impl WeChatCrypto {
         // logs!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
 
         //采用低位编址
-        wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be()).unwrap();
+        wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be())
+            .unwrap();
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
         //aes 加密
@@ -146,36 +147,41 @@ impl WeChatCrypto {
             <TimeStamp>{timestamp}</TimeStamp>\n\
             <Nonce><![CDATA[{nonce}]]></Nonce>\n\
             </xml>",
-            encrypt=b64encoded,
-            signature=signature,
-            timestamp=timestamp,
-            nonce=nonce,
+            encrypt = b64encoded,
+            signature = signature,
+            timestamp = timestamp,
+            nonce = nonce,
         );
 
-        logs!(format!("#################### encode message #####################\n{}", msg));
+        logs!(format!(
+            "#################### encode message #####################\n{}",
+            msg
+        ));
         Ok(msg)
     }
 }
 
 /// 获取随机字符串
-#[allow(dead_code)]
 fn get_random_string(length: usize) -> String {
-    use rand::Rng;
+    use rand::prelude::*;
+    // use rand::Rng;
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
                             0123456789"; // )(*&^%$#@!~
-    let rnd_len: usize = length;
     let mut rng = rand::thread_rng();
+    let mut nums: Vec<i32> = (1..CHARSET.len() as i32).collect();
+    nums.shuffle(&mut rng);
 
-    let rnd_string: String = (0..rnd_len)
-        .map(|_| {
-            let idx = rng.gen_range(0, CHARSET.len());
+    let y = &nums[0..length];
+    let rnd_string: String = y
+        .iter()
+        .map(|&x| {
+            let idx = x as usize;
             CHARSET[idx] as char
         })
         .collect();
-    
+
     rnd_string
-    
 }
 
 /// 从HashMap中取值
@@ -253,25 +259,32 @@ pub fn aes256_cbc_decrypt(
     Ok(final_result)
 }
 // Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_encrypt(data: &[u8],key: &[u8], iv: &[u8])->Result<Vec<u8>,symmetriccipher::SymmetricCipherError>{
-    let mut encryptor=aes::cbc_encryptor(
-        aes::KeySize::KeySize256,
-        key,
-        iv,
-        blockmodes::PkcsPadding);
+fn aes256_cbc_encrypt(
+    data: &[u8],
+    key: &[u8],
+    iv: &[u8],
+) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+    let mut encryptor =
+        aes::cbc_encryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
 
-    let mut final_result=Vec::<u8>::new();
-    let mut read_buffer=buffer::RefReadBuffer::new(data);
-    let mut buffer=[0;4096];
-    let mut write_buffer=buffer::RefWriteBuffer::new(&mut buffer);
-    loop{
-        let result=(encryptor.encrypt(&mut read_buffer,&mut write_buffer,true))?;
+    let mut final_result = Vec::<u8>::new();
+    let mut read_buffer = buffer::RefReadBuffer::new(data);
+    let mut buffer = [0; 4096];
+    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+    loop {
+        let result = (encryptor.encrypt(&mut read_buffer, &mut write_buffer, true))?;
 
-        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+        final_result.extend(
+            write_buffer
+                .take_read_buffer()
+                .take_remaining()
+                .iter()
+                .map(|&i| i),
+        );
 
         match result {
-            BufferResult::BufferUnderflow=>break,
-            BufferResult::BufferOverflow=>{},
+            BufferResult::BufferUnderflow => break,
+            BufferResult::BufferOverflow => {}
         }
     }
 
@@ -290,31 +303,40 @@ mod tests {
         <TimeStamp>1587121403</TimeStamp>
         <Nonce><![CDATA[1661748508]]></Nonce>
         </xml>";
-        let crypto = WeChatCrypto::new("tokenkm323", "khEda6IkyCedf2pbl7kKGX2N42bhOWLbkyBDgkkmpfs", "wx618efe0d63406d44");
+        let crypto = WeChatCrypto::new(
+            "tokenkm323",
+            "khEda6IkyCedf2pbl7kKGX2N42bhOWLbkyBDgkkmpfs",
+            "wx618efe0d63406d44",
+        );
         use std::collections::HashMap;
-        let mut dic=HashMap::new();
-        dic.insert("msg_signature".to_owned(),"b135f073fee09b86d9a0b83fcbea58a0e6569299".to_owned());
-        dic.insert("nonce".to_owned(),"1661748508".to_owned());
-        dic.insert("timestamp".to_owned(),"1587121403".to_owned());
-        let decrypted = crypto
-            .decrypt_message(xml, &dic)
-            .unwrap();
+        let mut dic = HashMap::new();
+        dic.insert(
+            "msg_signature".to_owned(),
+            "b135f073fee09b86d9a0b83fcbea58a0e6569299".to_owned(),
+        );
+        dic.insert("nonce".to_owned(), "1661748508".to_owned());
+        dic.insert("timestamp".to_owned(), "1587121403".to_owned());
+        let decrypted = crypto.decrypt_message(xml, &dic).unwrap();
         println!("decrypted={:?}", decrypted);
     }
 
     #[test]
-    fn test_encrypt_message(){
-        let msg=r#"<xml><ToUserName><![CDATA[gh_3c884a361561]]></ToUserName>
+    fn test_encrypt_message() {
+        let msg = r#"<xml><ToUserName><![CDATA[gh_3c884a361561]]></ToUserName>
         <FromUserName><![CDATA[ozy4qt5QUADNXORxCVipKMV9dss0]]></FromUserName>
         <CreateTime>1587087558</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
         <Content><![CDATA[QUERY_AUTH_CODE:queryauthcode@@@S46RZzudLRYEjxbNd5rzokMIybrsHw8a-Bm1gNX1PWyx_PFOhyilIHnnT6PKgdTkSOFAkQgosaogCOB-ZV62vg]]></Content>
         <MsgId>6816489157906572969</MsgId>
         </xml>"#;
-        let crypto = WeChatCrypto::new("shaipe", "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio", "wxce775970ff046a47");
+        let crypto = WeChatCrypto::new(
+            "shaipe",
+            "kdjCGGJKSRjjhESfPO5lTSWtYS0v5pQX47skCkZczio",
+            "wxce775970ff046a47",
+        );
         let timestamp = crate::current_timestamp();
         let nonce = format!("{}", timestamp);
         let encrypt_text = crypto.encrypt_message(msg, timestamp, &nonce);
-        println!("{:?}",encrypt_text);
+        println!("{:?}", encrypt_text);
     }
 }

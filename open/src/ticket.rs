@@ -2,11 +2,11 @@
 //! 微信第三方平台的ticket获取存储
 
 use super::{Component, TripartiteConfig};
-use crate::errors::WeChatError;
+use wechat_utils::errors::WeChatError;
 
-use crate::wechat_crypto::WeChatCrypto;
-use crate::xmlutil;
-use crate::WeChatResult;
+use wechat_utils::WeChatCrypto;
+use wechat_utils::xmlutil;
+use wechat_utils::WeChatResult;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
