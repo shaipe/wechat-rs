@@ -1,3 +1,6 @@
+//! copyright 
+
+
 const WECHAT_OPEN_URI: &'static str = "https://open.weixin.qq.com";
 ///网页授权
 pub struct WechatAuthorize {

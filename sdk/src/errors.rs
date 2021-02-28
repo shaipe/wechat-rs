@@ -1,5 +1,4 @@
-//! copyright
-//! 
+//! copyright © shaipe 2021 - present
 //! 微信处理错误信息处理
 
 use std::fmt;
@@ -7,16 +6,22 @@ use std::error;
 use std::io;
 use base64::DecodeError;
 
+/// 微信处理错误
 #[derive(Debug)]
 pub enum WeChatError {
+    // 签名错误
     InvalidSignature,
+    // AppId错误
     InvalidAppId,
+    // Base64 解析错误
     InvalidBase64(DecodeError),
+    // 请求错误
     ClientError { errcode: i32, errmsg: String },
     IOError(io::Error),
     InvalidValue
 }
 
+/// 实现调试输出
 impl fmt::Display for WeChatError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -30,6 +35,7 @@ impl fmt::Display for WeChatError {
     }
 }
 
+/// 错误信息扩展
 impl error::Error for WeChatError {
 
     /// 错误信息输出

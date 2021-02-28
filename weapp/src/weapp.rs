@@ -1,6 +1,7 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 微信小程序接口对接
 //!
+
 use byteorder::{NativeEndian, ReadBytesExt};
 use std::io::Cursor;
 use wechat_utils::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WeChatResult};
@@ -20,7 +21,6 @@ impl WeApp {
     pub async fn register(&self) -> WeChatResult<String> {
         Ok("".to_string())
     }
-
 
     /// 获取session_key
     pub async fn get_session_key(
@@ -46,7 +46,7 @@ impl WeApp {
             }
         }
     }
-    
+
     ///获取手机号
     pub fn get_phone_num(
         &self,

@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 byteorder = "1.4.2"
-wechat_utils = {path = "../utils", version = "0.1.0"}
+# wechat_sdk = {path = "../sdk", version = "0.1.0"}
