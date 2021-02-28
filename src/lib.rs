@@ -1,16 +1,16 @@
 //! copyright © shaipe 2020 - persent
 //!
 
-#[macro_use]
-extern crate serde_json;
+// #[macro_use]
+// extern crate serde_json;
 
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 
 // #[macro_use]
 // mod macros;
 
-/// 字义微信结果类型
+// 字义微信结果类型
 // pub type WeChatResult<T> = Result<T, WeChatError>;
 
 // mod errors;
@@ -36,15 +36,8 @@ extern crate lazy_static;
 // /// 公众号对接模块
 // pub mod official;
 
-pub use weapp::WeApp;
+// pub use weapp::WeApp;
 
-/// 获取当前时间戮
-pub fn current_timestamp() -> i64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64
-}
+
 
 

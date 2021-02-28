@@ -20,6 +20,16 @@ pub use client::Client;
 pub mod xmlutil;
 // pub use xmlutil::
 
+/// 获取当前时间戮
+pub fn current_timestamp() -> i64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64
+}
+
+
 #[cfg(test)]
 mod tests {
     #[test]

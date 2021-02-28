@@ -2,8 +2,7 @@
 //! 文本消息处理
 
 use super::MessageParser;
-use crate::current_timestamp;
-use wechat_sdk::xmlutil;
+use wechat_sdk::{current_timestamp, xmlutil};
 
 // use super::WechatMessage;
 

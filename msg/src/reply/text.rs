@@ -1,7 +1,7 @@
 //! copyright © shaipe 2021 - present
 //! 文本消息回复
 
-use crate::current_timestamp;
+use wechat_sdk::current_timestamp;
 use super::ReplyRender;
 
 #[derive(Debug, Eq, PartialEq, Clone)]

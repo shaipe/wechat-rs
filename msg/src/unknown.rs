@@ -1,10 +1,10 @@
 //! copyright © shaipe 2021 - present
+//! 未知消息类型
 
-
-use crate::current_timestamp;
-use wechat_sdk::xmlutil;
 use super::MessageParser;
+use wechat_sdk::{current_timestamp, xmlutil};
 
+/// 未知类型的消息结构体
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct UnknownMessage {
     pub from_user: String,

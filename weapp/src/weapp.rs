@@ -4,7 +4,7 @@
 
 use byteorder::{NativeEndian, ReadBytesExt};
 use std::io::Cursor;
-use wechat_utils::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WeChatResult};
+use wechat_sdk::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WeChatResult};
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 

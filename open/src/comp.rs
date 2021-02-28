@@ -4,9 +4,9 @@
 use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};
-use crate::{current_timestamp, Client, WeChatError, WeChatResult};
 use serde_json::Value;
 use std::collections::HashMap;
+use wechat_sdk::{current_timestamp, Client, WeChatError, WeChatResult};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
@@ -39,7 +39,7 @@ impl Component {
             self.ticket.access_ticket.clone(),
         );
         let api = Client::new();
-        let res= api.post(&url, &hash).await?;
+        let res = api.post(&url, &hash).await?;
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
@@ -47,14 +47,14 @@ impl Component {
             }
         };
         //asscess_token
-        let token = match data["component_access_token"].as_str(){
-            Some(v)=>v.to_owned(),
-            None=>"".to_owned()
+        let token = match data["component_access_token"].as_str() {
+            Some(v) => v.to_owned(),
+            None => "".to_owned(),
         };
-        println!("{:?}",data);
-        let mut t=self.ticket.clone();
-        t.access_token=token.clone();
-        t.at_expired_time=current_timestamp() + 7000;
+        println!("{:?}", data);
+        let mut t = self.ticket.clone();
+        t.access_token = token.clone();
+        t.at_expired_time = current_timestamp() + 7000;
         t.save("");
         Ok((token, t.at_expired_time))
     }
@@ -95,9 +95,9 @@ impl Component {
         };
 
         //pre_auth_code
-        let pre_auth_code = match data["pre_auth_code"].as_str(){
-            Some(v)=>v,
-            None=>""
+        let pre_auth_code = match data["pre_auth_code"].as_str() {
+            Some(v) => v,
+            None => "",
         };
 
         Ok(pre_auth_code.to_owned())
@@ -191,13 +191,13 @@ impl Component {
                 }
             }
         };
-        let acc_token = match data["authorizer_access_token"].as_str(){
-            Some(v)=>v,
-            None=>""
+        let acc_token = match data["authorizer_access_token"].as_str() {
+            Some(v) => v,
+            None => "",
         };
-        let ref_token = match data["authorizer_refresh_token"].as_str(){
-            Some(v)=>v,
-            None=>""
+        let ref_token = match data["authorizer_refresh_token"].as_str() {
+            Some(v) => v,
+            None => "",
         };
         // let acc_token = data["authorizer_access_token"].to_string();
         // let ref_token = data["authorizer_refresh_token"].to_string();

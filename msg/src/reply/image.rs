@@ -1,7 +1,7 @@
 //! copyright © shaipe 2021 - present
 
 use super::ReplyRender;
-use crate::current_timestamp;
+use wechat_sdk::current_timestamp;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct ImageReply {

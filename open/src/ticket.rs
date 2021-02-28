@@ -1,19 +1,15 @@
-//! copyright 
+//! copyright
 //! 微信第三方平台的ticket获取存储
 
 use super::{Component, TripartiteConfig};
-use wechat_utils::errors::WeChatError;
-
-use wechat_utils::WeChatCrypto;
-use wechat_utils::xmlutil;
-use wechat_utils::WeChatResult;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::sync::{Mutex,Arc};
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
+use wechat_sdk::{xmlutil, WeChatCrypto, WeChatError, WeChatResult};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -73,7 +69,7 @@ impl Ticket {
         // 第三方配置处理
         match cnf {
             Ok(val) => {
-                let t:Ticket=val;
+                let t: Ticket = val;
                 set_ticket(t.clone());
                 t
             }
@@ -124,7 +120,7 @@ impl Ticket {
             Ok(s) => {
                 set_ticket(self.clone());
                 s
-            },
+            }
             Err(e) => panic!("Error Reading file:{}", e),
         };
     }
@@ -158,19 +154,20 @@ impl Ticket {
 
 // 默认加载静态全局
 lazy_static! {
-    pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>>= Arc::new(Mutex::new(Ticket::default()));
+    pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
+        Arc::new(Mutex::new(Ticket::default()));
 }
 
 /// 设置ticket
 pub fn set_ticket(cnf: Ticket) {
-    let counter=Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
     let mut cache = counter.lock().unwrap();
     *cache = cnf;
 }
 
 /// 获取ticket
 pub fn get_ticket() -> Ticket {
-    let counter=Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
     let cache = counter.lock().unwrap();
     cache.clone()
 }

@@ -1,7 +1,7 @@
 //! copyright
 //! 微信三方信息配置
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 ///tripartite 配置
