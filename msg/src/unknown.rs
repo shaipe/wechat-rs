@@ -1,6 +1,8 @@
+//! copyright © shaipe 2021 - present
 
 
-use crate::{xmlutil, current_timestamp};
+use crate::current_timestamp;
+use wechat_sdk::xmlutil;
 use super::MessageParser;
 
 #[derive(Debug, Eq, PartialEq, Clone)]

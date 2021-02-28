@@ -1,4 +1,4 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 文本消息回复
 
 use crate::current_timestamp;

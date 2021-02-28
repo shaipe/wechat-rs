@@ -1,8 +1,8 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 事件消息
 
 use super::MessageParser;
-use crate::{xmlutil};
+use wechat_sdk::xmlutil;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct EventMessage {
@@ -13,7 +13,6 @@ pub struct EventMessage {
     pub event: String,
     pub raw: String,
 }
-
 
 /// 消息解析器实现
 impl MessageParser for EventMessage {

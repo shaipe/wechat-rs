@@ -1,4 +1,4 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 图文消息回复
 
 use super::ReplyRender;

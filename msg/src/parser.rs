@@ -1,7 +1,7 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 
 
-use crate::xmlutil;
+use wechat_sdk::xmlutil;
 use super::{Message, TextMessage, UnknownMessage};
 
 

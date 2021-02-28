@@ -35,5 +35,5 @@ members = [
   "open", # 开放平台
   "msg",  # 消息
   "mp",   # 公众号
-  "utils" # 工具类
+  "sdk" # 工具类
 ]

@@ -1,8 +1,9 @@
-//! copyright
+//! copyright © shaipe 2021 - present
 //! 文本消息处理
 
 use super::MessageParser;
-use crate::{current_timestamp, xmlutil};
+use crate::current_timestamp;
+use wechat_sdk::xmlutil;
 
 // use super::WechatMessage;
 
