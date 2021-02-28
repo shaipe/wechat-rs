@@ -21,3 +21,6 @@ bytes = "1.0.1"
 # Xml解析
 sxd-document = "0.3.2"
 sxd-xpath = "0.4.2"
+
+# yml配置
+yaml-rust = "0.4.5"

@@ -3,14 +3,11 @@
 //! DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
 //!
 
-
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WeChatResult};
+use wechat_sdk::{Client, WeChatResult};
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
-
-
 
 pub struct Auth;
 
@@ -54,7 +51,7 @@ impl Auth {
     /// 获取小程序全局唯一后台接口调用凭据（access_token）。调用绝大多数后台接口时都需使用 access_token，开发者需要进行妥善保存。
     /// GET https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
     /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-    pub fn get_access_token() ->WeChatResult<String> {
+    pub fn get_access_token() -> WeChatResult<String> {
         Ok(String::from(""))
     }
 }
