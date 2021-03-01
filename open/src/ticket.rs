@@ -96,7 +96,7 @@ impl Ticket {
                     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
                 Ok(ticketstr)
             }
-            Err(_) => Err(WeChatError::InvalidSignature),
+            Err(_) => Err(),
         }
     }
 

@@ -7,3 +7,5 @@
 
 mod auth;
 pub use auth::Auth;
+
+mod config;

@@ -6,7 +6,7 @@ use super::TripartiteConfig;
 use super::{get_ticket, Ticket};
 use serde_json::Value;
 use std::collections::HashMap;
-use wechat_sdk::{current_timestamp, Client, WeChatError, WeChatResult};
+use wechat_sdk::{current_timestamp, Client, WeChatResult};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
