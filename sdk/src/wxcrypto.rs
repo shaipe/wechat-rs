@@ -1,7 +1,6 @@
 //! copyright
 //! 微信加解密码处理
 
-use crate::errors::WeChatError;
 use crate::WeChatResult;
 use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
@@ -87,7 +86,10 @@ impl WeChatCrypto {
         // println!("o: {}, new: {}", signature, real_signature);
 
         if signature != real_signature {
-            return Err(WeChatError::InvalidSignature);
+            return Err(error! {
+                code: 40002,
+                msg: "Invalid Signature",
+            });
         }
         let msg = self.decrypt(&encrypted_msg)?;
         logs!(format!("######### decode message ########## \n{}", msg));
@@ -107,7 +109,7 @@ impl WeChatCrypto {
         //println!("form_id: {:?}  ,, id_ {:?}", from_id, self._id.as_bytes());
         // 此处取出的formid中包含了回车符,只能取前18位进行判断比较
         if &from_id[0..18] != self._id.as_bytes() {
-            return Err(WeChatError::InvalidAppId);
+            return Err(error! {code: 50001, msg: "Invalid from"});
         }
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)

@@ -1,7 +1,6 @@
 //! copyright © shaipe 2020 - persent
 //! 微信对接的网络请求客户端
 
-use crate::errors::WeChatError;
 use crate::WeChatResult;
 use bytes::Bytes;
 use reqwest::header;
@@ -45,21 +44,21 @@ impl Client {
                             // println!("--- {} ----", txt);
                             Ok(txt)
                         }
-                        Err(e) => Err(WeChatError::ClientError {
-                            errcode: -1,
-                            errmsg: format!("Send request error: {}", e),
+                        Err(e) => Err(error! {
+                            code: -1,
+                            msg: format!("Send request error: {}", e),
                         }),
                     }
                 } else {
-                    Err(WeChatError::ClientError {
-                        errcode: 500,
-                        errmsg: format!("status={}", res.status()),
+                    Err(error! {
+                        code: 500,
+                        msg: format!("status={}", res.status()),
                     })
                 }
             }
-            Err(e) => Err(WeChatError::ClientError {
-                errcode: 500,
-                errmsg: format!("Send request error: {}", e),
+            Err(e) => Err(error! {
+                code: 500,
+                msg: format!("Send request error: {}", e),
             }),
         }
     }
@@ -71,21 +70,21 @@ impl Client {
                 if res.status() == 200 {
                     match res.text().await {
                         Ok(txt) => Ok(txt),
-                        Err(e) => Err(WeChatError::ClientError {
-                            errcode: -1,
-                            errmsg: format!("Send request error: {}", e),
+                        Err(e) => Err(error! {
+                            code: -1,
+                            msg: format!("Send request error: {}", e),
                         }),
                     }
                 } else {
-                    Err(WeChatError::ClientError {
-                        errcode: 500,
-                        errmsg: format!("status={}", res.status()),
+                    Err(error! {
+                        code: 500,
+                        msg: format!("status={}", res.status()),
                     })
                 }
             }
-            Err(e) => Err(WeChatError::ClientError {
-                errcode: 500,
-                errmsg: format!("Send request error: {}", e),
+            Err(e) => Err(error! {
+                code: 500,
+                msg: format!("Send request error: {}", e),
             }),
         }
     }
@@ -98,21 +97,21 @@ impl Client {
                 if res.status() == 200 {
                     match res.text().await {
                         Ok(txt) => Ok(txt),
-                        Err(e) => Err(WeChatError::ClientError {
-                            errcode: -1,
-                            errmsg: format!("Send request error: {}", e),
+                        Err(e) => Err(error! {
+                            code: -1,
+                            msg: format!("Send request error: {}", e),
                         }),
                     }
                 } else {
-                    Err(WeChatError::ClientError {
-                        errcode: 500,
-                        errmsg: format!("status={}", res.status()),
+                    Err(error! {
+                        code: 500,
+                        msg: format!("status={}", res.status()),
                     })
                 }
             }
-            Err(e) => Err(WeChatError::ClientError {
-                errcode: 500,
-                errmsg: format!("Send request error: {}", e),
+            Err(e) => Err(error! {
+                code: 500,
+                msg: format!("Send request error: {}", e),
             }),
         }
     }
@@ -123,21 +122,21 @@ impl Client {
         let obj: serde_json::Value = match serde_json::from_str(data) {
             Ok(decoded) => decoded,
             Err(ref e) => {
-                return Err(WeChatError::ClientError {
-                    errcode: -3,
-                    errmsg: format!("Json decode error: {}", e),
+                return Err(error! {
+                    code: -3,
+                    msg: format!("Json decode error: {}", e),
                 });
             }
         };
-        let errcode = match obj["errcode"].as_i64() {
+        let code = match obj["code"].as_i64() {
             Some(v) => v,
             None => 0,
         };
-        if errcode != 0 {
-            let errmsg: String = obj["errmsg"].to_string();
-            return Err(WeChatError::ClientError {
-                errcode: errcode as i32,
-                errmsg: errmsg,
+        if code != 0 {
+            let msg: String = obj["msg"].to_string();
+            return Err(error! {
+                code: code as i32,
+                msg: msg,
             });
         }
         println!("obj====={:?}", obj);

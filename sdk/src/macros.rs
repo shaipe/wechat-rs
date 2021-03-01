@@ -68,3 +68,30 @@ macro_rules! watch_time {
     };
 }
 
+
+/// 获取错误信息对象
+#[macro_export]
+macro_rules! error {
+    // error! {code: i32, msg: String};
+    (code: $code: expr, msg: $msg: expr) => {{
+        crate::WeChatError::custom($code, $msg)
+    }};
+    // error! {code: i32, msg: String,};
+    (code: $code: expr, msg: $msg: expr,) => {{
+        crate::WeChatError::custom($code, $msg)
+    }};
+
+    // error!(msg);
+    ($e: expr) => {{
+        crate::WeChatError::msg($e)
+        // ::std::io::WechatError::new(::std::io::ErrorKind::Other, "wewe")
+    }};
+
+    ($code: expr, $msg: expr) => {{
+        crate::WeChatError::custom($code, $msg)
+    }};
+
+    // ($code: expr, $msg: expr, $s: tt) => {{
+    //     crate::WeChatError::custom_err($code, $msg, $s)
+    // }};
+}
