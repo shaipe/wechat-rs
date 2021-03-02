@@ -1,43 +1,36 @@
 //! copyright © shaipe 2020 - persent
 //!
 
-// #[macro_use]
-// extern crate serde_json;
+/// 微信公众号
+pub mod mp {
+    #[cfg(feature="mp")]
+    pub use wechat_mp::*;
+}
 
-// #[macro_use]
-// extern crate lazy_static;
+/// 微信小程序
+pub mod weapp {
+    #[cfg(feature="weapp")]
+    pub use wechat_weapp::*;
+}
 
-// #[macro_use]
-// mod macros;
+/// 微信支付
+pub mod pay {
+    #[cfg(feature="pay")]
+    pub use wechat_weapp::*;
+}
 
-// 字义微信结果类型
-// pub type WechatResult<T> = Result<T, WechatError>;
+/// 微信小店
+pub mod store {
+    #[cfg(feature="store")]
+    pub use wechat_store::*;
+}
 
-// mod errors;
-// pub use errors::WechatError;
+/// 企业微信
+pub mod work {
+    #[cfg(feature="work")]
+    pub use wechat_work::*;
+}
 
-// mod wechat_crypto;
-// pub use wechat_crypto::{WeChatCrypto,aes256_cbc_decrypt,aes128_cbc_decrypt};
-
-// mod client;
-// pub use client::Client;
-
-// pub mod config;
-
-// pub mod message;
-// pub mod xmlutil;
-
-// /// 小程序功能对接模块
-// pub mod weapp;
-
-// /// 第三方开发平台模块
-// pub mod tripartite;
-
-// /// 公众号对接模块
-// pub mod official;
-
-// pub use weapp::WeApp;
-
-
-
+mod config ;
+pub use config::Config;
 
