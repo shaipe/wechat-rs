@@ -1,5 +1,5 @@
 [package]
-name = "weapp"
+name = "wechat_weapp"
 version = "0.1.0"
 authors = ["shaipe <shaipe@live.com>"]
 edition = "2018"

@@ -15,6 +15,7 @@ log/
 *.lock
 *.log
 *.conf
+*.yml
 
 ## delete remote file
 # git rm --cache filename

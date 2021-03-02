@@ -46,7 +46,7 @@ impl Config {
         // get first yaml hash doc
         let yaml_doc = &docs[0];
         // get server value
-        let server = yaml_doc["web"].clone();
+        let server = yaml_doc["weapp"].clone();
 
         Ok(Config::load_yaml_node(&server))
     }
@@ -55,20 +55,20 @@ impl Config {
     /// @param1: yaml 配置节点
     pub fn load_yaml_node(conf_node: &yaml_rust::yaml::Yaml) -> Config {
         Config {
-            app_id: if let Some(s) = conf_node["ip"].as_str() {
+            app_id: if let Some(s) = conf_node["app_id"].as_str() {
                 s.to_owned()
             } else {
-                "0.0.0.0".to_owned()
+                "".to_owned()
             },
-            name: if let Some(s) = conf_node["static_dir"].as_str() {
+            name: if let Some(s) = conf_node["name"].as_str() {
                 s.to_owned()
             } else {
-                "static".to_owned()
+                "".to_owned()
             },
-            secret: if let Some(s) = conf_node["static_dir"].as_str() {
+            secret: if let Some(s) = conf_node["secret"].as_str() {
                 s.to_owned()
             } else {
-                "static".to_owned()
+                "".to_owned()
             },
         }
     }

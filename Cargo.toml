@@ -7,25 +7,21 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# serde = "1.0.123"
-# serde_json = "1.0.64"
-# serde_derive = "1.0.123"
-# lazy_static = "1.4.0"
+wechat_mp = {path="mp", version = "0.1.0", optional = true}
+wechat_msg = {path="msg", version = "0.1.0", optional = true}
+wechat_open = {path="open", version = "0.1.0", optional=true}
+wechat_pay = {path="pay", version = "0.1.0", optional=true}
+wechat_store = {path="store", version = "0.1.0", optional=true}
+wechat_weapp = {path="weapp", version = "0.1.0", optional = true}
 
-
-# futures = "0.3.13"
-# env_logger = "0.8.3"
-# bytes = "1.0.1"
-# percent-encoding = "2.1.0"
-# base64 = "0.13.0"
-# rust-crypto = "0.2.36"
-# byteorder = "1.4.2"
-# hex = "0.4.2"
-# sxd-document = "0.3.2"
-# sxd-xpath = "0.4.2"
-# json = "0.12.4"
-# rand = "0.8.3"
-
+[features]
+default = ["wechat_weapp"]
+mp = ["wechat_mp"]
+msg = ["wechat_msg"]
+open = ["wechat_open"]
+pay = ["wechat_pay"]
+store = ["wechat_store"]
+full = ["wechat_weapp"]
 
 [workspace]
 members = [

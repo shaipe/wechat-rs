@@ -14,3 +14,4 @@ mod auth;
 pub use auth::Auth;
 
 mod config;
+pub use config::Config;
