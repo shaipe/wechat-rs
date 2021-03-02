@@ -1,4 +1,5 @@
-//! copyright 
+//! copyright © shaipe 2021 - present
+//! 微信公众号授权
 
 
 const WECHAT_OPEN_URI: &'static str = "https://open.weixin.qq.com";
