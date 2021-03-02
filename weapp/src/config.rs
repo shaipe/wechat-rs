@@ -3,6 +3,7 @@
 //! created by shaipe 20210228
 
 use std::fs::File;
+use wechat_sdk::WechatResult;
 
 /// 配置信息结构体
 pub struct Config {
@@ -15,7 +16,6 @@ pub struct Config {
 }
 
 impl Config {
- 
     /// 加载yml配置文件
     pub fn load_yaml(conf_path: &str) -> WechatResult<Config> {
         use yaml_rust::yaml;
@@ -30,6 +30,7 @@ impl Config {
             }
         };
         let mut s = String::new();
+        use std::io::Read;
         match f.read_to_string(&mut s) {
             Ok(s) => s,
             Err(e) => {
@@ -54,25 +55,21 @@ impl Config {
     /// @param1: yaml 配置节点
     pub fn load_yaml_node(conf_node: &yaml_rust::yaml::Yaml) -> Config {
         Config {
-            ip: if let Some(s) = conf_node["ip"].as_str() {
+            app_id: if let Some(s) = conf_node["ip"].as_str() {
                 s.to_owned()
             } else {
                 "0.0.0.0".to_owned()
             },
-            port: if let Some(p) = conf_node["port"].as_i64() {
-                p as u64
-            } else {
-                8080
-            },
-            static_dir: if let Some(s) = conf_node["static_dir"].as_str() {
+            name: if let Some(s) = conf_node["static_dir"].as_str() {
                 s.to_owned()
             } else {
                 "static".to_owned()
             },
-            static_ext: vec![],
-            debug: Some(false), //server["debug"]. ,
-            cert_path: None,
-            tls: None,
+            secret: if let Some(s) = conf_node["static_dir"].as_str() {
+                s.to_owned()
+            } else {
+                "static".to_owned()
+            },
         }
     }
 }
@@ -81,19 +78,9 @@ impl std::default::Default for Config {
     // 给定默认值
     fn default() -> Config {
         Config {
-            ip: "0.0.0.0".to_owned(),
-            port: 9090,
-            static_dir: "www".to_owned(),
-            static_ext: vec![
-                ".html".to_owned(),
-                ".js".to_owned(),
-                ".png".to_owned(),
-                ".jpg".to_owned(),
-                ".css".to_owned(),
-            ],
-            debug: Some(false),
-            cert_path: None,
-            tls: None,
+            name: String::new(),
+            app_id: String::new(),
+            secret: String::new(),
         }
     }
 }

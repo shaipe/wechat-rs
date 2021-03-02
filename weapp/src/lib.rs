@@ -5,6 +5,11 @@
 // mod weapp;
 // pub use weapp::WeApp;
 
+#[macro_use]
+extern crate wechat_sdk;
+
+use wechat_sdk::WechatError;
+
 mod auth;
 pub use auth::Auth;
 

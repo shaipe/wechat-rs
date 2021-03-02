@@ -3,13 +3,13 @@
 //! created by shaipe 20210228
 
 /// 字义微信结果类型
-pub type WechatResult<T> = Result<T, WeChatError>;
+pub type WechatResult<T> = Result<T, WechatError>;
 
 #[macro_use]
 pub mod macros;
 
 mod errors;
-pub use errors::WeChatError;
+pub use errors::WechatError;
 
 mod wxcrypto;
 pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};

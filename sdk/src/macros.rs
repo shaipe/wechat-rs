@@ -74,24 +74,58 @@ macro_rules! watch_time {
 macro_rules! error {
     // error! {code: i32, msg: String};
     (code: $code: expr, msg: $msg: expr) => {{
-        crate::WeChatError::custom($code, $msg)
+        crate::WechatError::custom($code, $msg)
     }};
     // error! {code: i32, msg: String,};
     (code: $code: expr, msg: $msg: expr,) => {{
-        crate::WeChatError::custom($code, $msg)
+        crate::WechatError::custom($code, $msg)
     }};
 
     // error!(msg);
     ($e: expr) => {{
-        crate::WeChatError::msg($e)
+        crate::WechatError::msg($e)
         // ::std::io::WechatError::new(::std::io::ErrorKind::Other, "wewe")
     }};
 
     ($code: expr, $msg: expr) => {{
-        crate::WeChatError::custom($code, $msg)
+        crate::WechatError::custom($code, $msg)
     }};
 
     // ($code: expr, $msg: expr, $s: tt) => {{
-    //     crate::WeChatError::custom_err($code, $msg, $s)
+    //     crate::WechatError::custom_err($code, $msg, $s)
     // }};
+}
+
+
+
+/// 宏测试
+#[test]
+fn test_err() {
+    use crate::WechatResult;
+
+    fn te() -> WechatResult<String> {
+        if false {
+            Ok("".to_string())
+        } else {
+            Err(error!("没有给定必要的参数"))
+        }
+    }
+    // let er = error!(4001, "test");
+    // let x = error!("没有给定必要的参数");
+    // let err = std::io::Error::new(std::io::ErrorKind::Other, "wewe");
+    // let y = error!(4002, "没有给定必要的参数", err);
+    // println!("{:?},     {:?} , {:?}", er, x, y);
+    println!("{:?}", te());
+
+    let t = error! {
+        code:-3,
+        msg:format!("Json decode error: {}", "e"),
+    };
+    let x = error! {
+        code:-3,
+        msg: format!("Json decode error: {}", "e")
+    };
+
+    println!("{:?} {:?}", t, x);
+    assert_eq!(1 + 1, 1);
 }

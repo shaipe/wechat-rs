@@ -6,7 +6,7 @@ use super::TripartiteConfig;
 use super::{get_ticket, Ticket};
 use serde_json::Value;
 use std::collections::HashMap;
-use wechat_sdk::{current_timestamp, Client, WechatResult};
+use wechat_sdk::{current_timestamp, Client, WechatResult, WechatError};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
@@ -81,7 +81,7 @@ impl Component {
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
+                if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
                         self.fetch_access_token().await?;
                         return Err(err);
@@ -126,7 +126,7 @@ impl Component {
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
+                if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
                         self.fetch_access_token().await?;
                         return Err(err);
@@ -146,7 +146,7 @@ impl Component {
         //             // println!("auth ::: ==== {:?}", dic);
         //             Ok(dic)
         //         }
-        //         Err(_) => Err(WeChatError::InvalidValue),
+        //         Err(_) => Err(WechatError::InvalidValue),
         //     },
         //     Err(e) => Err(e),
         // }
@@ -179,7 +179,7 @@ impl Component {
         let data = match api.json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
+                if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
                         self.fetch_access_token().await?;
                         return Err(err);
@@ -217,7 +217,7 @@ impl Component {
         //             };
         //             Ok((acc_token.to_string(), ref_token.to_string()))
         //         }
-        //         Err(_) => Err(WeChatError::InvalidValue),
+        //         Err(_) => Err(WechatError::InvalidValue),
         //     },
         //     Err(e) => Err(e),
         // }
@@ -281,10 +281,10 @@ impl Component {
                     // println!("{:?}", v);
                     Ok((c, list))
                 }
-                Err(_) => Err(WeChatError::InvalidValue),
+                Err(_) => Err(WechatError::InvalidValue),
             },
             Err(err) => {
-                if let WeChatError::ClientError { errcode, .. } = err {
+                if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
                         self.fetch_access_token().await?;
                         return Err(err);

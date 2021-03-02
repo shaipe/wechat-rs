@@ -11,10 +11,10 @@
 // mod macros;
 
 // 字义微信结果类型
-// pub type WechatResult<T> = Result<T, WeChatError>;
+// pub type WechatResult<T> = Result<T, WechatError>;
 
 // mod errors;
-// pub use errors::WeChatError;
+// pub use errors::WechatError;
 
 // mod wechat_crypto;
 // pub use wechat_crypto::{WeChatCrypto,aes256_cbc_decrypt,aes128_cbc_decrypt};

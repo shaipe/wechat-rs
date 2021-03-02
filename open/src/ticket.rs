@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat_sdk::{xmlutil, WeChatCrypto, WeChatError, WechatResult};
+use wechat_sdk::{xmlutil, WeChatCrypto, WechatError, WechatResult};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]

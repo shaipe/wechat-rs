@@ -8,7 +8,7 @@ use base64::DecodeError;
 
 /// 微信处理错误
 #[derive(Debug)]
-pub enum WeChatError {
+pub enum WechatError {
     
     InvalidSignature,
     InvalidAppId,
@@ -20,61 +20,61 @@ pub enum WeChatError {
 }
 
 /// 实现调试输出
-impl fmt::Display for WeChatError {
+impl fmt::Display for WechatError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            WeChatError::InvalidSignature => write!(f, "Invalid signature"),
-            WeChatError::InvalidAppId => write!(f, "Invalid app_id"),
-            WeChatError::InvalidBase64(ref err) => err.fmt(f),
-            WeChatError::ClientError { errcode, ref errmsg } => write!(f, "Client error code: {}, message: {}", errcode, errmsg),
-            WeChatError::IOError(ref err) => err.fmt(f),
-            WeChatError::InvalidValue => write!(f, "Invalid Value of Null"),
-            WeChatError::Custom { code, ref msg } => write!(f, "Client error code: {}, message: {}", code, msg),
+            WechatError::InvalidSignature => write!(f, "Invalid signature"),
+            WechatError::InvalidAppId => write!(f, "Invalid app_id"),
+            WechatError::InvalidBase64(ref err) => err.fmt(f),
+            WechatError::ClientError { errcode, ref errmsg } => write!(f, "Client error code: {}, message: {}", errcode, errmsg),
+            WechatError::IOError(ref err) => err.fmt(f),
+            WechatError::InvalidValue => write!(f, "Invalid Value of Null"),
+            WechatError::Custom { code, ref msg } => write!(f, "Client error code: {}, message: {}", code, msg),
 
         }
     }
 }
 
 /// 错误信息扩展
-impl error::Error for WeChatError {
+impl error::Error for WechatError {
 
     /// 错误信息输出
     fn description(&self) -> &str {
         match *self {
-            WeChatError::InvalidSignature => "Invalid signature",
-            WeChatError::InvalidAppId => "Invalid app_id",
-            WeChatError::InvalidBase64(ref _err) => "Invalid Base64",
-            WeChatError::ClientError { ref errmsg, .. } => errmsg,
-            WeChatError::IOError(ref _err) => "Invalid IOError",
-            WeChatError::InvalidValue => "Invalid Value Of Empty",
-            WeChatError::Custom { ref msg, .. } => msg,
+            WechatError::InvalidSignature => "Invalid signature",
+            WechatError::InvalidAppId => "Invalid app_id",
+            WechatError::InvalidBase64(ref _err) => "Invalid Base64",
+            WechatError::ClientError { ref errmsg, .. } => errmsg,
+            WechatError::IOError(ref _err) => "Invalid IOError",
+            WechatError::InvalidValue => "Invalid Value Of Empty",
+            WechatError::Custom { ref msg, .. } => msg,
         }
     }
 }
 
-impl From<DecodeError> for WeChatError {
-    fn from(err: DecodeError) -> WeChatError {
-        WeChatError::InvalidBase64(err)
+impl From<DecodeError> for WechatError {
+    fn from(err: DecodeError) -> WechatError {
+        WechatError::InvalidBase64(err)
     }
 }
 
-impl From<io::Error> for WeChatError {
-    fn from(err: io::Error) -> WeChatError {
-        WeChatError::IOError(err)
+impl From<io::Error> for WechatError {
+    fn from(err: io::Error) -> WechatError {
+        WechatError::IOError(err)
     }
 }
 
 
 
-impl WeChatError {
+impl WechatError {
     /// Creates generic error
     pub fn msg(_value: impl ToString) -> Self {
-        WeChatError::InvalidAppId
+        WechatError::InvalidAppId
     }
 
     /// 自定义错误
     pub fn custom(code: i32, msg: impl ToString) -> Self {
-         WeChatError::Custom {
+         WechatError::Custom {
                 code,
                 msg: msg.to_string(),
             }
