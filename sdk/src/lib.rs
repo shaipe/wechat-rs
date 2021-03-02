@@ -3,7 +3,7 @@
 //! created by shaipe 20210228
 
 /// 字义微信结果类型
-pub type WeChatResult<T> = Result<T, WeChatError>;
+pub type WechatResult<T> = Result<T, WeChatError>;
 
 #[macro_use]
 pub mod macros;

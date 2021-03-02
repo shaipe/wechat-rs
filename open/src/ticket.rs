@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat_sdk::{xmlutil, WeChatCrypto, WeChatError, WeChatResult};
+use wechat_sdk::{xmlutil, WeChatCrypto, WeChatError, WechatResult};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -85,7 +85,7 @@ impl Ticket {
         conf: TripartiteConfig,
         xml: &str,
         query_params: HashMap<String, String>,
-    ) -> WeChatResult<String> {
+    ) -> WechatResult<String> {
         let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
         // let decrpty = c.decrypt_message(xml, &signature, timestamp, &nonce);
         match c.decrypt_message(xml, &query_params) {
@@ -96,7 +96,7 @@ impl Ticket {
                     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
                 Ok(ticketstr)
             }
-            Err(_) => Err(),
+            Err(_) => Err(error!{code: 3000, msg: "Invalid"}),
         }
     }
 

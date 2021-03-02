@@ -5,7 +5,7 @@
 
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{Client, WeChatResult};
+use wechat_sdk::{Client, WechatResult};
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
@@ -24,7 +24,7 @@ impl Auth {
         appid: &str,
         secret: &str,
         code: &str,
-    ) -> WeChatResult<serde_json::Value> {
+    ) -> WechatResult<serde_json::Value> {
         let url = format!("{api}/sns/jscode2session?appid={appid}&secret={secret}&js_code={code}&grant_type=authorization_code",
         api=API_DOMAIN,
         appid=appid,
@@ -44,14 +44,14 @@ impl Auth {
     /// 用户支付完成后，获取该用户的 UnionId，无需用户授权。本接口支持第三方平台代理查询。
     /// GET https://api.weixin.qq.com/wxa/getpaidunionid?access_token=ACCESS_TOKEN&openid=OPENID
     /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/user-info/auth.getPaidUnionId.html
-    pub fn get_paid_union_id() -> WeChatResult<String> {
+    pub fn get_paid_union_id() -> WechatResult<String> {
         Ok("".to_string())
     }
 
     /// 获取小程序全局唯一后台接口调用凭据（access_token）。调用绝大多数后台接口时都需使用 access_token，开发者需要进行妥善保存。
     /// GET https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
     /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-    pub fn get_access_token() -> WeChatResult<String> {
+    pub fn get_access_token() -> WechatResult<String> {
         Ok(String::from(""))
     }
 }

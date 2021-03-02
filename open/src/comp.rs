@@ -6,7 +6,7 @@ use super::TripartiteConfig;
 use super::{get_ticket, Ticket};
 use serde_json::Value;
 use std::collections::HashMap;
-use wechat_sdk::{current_timestamp, Client, WeChatResult};
+use wechat_sdk::{current_timestamp, Client, WechatResult};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
@@ -28,7 +28,7 @@ impl Component {
 
     /// 获取Aceess Token
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/component_access_token.html
-    pub async fn fetch_access_token(&self) -> WeChatResult<(String, i64)> {
+    pub async fn fetch_access_token(&self) -> WechatResult<(String, i64)> {
         let url = format!("{}{}", API_DOMAIN, "/cgi-bin/component/api_component_token");
         let mut hash = HashMap::new();
         let conf = self.config.clone();
@@ -61,7 +61,7 @@ impl Component {
 
     /// 生成预授权码
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/pre_auth_code.html
-    pub async fn create_preauthcode(&self, access_token: &str) -> WeChatResult<String> {
+    pub async fn create_preauthcode(&self, access_token: &str) -> WechatResult<String> {
         let uri = format!(
             "{}{}",
             API_DOMAIN,
@@ -105,7 +105,7 @@ impl Component {
 
     /// 查询授权
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
-    pub async fn query_auth(&self, pre_auth_code: &str) -> WeChatResult<serde_json::Value> {
+    pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
         let conf = self.config.clone();
         let mut t = self.ticket.clone();
         // 获取
@@ -158,7 +158,7 @@ impl Component {
         &self,
         authorizer_appid: &str,
         refresh_token: &str,
-    ) -> WeChatResult<(String, String)> {
+    ) -> WechatResult<(String, String)> {
         let conf = self.config.clone();
         let mut t = self.ticket.clone();
         let acc_token = t.get_token(conf.clone()).await;
@@ -225,19 +225,19 @@ impl Component {
 
     /// 获取授权信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_info.html
-    pub async fn fetch_auth_info(&self, _auth_appid: &str) -> WeChatResult<String> {
+    pub async fn fetch_auth_info(&self, _auth_appid: &str) -> WechatResult<String> {
         Ok("".to_string())
     }
 
     /// 获取授权方的选项信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_option.html
-    pub async fn fetch_auth_option(&self, _auth_appid: &str) -> WeChatResult<String> {
+    pub async fn fetch_auth_option(&self, _auth_appid: &str) -> WechatResult<String> {
         Ok("".to_string())
     }
 
     /// 设置授权方选项信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_set_authorizer_option.html
-    pub async fn set_auth_option(&self, _auth_appid: &str) -> WeChatResult<String> {
+    pub async fn set_auth_option(&self, _auth_appid: &str) -> WechatResult<String> {
         Ok("".to_string())
     }
 
@@ -248,7 +248,7 @@ impl Component {
         &self,
         offset: i64,
         count: i64,
-    ) -> WeChatResult<(i64, Vec<(String, String, i64)>)> {
+    ) -> WechatResult<(i64, Vec<(String, String, i64)>)> {
         let conf = self.config.clone();
         let mut ticket = get_ticket();
         let acc_token = ticket.get_token(conf.clone()).await;

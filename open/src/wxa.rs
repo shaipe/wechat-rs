@@ -5,7 +5,7 @@
 
 use byteorder::{NativeEndian, ReadBytesExt};
 use std::io::Cursor;
-use wechat_sdk::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WeChatResult};
+use wechat_sdk::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WechatResult};
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
@@ -25,7 +25,7 @@ impl WxApp {
         code: &str,
         component_appid: &str,
         component_access_token: &str,
-    ) -> WeChatResult<serde_json::Value> {
+    ) -> WechatResult<serde_json::Value> {
         let url = format!("{api}/sns/component/jscode2session?appid={appid}&js_code={code}&grant_type=authorization_code&component_appid={component_appid}&component_access_token={component_access_token}",
         api=API_DOMAIN,
         appid=appid,
@@ -53,7 +53,7 @@ impl WxApp {
         session_key: &str,
         iv: &str,
         encrypte_data: &str,
-    ) -> WeChatResult<String> {
+    ) -> WechatResult<String> {
         let encrypte_data = base64::decode(encrypte_data).unwrap();
         let iv = base64::decode(iv).unwrap();
         let session_key = base64::decode(session_key).unwrap();

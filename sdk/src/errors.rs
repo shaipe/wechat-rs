@@ -68,7 +68,7 @@ impl From<io::Error> for WeChatError {
 
 impl WeChatError {
     /// Creates generic error
-    pub fn msg(value: impl ToString) -> Self {
+    pub fn msg(_value: impl ToString) -> Self {
         WeChatError::InvalidAppId
     }
 

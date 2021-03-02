@@ -1,7 +1,7 @@
 //! copyright
 //! 微信加解密码处理
 
-use crate::WeChatResult;
+use crate::WechatResult;
 use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
@@ -65,7 +65,7 @@ impl WeChatCrypto {
         &self,
         xml: &str,
         query_params: &HashMap<String, String>,
-    ) -> WeChatResult<String> {
+    ) -> WechatResult<String> {
         //随机数
         let nonce = get_hash_value(query_params, "nonce");
         //时间缀
@@ -97,7 +97,7 @@ impl WeChatCrypto {
     }
 
     /// 解密
-    pub fn decrypt(&self, ciphertext: &str) -> WeChatResult<String> {
+    pub fn decrypt(&self, ciphertext: &str) -> WechatResult<String> {
         let b64decoded = base64::decode(ciphertext).unwrap();
         // aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
@@ -125,7 +125,7 @@ impl WeChatCrypto {
     // }
 
     /// 对消息进行加密
-    pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WeChatResult<String> {
+    pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WechatResult<String> {
         let rnd_str = get_random_string(16);
         let mut wtr = rnd_str.into_bytes();
 

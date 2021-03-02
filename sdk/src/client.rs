@@ -1,7 +1,7 @@
 //! copyright © shaipe 2020 - persent
 //! 微信对接的网络请求客户端
 
-use crate::WeChatResult;
+use crate::WechatResult;
 use bytes::Bytes;
 use reqwest::header;
 use reqwest::Client as HttpClient;
@@ -35,7 +35,7 @@ impl Client {
     /// post方式提交数据
     /// url:
     /// param:
-    pub async fn post<T: Serialize + ?Sized>(&self, url: &str, params: &T) -> WeChatResult<String> {
+    pub async fn post<T: Serialize + ?Sized>(&self, url: &str, params: &T) -> WechatResult<String> {
         match self.client.post(url).json(params).send().await {
             Ok(res) => {
                 if res.status() == 200 {
@@ -64,7 +64,7 @@ impl Client {
     }
 
     /// 发送二进制文件
-    pub async fn post_betyes(&self, url: &str, body: Bytes) -> WeChatResult<String> {
+    pub async fn post_betyes(&self, url: &str, body: Bytes) -> WechatResult<String> {
         match self.client.post(url).body(body).send().await {
             Ok(res) => {
                 if res.status() == 200 {
@@ -91,7 +91,7 @@ impl Client {
 
     /// get方法
     #[allow(dead_code)]
-    pub async fn get(&self, url: &str) -> WeChatResult<String> {
+    pub async fn get(&self, url: &str) -> WechatResult<String> {
         match self.client.get(url).send().await {
             Ok(res) => {
                 if res.status() == 200 {
@@ -118,7 +118,7 @@ impl Client {
 
     ///
     #[inline]
-    pub fn json_decode(&self, data: &str) -> WeChatResult<serde_json::Value> {
+    pub fn json_decode(&self, data: &str) -> WechatResult<serde_json::Value> {
         let obj: serde_json::Value = match serde_json::from_str(data) {
             Ok(decoded) => decoded,
             Err(ref e) => {

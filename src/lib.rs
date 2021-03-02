@@ -11,7 +11,7 @@
 // mod macros;
 
 // 字义微信结果类型
-// pub type WeChatResult<T> = Result<T, WeChatError>;
+// pub type WechatResult<T> = Result<T, WeChatError>;
 
 // mod errors;
 // pub use errors::WeChatError;
