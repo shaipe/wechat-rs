@@ -1,11 +1,6 @@
 //! copyright © shaipe 2021 - present
 //! 微信消息处理
 
-#[macro_use]
-extern crate wechat_sdk;
-
-#[macro_use]
-extern crate serde_json;
 
 mod parser;
 pub use parser::{parse_message, MessageParser};

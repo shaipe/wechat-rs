@@ -9,8 +9,6 @@ edition = "2018"
 [dependencies]
 # 公众号对接
 wechat_mp = {path="mp", version = "0.1.0", optional = true}
-# 消息对接
-wechat_msg = {path="msg", version = "0.1.0", optional = true}
 # 开放平台
 wechat_open = {path="open", version = "0.1.0", optional=true}
 # 微信支付
@@ -25,13 +23,12 @@ wechat_work = {path="work", version = "0.1.0", optional = true}
 [features]
 default = ["wechat_weapp"]
 mp = ["wechat_mp"]
-msg = ["wechat_msg"]
 open = ["wechat_open"]
 pay = ["wechat_pay"]
 store = ["wechat_store"]
 weapp = ["wechat_weapp"]
 work = ["wechat_work"]
-full = ["wechat_mp", "wechat_msg", "wechat_open", "wechat_pay", "wechat_store", "wechat_weapp", "wechat_work"]
+full = ["wechat_mp", "wechat_open", "wechat_pay", "wechat_store", "wechat_weapp", "wechat_work"]
 
 [workspace]
 members = [
@@ -39,7 +36,7 @@ members = [
   "weapp", # 小程序
   "work", # 企业微信
   "open", # 开放平台
-  "msg",  # 消息
   "mp",   # 公众号
+  "store",
   "sdk" # 工具类
 ]

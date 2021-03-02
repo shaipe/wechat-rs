@@ -2,10 +2,14 @@
 name = "wechat_mp"
 version = "0.1.0"
 authors = ["shaipe <shaipe@live.com>"]
+keywords = ["wechat", "微信公众号"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 percent-encoding = "2.1.0"
+serde_json = "1.0.64"
+serde = { version = "1.0.123", features = ["derive"] }
+# 
 wechat_sdk = {path = "../sdk", version = "0.1.0"}
