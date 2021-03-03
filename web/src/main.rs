@@ -1,28 +1,13 @@
-//! copyright
-//! 微信业务处理服务入口类
+//! copyright © shaipe 2021 - present
+//! 应用
+//! created by shaipe 20210303
 
 #[macro_use]
 extern crate actix_web;
 
-// #[macro_use]
-// extern crate wechat_sdk;
-
-#[macro_use]
-extern crate lazy_static;
-
+use actix_web::client::Client;
 use actix_web::http::StatusCode;
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
-use std::{env, io};
-
-mod cluster;
-mod utils;
-// mod wx_msg;
-// mod wx_handler;
-// mod config;
-mod result_response;
-use cluster::load_cluster;
-mod official;
-// use wechat_sdk::tripartite::Ticket;
+use actix_web::{middleware, App, HttpRequest, HttpResponse, HttpServer, Result};
 
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
@@ -32,39 +17,51 @@ async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
         .body("wx test"))
 }
 
-#[actix_rt::main]
-async fn main() -> io::Result<()> {
-    env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
+/// 应用启动入口
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // 加载配置文件
+    let conf_path = "conf/social.yml";
+
+    // 启动web服务
+    start_web_server(conf_path).await
+}
+
+/// web服务启动
+async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
+    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 
-    // 加载应用id与域名的映射信息
-    load_cluster("");
+    // // 加载配置信息
+    // let conf = match Config::load_yaml(conf_path) {
+    //     Ok(conf) => conf,
+    //     Err(e) => {
+    //         println!("file: {}, {:?}", conf_path, e);
+    //         Config::default()
+    //     }
+    // };
 
-    // let conf = config::Config::new("");
-    // Ticket::new("");
-    let addr = format!("0.0.0.0:{}", 999);
+    // println!("config :: {:?}", conf);
 
-    HttpServer::new(|| {
+    // 设置服务器运行ip和端口信息
+    // let ip = format!("{}:{}", conf.web.ip, conf.web.port);
+    let ip = format!("{}:{}", "0.0.0.0", 999);
+
+    // 启动一个web服务
+    HttpServer::new(move || {
         App::new()
-            // enable logger - always register actix-web Logger middleware last
             .wrap(middleware::Logger::default())
-            // .data(Client::new())
-            // register simple route, handle all methods
+            // .wrap(
+            //     // 设置允许跨域请求
+            //     actix_cors::Cors::default()
+            //         .allow_any_origin()
+            //         .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+            //         .max_age(3600),
+            // )
+            .data(Client::new())
             .service(index_handler)
-        // .service(wx_handler::receive_ticket)
-        // .service(wx_handler::auth_transfer)
-        // .service(wx_handler::official_auth)
-        // .service(wx_handler::official_auth_calback)
-        // .service(wx_handler::offical_back)
-        // .service(wx_handler::fetch_common_official)
-        // .service(wx_handler::fetch_component_token)
-        // .service(wx_handler::fetch_auth_url)
-        // .service(wx_handler::user_auth_calback)
-        // .service(wx_handler::test)
-        // // with path parameters
-        // .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
     })
-    .bind(addr)?
+    .bind(ip)?
     .run()
     .await
 }
