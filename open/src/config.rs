@@ -7,10 +7,15 @@ use std::sync::Mutex;
 ///tripartite 配置
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TripartiteConfig {
+    // 名称
     pub name: String,
+    // 域名
     pub domain: String,
+    // 应用id
     pub app_id: String,
+    // 密钥
     pub secret: String,
+    // 已获取的token
     pub token: String,
     pub encoding_aes_key: String,
     pub wap_domain: String,

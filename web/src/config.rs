@@ -8,6 +8,7 @@ pub struct Config {
     pub name: String,
     pub port: i32,
     pub tripartite: Option<TripartiteConfig>,
+    // pub weapp: Option<>
 }
 
 impl Config {

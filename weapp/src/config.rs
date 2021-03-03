@@ -6,7 +6,7 @@ use std::fs::File;
 use wechat_sdk::WechatResult;
 
 /// 配置信息结构体
-pub struct Config {
+pub struct WeappConfig {
     // 应用id
     pub app_id: String,
     // 应用密钥
@@ -15,9 +15,9 @@ pub struct Config {
     pub name: String,
 }
 
-impl Config {
+impl WeappConfig {
     /// 加载yml配置文件
-    pub fn load_yaml(conf_path: &str) -> WechatResult<Config> {
+    pub fn load_yaml(conf_path: &str) -> WechatResult<WeappConfig> {
         use yaml_rust::yaml;
         // open file
         let mut f = match File::open(conf_path) {
@@ -48,13 +48,13 @@ impl Config {
         // get server value
         let server = yaml_doc["weapp"].clone();
 
-        Ok(Config::load_yaml_node(&server))
+        Ok(WeappConfig::load_yaml_node(&server))
     }
 
     /// 根据yaml配置点进加载配置
     /// @param1: yaml 配置节点
-    pub fn load_yaml_node(conf_node: &yaml_rust::yaml::Yaml) -> Config {
-        Config {
+    pub fn load_yaml_node(conf_node: &yaml_rust::yaml::Yaml) -> WeappConfig {
+        WeappConfig {
             app_id: if let Some(s) = conf_node["app_id"].as_str() {
                 s.to_owned()
             } else {
@@ -74,10 +74,11 @@ impl Config {
     }
 }
 
-impl std::default::Default for Config {
+/// 默认实现
+impl std::default::Default for WeappConfig {
     // 给定默认值
-    fn default() -> Config {
-        Config {
+    fn default() -> WeappConfig {
+        WeappConfig {
             name: String::new(),
             app_id: String::new(),
             secret: String::new(),
