@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate wechat_sdk;
 // 此句一定不能少
-use wechat_sdk::{RedisStorage, SessionStore, WechatError};
+use wechat_sdk::WechatError;
 
 // #[macro_use]
 extern crate serde_json;

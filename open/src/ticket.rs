@@ -10,8 +10,7 @@ use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use wechat_sdk::{
-    get_redis_conf, set_redis_conf, xmlutil, RedisConfig, RedisStorage, SessionStore, WeChatCrypto,
-    WechatResult,
+    get_redis_conf, set_redis_conf, xmlutil, RedisStorage, SessionStore, WeChatCrypto, WechatResult,
 };
 
 /// Ticket对象
@@ -22,7 +21,9 @@ pub struct Ticket {
     pub access_token: String,
     pub at_expired_time: i64,
 }
-
+impl redis::ToRedisArgs for Ticket {
+    fn write_redis_args(&self) {}
+}
 impl Default for Ticket {
     fn default() -> Self {
         Ticket {
@@ -156,26 +157,18 @@ impl Ticket {
         }
     }
 }
-
 // 默认加载静态全局
 lazy_static! {
     pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
         Arc::new(Mutex::new(Ticket::default()));
 }
-
+const TICKET_CATCHE_KEY: &str = "TICKET_CATCHE_KEY";
 /// 设置ticket
 pub fn set_ticket(cnf: Ticket) {
-    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    let mut cache = counter.lock().unwrap();
-    *cache = cnf;
-}
-
-/// 获取ticket
-pub fn get_ticket() -> Ticket {
     // let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    // let cache = counter.lock().unwrap();
-    // let mut obj = cache.clone();
-    let obj = Ticket::default();
+    // let mut cache = counter.lock().unwrap();
+    // *cache = cnf;
+    let mut obj = Ticket::default();
     let redisconfig = get_redis_conf();
     let url = format!(
         "{}:{}/{}",
@@ -183,11 +176,33 @@ pub fn get_ticket() -> Ticket {
     );
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            // if let Some(v) = session.get("ticket", None) {
-            //     v
-            // } else {
+            session.set(TICKET_CATCHE_KEY, cnf, Some(10 * 1000));
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
+    }
+}
+
+/// 获取ticket
+pub fn get_ticket() -> Ticket {
+    // let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    // let cache = counter.lock().unwrap();
+    // let mut obj = cache.clone();
+    let mut obj = Ticket::default();
+    let redisconfig = get_redis_conf();
+    let url = format!(
+        "{}:{}/{}",
+        redisconfig.server, redisconfig.port, redisconfig.dbid
+    );
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            if let Some(v) = session.get(TICKET_CATCHE_KEY, None) {
+                obj.access_ticket = v;
                 obj
-            // }
+            } else {
+                obj
+            }
         }
         Err(e) => obj,
     }

@@ -1,13 +1,15 @@
 use super::WechatResult;
 use redis::{self, Commands, FromRedisValue, ToRedisArgs};
 use std::collections::{BTreeMap, HashMap};
+pub trait SessionStruct {}
+
 pub trait SessionStore: Clone {
     fn get<K: AsRef<str>, T: FromRedisValue>(&self, key: K, default: Option<T>) -> Option<T>;
-    fn set_hashs<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>);
-    fn set_hash<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, key: K, map: BTreeMap<T, T>);
     fn set<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>);
     fn del<K: AsRef<str>>(&self, key: K);
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>));
+    fn set_hashs<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>);
+    fn set_hash<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, key: K, map: BTreeMap<T, T>);
 }
 
 #[derive(Debug, Clone)]
