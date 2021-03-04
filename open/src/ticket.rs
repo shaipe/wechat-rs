@@ -34,6 +34,8 @@ impl Default for Ticket {
     }
 }
 
+// impl redis::types::FromRedisValue for Ticket {}
+
 impl Ticket {
     /// 加载配置
     pub fn new(config_path: &str) -> Self {
@@ -181,11 +183,11 @@ pub fn get_ticket() -> Ticket {
     );
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            if let Some(v) = session.get("ticket", Some(obj)) {
-                v
-            } else {
+            // if let Some(v) = session.get("ticket", None) {
+            //     v
+            // } else {
                 obj
-            }
+            // }
         }
         Err(e) => obj,
     }
