@@ -15,6 +15,8 @@ read input_msg
 # 开始提交代码
 git commit -a -m "$input_msg"
 git push
+# 强制推送到github
+git push -f github
 
 echo "git commit and push success"
 

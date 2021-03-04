@@ -11,7 +11,11 @@ pub struct Config {
     pub name: String,
     pub port: i32,
     pub tripartite: Option<TripartiteConfig>,
+<<<<<<< HEAD
     pub redisconfig: Option<RedisConfig>,
+=======
+    // pub weapp: Option<>
+>>>>>>> 69b0773a5f90bd73dffa9ff6477dd26220c36b1c
 }
 
 impl Config {

@@ -25,6 +25,7 @@ json = "0.12.4"
 url = "2.2.1"
 http = "0.2.3"
 
+
 [[bin]]
 name = "web"
 path = "src/main.rs"
