@@ -1,17 +1,20 @@
-use serde_derive::{Deserialize,Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::prelude::*;
-use wechat_sdk::tripartite::{set_tripartite_config, TripartiteConfig};
+use wechat_sdk::{
+    tripartite::{set_tripartite_config, TripartiteConfig},
+    RedisConfig,
+};
 // 业务配置信息
-#[derive(Debug, Clone, Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
     pub name: String,
     pub port: i32,
     pub tripartite: Option<TripartiteConfig>,
+    pub redisconfig: Option<RedisConfig>,
 }
 
 impl Config {
-
     /// 加载配置
     pub fn new(config_path: &str) -> Self {
         let file_path = if config_path.is_empty() {
@@ -45,7 +48,13 @@ impl Config {
                 TripartiteConfig::default()
             }
         };
-
+        match cnf.redisconfig.clone() {
+            Some(val) => val,
+            _ => {
+                println!("请配置redis缓存!");
+                RedisConfig::default()
+            }
+        };
         cnf
     }
 }

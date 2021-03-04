@@ -17,6 +17,8 @@ rand = "0.8.3"
 byteorder = "1.4.2"
 base64 = "0.13.0"
 bytes = "1.0.1"
+redis = "0.20.0"
+lazy_static = "1.4.0"
 
 # Xml解析
 sxd-document = "0.3.2"

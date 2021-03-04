@@ -9,7 +9,10 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat_sdk::{xmlutil, WeChatCrypto, WechatResult};
+use wechat_sdk::{
+    get_redis_conf, set_redis_conf, xmlutil, RedisConfig, RedisStorage, SessionStore, WeChatCrypto,
+    WechatResult,
+};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -167,7 +170,23 @@ pub fn set_ticket(cnf: Ticket) {
 
 /// 获取ticket
 pub fn get_ticket() -> Ticket {
-    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    let cache = counter.lock().unwrap();
-    cache.clone()
+    // let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    // let cache = counter.lock().unwrap();
+    // let mut obj = cache.clone();
+    let obj = Ticket::default();
+    let redisconfig = get_redis_conf();
+    let url = format!(
+        "{}:{}/{}",
+        redisconfig.server, redisconfig.port, redisconfig.dbid
+    );
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            if let Some(v) = session.get("ticket", Some(obj)) {
+                v
+            } else {
+                obj
+            }
+        }
+        Err(e) => obj,
+    }
 }

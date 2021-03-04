@@ -35,7 +35,6 @@ impl TripartiteConfig {
         }
     }
 }
-
 // // 默认加载静态全局
 lazy_static! {
     pub static ref TRIPARTITE_CACHES: Mutex<TripartiteConfig> =

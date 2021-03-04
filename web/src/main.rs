@@ -4,11 +4,17 @@
 
 #[macro_use]
 extern crate actix_web;
+#[macro_use]
+extern crate wechat;
 
+#[macro_use]
+extern crate lazy_static;
 use actix_web::client::Client;
 use actix_web::http::StatusCode;
 use actix_web::{middleware, App, HttpRequest, HttpResponse, HttpServer, Result};
-
+mod result_response;
+mod utils;
+mod wx_handler;
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
     // response
@@ -60,6 +66,7 @@ async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
             // )
             .data(Client::new())
             .service(index_handler)
+            .service(wx_handler::receive_ticket)
     })
     .bind(ip)?
     .run()

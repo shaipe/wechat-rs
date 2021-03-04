@@ -19,7 +19,14 @@ pub use client::Client;
 
 pub mod xmlutil;
 // pub use xmlutil::
+mod session;
+pub use session::{RedisStorage, SessionStore};
 
+#[macro_use]
+extern crate lazy_static;
+
+mod config;
+pub use config::{get_redis_conf, set_redis_conf, RedisConfig};
 /// 获取当前时间戮
 pub fn current_timestamp() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -28,7 +35,6 @@ pub fn current_timestamp() -> i64 {
         .unwrap()
         .as_secs() as i64
 }
-
 
 #[cfg(test)]
 mod tests {
