@@ -22,7 +22,11 @@ pub struct Ticket {
     pub at_expired_time: i64,
 }
 impl redis::ToRedisArgs for Ticket {
-    fn write_redis_args(&self) {}
+    fn write_redis_args<W>(&self, out: &mut W)
+    where
+        W: ?Sized + redis::RedisWrite,
+    {
+    }
 }
 impl Default for Ticket {
     fn default() -> Self {
