@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! Xml操作处理单元
 //! created by shaipe 20210228
 

@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! 消息回复
 
 mod text;

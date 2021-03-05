@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! 事件消息
 
 use super::MessageParser;

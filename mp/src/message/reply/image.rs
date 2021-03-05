@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 
 use super::ReplyRender;
 use wechat_sdk::current_timestamp;

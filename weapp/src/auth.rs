@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! 小程序授权接口对接
 //! DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
 //!

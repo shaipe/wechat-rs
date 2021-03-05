@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! 获取客服消息内的临时素材。即下载临时的多媒体文件。目前小程序仅支持下载图片文件。
 //! created by shaipe 20210228
 //! 

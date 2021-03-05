@@ -1,4 +1,4 @@
-//! copyright © shaipe 2021 - present
+//! copyright © ecdata.cn 2021 - present
 //! 附近的小程序列
 //! created by shaipe 20210228
 //! 
