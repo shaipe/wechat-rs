@@ -2,6 +2,7 @@
 //! 微信第三方平台的ticket获取存储
 
 use super::{Component, TripartiteConfig};
+use form_urlencoded;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
@@ -9,9 +10,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat_sdk::{
-    get_redis_conf, set_redis_conf, xmlutil, RedisStorage, SessionStore, WeChatCrypto, WechatResult,
-};
+use wechat_sdk::{get_redis_conf, xmlutil, RedisStorage, SessionStore, WeChatCrypto, WechatResult};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -28,9 +27,9 @@ impl redis::ToRedisArgs for Ticket {
     {
     }
 }
-impl redis::FromRedisValue for Ticket {
-    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {}
-}
+// impl redis::FromRedisValue for Ticket {
+//     fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {}
+// }
 impl Default for Ticket {
     fn default() -> Self {
         Ticket {
@@ -105,6 +104,7 @@ impl Ticket {
                 let doc = package.as_document();
                 let ticketstr =
                     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
+                Ticket::set_ticket(&conf, ticketstr.clone());
                 Ok(ticketstr)
             }
             Err(_) => Err(error! {code: 3000, msg: "Invalid"}),
@@ -150,64 +150,82 @@ impl Ticket {
             let result = c.fetch_access_token().await;
             // println!("result={:?},access_ticket={:?}", result, self.access_ticket);
             match result {
-                Ok(token) => {
-                    self.access_token = token.0.clone();
-                    self.at_expired_time = token.1;
-                    token.0
-                }
+                Ok(token) => token.0,
                 Err(_) => "".to_owned(),
             }
         } else {
             self.access_token.clone()
         }
     }
+    pub fn set_ticket(conf: &TripartiteConfig, ticket_str: String) {
+        let redisconfig = get_redis_conf();
+        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        let url = format!(
+            "{}:{}:{}/{}",
+            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        );
+        let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
+        match RedisStorage::from_url(url) {
+            Ok(session) => {
+                session.set(key, ticket_str, Some(10 * 1000));
+            }
+            Err(e) => {
+                println!("{:?}", e);
+            }
+        }
+    }
+    /// 获取ticket
+    pub fn get_ticket(conf: &TripartiteConfig) -> Ticket {
+        let mut obj = Ticket::default();
+        let redisconfig = get_redis_conf();
+
+        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        let url = format!(
+            "{}:{}:{}/{}",
+            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        );
+        let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
+        match RedisStorage::from_url(url) {
+            Ok(session) => {
+                if let Some(v) = session.get(key, None) {
+                    obj.access_ticket = v;
+                } else {
+                }
+            }
+            Err(e) => {
+                println!("redis read {:?}", e);
+            }
+        };
+        match Component::get_access_token(conf) {
+            Ok(s) => {
+                obj.access_token = s.1;
+                obj.at_expired_time = s.0;
+            }
+            Err(e) => {
+                println!("redis read {:?}", e);
+            }
+        };
+        obj
+    }
 }
-// 默认加载静态全局
+const TICKET_CATCHE_KEY: &str = "TICKET_CATCHE_KEY_";
+// // 默认加载静态全局
 lazy_static! {
     pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
         Arc::new(Mutex::new(Ticket::default()));
 }
-const TICKET_CATCHE_KEY: &str = "TICKET_CATCHE_KEY";
+
 /// 设置ticket
 pub fn set_ticket(cnf: Ticket) {
-    // let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    // let mut cache = counter.lock().unwrap();
-    // *cache = cnf;
-    let mut obj = Ticket::default();
-    let redisconfig = get_redis_conf();
-    let url = format!(
-        "{}:{}/{}",
-        redisconfig.server, redisconfig.port, redisconfig.dbid
-    );
-    match RedisStorage::from_url(url) {
-        Ok(session) => {
-            session.set(TICKET_CATCHE_KEY, cnf, Some(10 * 1000));
-        }
-        Err(e) => {
-            println!("{:?}", e);
-        }
-    }
+    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let mut cache = counter.lock().unwrap();
+    *cache = cnf;
 }
 
 /// 获取ticket
 pub fn get_ticket() -> Ticket {
-    // let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    // let cache = counter.lock().unwrap();
-    // let mut obj = cache.clone();
-    let mut obj = Ticket::default();
-    let redisconfig = get_redis_conf();
-    let url = format!(
-        "{}:{}/{}",
-        redisconfig.server, redisconfig.port, redisconfig.dbid
-    );
-    match RedisStorage::from_url(url) {
-        Ok(session) => {
-            if let Some(v) = session.get(TICKET_CATCHE_KEY, Some(obj)) {
-                v
-            } else {
-                obj
-            }
-        }
-        Err(e) => obj,
-    }
+    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+    let cache = counter.lock().unwrap();
+    let obj = cache.clone();
+    obj
 }

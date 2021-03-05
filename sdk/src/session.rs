@@ -220,14 +220,15 @@ pub fn get_redis_client() -> HashMap<String, redis::Client> {
 #[test]
 fn test_err() {
     use super::{RedisStorage, SessionStore};
-    let url = format!("redis://127.0.0.1:6379/1");
+    let url = format!("redis://:abc123!%40%23%24@139.9.173.11:6379/9");
+    println!("{:?}", url);
     match RedisStorage::from_url(url) {
         Ok(session) => {
             println!("执行了set");
             session.set("hello", "18981772611", Some(10000));
         }
         Err(e) => {
-            println!("{:?}", e);
+            println!("error==={:?}", e);
         }
     }
     assert_eq!(1 + 1, 1);

@@ -13,3 +13,4 @@ serde_json = "1.0.64"
 wechat_sdk = {path = "../sdk", version = "0.1.0"}
 lazy_static = "1.4.0"
 redis = "0.20.0"
+form_urlencoded="*"

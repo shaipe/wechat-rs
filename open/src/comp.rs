@@ -5,8 +5,11 @@ use super::TripartiteConfig;
 
 use super::{get_ticket, Ticket};
 use serde_json::Value;
-use std::collections::HashMap;
-use wechat_sdk::{current_timestamp, Client, WechatResult, WechatError};
+use std::collections::{BTreeMap, HashMap};
+use wechat_sdk::{
+    current_timestamp, get_redis_conf, Client, RedisStorage, SessionStore, WechatError,
+    WechatResult,
+};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
@@ -52,11 +55,13 @@ impl Component {
             None => "".to_owned(),
         };
         println!("{:?}", data);
-        let mut t = self.ticket.clone();
-        t.access_token = token.clone();
-        t.at_expired_time = current_timestamp() + 7000;
-        t.save("");
-        Ok((token, t.at_expired_time))
+        let expired_time = current_timestamp() + 7000;
+        // let mut t = self.ticket.clone();
+        // t.access_token = token.clone();
+        // t.at_expired_time = current_timestamp() + 7000;
+        // t.save("");
+        Component::set_access_token(&self.config, (expired_time, token.clone()));
+        Ok((token, expired_time))
     }
 
     /// 生成预授权码
@@ -318,4 +323,44 @@ impl Component {
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
+    pub fn set_access_token(conf: &TripartiteConfig, c: (i64, String)) {
+        let redisconfig = get_redis_conf();
+
+        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        let url = format!(
+            "{}:{}:{}/{}",
+            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        );
+        let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
+        match RedisStorage::from_url(url) {
+            Ok(session) => {
+                session.set(key, c, None);
+            }
+            Err(e) => {
+                println!("{:?}", e);
+            }
+        };
+    }
+    /// 获取access_token
+    pub fn get_access_token(conf: &TripartiteConfig) -> WechatResult<(i64, String)> {
+        let redisconfig = get_redis_conf();
+
+        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        let url = format!(
+            "{}:{}:{}/{}",
+            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        );
+        let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
+        match RedisStorage::from_url(url) {
+            Ok(session) => {
+                if let Some(v) = session.get(key, None) {
+                    Ok(v)
+                } else {
+                    Err(error!("没有相应的键"))
+                }
+            }
+            Err(e) => Err(error!(format!("{:?}", e))),
+        }
+    }
 }
+const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
