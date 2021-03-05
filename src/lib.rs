@@ -1,9 +1,9 @@
 //! copyright © shaipe 2020 - persent
 //!
 
-// #[macro_use]
-// extern crate wechat_sdk;
-// use wechat_sdk::WechatError;
+#[macro_use]
+extern crate wechat_sdk;
+use wechat_sdk::WechatError;
 
 
 
