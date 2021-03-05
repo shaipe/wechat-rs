@@ -28,40 +28,40 @@ pub struct Config {
 }
 
 impl Config {
-    // /// 加载yml配置文件
-    // pub fn load_yaml(conf_path: &str) -> WechatResult<Config> {
-    //     use yaml_rust::yaml;
-    //     // open file
-    //     let mut f = match File::open(conf_path) {
-    //         Ok(f) => f,
-    //         Err(e) => {
-    //             return Err(error! {
-    //                 code: 4004,
-    //                 msg: format!("{}", e)
-    //             });
-    //         }
-    //     };
-    //     let mut s = String::new();
-    //     use std::io::Read;
-    //     match f.read_to_string(&mut s) {
-    //         Ok(s) => s,
-    //         Err(e) => {
-    //             return Err(error! {
-    //                 code: 4004,
-    //                 msg: format!("Error Reading file: {}", e)
-    //             });
-    //         }
-    //     };
-    //     // f.read_to_string(&mut s).unwrap(); // read file content to s
-    //     // load string to yaml loader
-    //     let docs = yaml::YamlLoader::load_from_str(&s).unwrap();
-    //     // get first yaml hash doc
-    //     let yaml_doc = &docs[0];
-    //     // get server value
-    //     let server = yaml_doc["weapp"].clone();
+    /// 加载yml配置文件
+    pub fn load_yaml(conf_path: &str) -> WechatResult<Config> {
+        use yaml_rust::yaml;
+        // open file
+        let mut f = match File::open(conf_path) {
+            Ok(f) => f,
+            Err(e) => {
+                return Err(error! {
+                    code: 4004,
+                    msg: format!("{}", e)
+                });
+            }
+        };
+        let mut s = String::new();
+        use std::io::Read;
+        match f.read_to_string(&mut s) {
+            Ok(s) => s,
+            Err(e) => {
+                return Err(error! {
+                    code: 4004,
+                    msg: format!("Error Reading file: {}", e)
+                });
+            }
+        };
+        // f.read_to_string(&mut s).unwrap(); // read file content to s
+        // load string to yaml loader
+        let docs = yaml::YamlLoader::load_from_str(&s).unwrap();
+        // get first yaml hash doc
+        let _yaml_doc = &docs[0];
+        // get server value
+        // let server = yaml_doc["weapp"].clone();
 
-    //     // Ok(WeappConfig::load_yaml_node(&server))
-    // }
+        Ok(Config::default())
+    }
 }
 
 /// 默认配置项
