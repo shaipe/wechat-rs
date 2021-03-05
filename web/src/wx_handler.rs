@@ -32,14 +32,9 @@ pub async fn receive_ticket(
     ));
 
     let config: TripartiteConfig = get_tripartite_config();
-    Ticket::parse_ticket(config, &post_str, dic);
-    // if let Ok(t) = Ticket::parse_ticket(config, &post_str, dic) {
-    //     if !t.is_empty() {
-    //         let mut ticket = get_ticket();
-    //         ticket.access_ticket = t;
-    //         ticket.save("");
-    //     }
-    // };
+    if let Err(t) = Ticket::parse_ticket(config, &post_str, dic) {
+        println!("{:?}", t);
+    };
 
     // 告诉服务器接收成功
     Ok(HttpResponse::build(StatusCode::OK)
