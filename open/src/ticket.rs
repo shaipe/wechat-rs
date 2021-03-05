@@ -28,6 +28,9 @@ impl redis::ToRedisArgs for Ticket {
     {
     }
 }
+impl redis::FromRedisValue for Ticket {
+    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {}
+}
 impl Default for Ticket {
     fn default() -> Self {
         Ticket {
@@ -38,8 +41,6 @@ impl Default for Ticket {
         }
     }
 }
-
-// impl redis::types::FromRedisValue for Ticket {}
 
 impl Ticket {
     /// 加载配置
@@ -201,9 +202,8 @@ pub fn get_ticket() -> Ticket {
     );
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            if let Some(v) = session.get(TICKET_CATCHE_KEY, None) {
-                obj.access_ticket = v;
-                obj
+            if let Some(v) = session.get(TICKET_CATCHE_KEY, Some(obj)) {
+                v
             } else {
                 obj
             }
