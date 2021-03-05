@@ -8,13 +8,11 @@ use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use std::collections::HashMap;
 use url::Url;
-use wechat_sdk::{
-    current_timestamp,
-    message::{KFService, Message, ReplyRender, TextReply},
-    tripartite::{get_tripartite_config, Component, TripartiteConfig},
-    WeChatCrypto,
+use wechat::{
+    mp::message::{KFService, Message, ReplyRender, TextReply},
+    open::{get_tripartite_config, Component, TripartiteConfig},
 };
-
+use wechat_sdk::{current_timestamp, WeChatCrypto};
 /// 消息回复处理
 pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
     match msg {
@@ -33,12 +31,8 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
             //     .content_type("text/xml; charset=utf-8")
             //     .body(encrypt_text.unwrap()));
         }
-        Message::EventMessage(ref m) => {
-            println!("{:?}", m)
-        }
-        Message::UnknownMessage(ref m) => {
-            println!("{:?}", m)
-        }
+        Message::EventMessage(ref m) => println!("{:?}", m),
+        Message::UnknownMessage(ref m) => println!("{:?}", m),
     }
 
     Ok(HttpResponse::build(StatusCode::OK)
@@ -47,11 +41,7 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 }
 
 /// 代理消息业务转发
-pub async fn proxy_reply(
-    app_id: &str,
-    req: HttpRequest,
-    body: web::Bytes
-) -> Result<HttpResponse> {
+pub async fn proxy_reply(app_id: &str, req: HttpRequest, body: web::Bytes) -> Result<HttpResponse> {
     use crate::cluster::get_domain;
     use wechat_sdk::Client;
     let mut domain = get_domain(app_id.to_owned());

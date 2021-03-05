@@ -348,29 +348,29 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
 // 微信第三方消息回调处理
 // https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Post_Application_on_the_Entire_Network/releases_instructions.html
 // 上面是全网发布的资料
-// pub async fn callback(
-//     req: HttpRequest,
-//     path: web::Path<(String,)>,
-//     body: web::Bytes,
-// ) -> Result<HttpResponse> {
-//     use super::wx_msg;
-//     let app_id = &path.0;
-
-//     // 全网发布
-//     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
-//         let dic = utils::parse_query(req.query_string());
-//         let post_str = match std::str::from_utf8(&body) {
-//             Ok(s) => s,
-//             Err(_e) => "",
-//         };
-//         logs!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
-//         //wx_msg::global_publish(dic, post_str.to_owned()).await
-//         watch_time!(
-//             "global",
-//             wx_msg::global_publish(dic, post_str.to_owned()).await
-//         )
-//     } else {
-//         // 业务系统处理
-//         wx_msg::proxy_reply(app_id, req, body).await
-//     }
-// }
+pub async fn callback(
+    req: HttpRequest,
+    path: web::Path<(String,)>,
+    body: web::Bytes,
+) -> Result<HttpResponse> {
+    use super::wx_msg;
+    let app_id = path.0;
+    let app_id = &app_id.0;
+    // 全网发布
+    if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
+        let dic = utils::parse_query(req.query_string());
+        let post_str = match std::str::from_utf8(&body) {
+            Ok(s) => s,
+            Err(_e) => "",
+        };
+        logs!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
+        //wx_msg::global_publish(dic, post_str.to_owned()).await
+        watch_time!(
+            "global",
+            wx_msg::global_publish(dic, post_str.to_owned()).await
+        )
+    } else {
+        // 业务系统处理
+        wx_msg::proxy_reply(app_id, req, body).await
+    }
+}

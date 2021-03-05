@@ -14,12 +14,13 @@ extern crate wechat_sdk;
 extern crate lazy_static;
 use actix_web::client::Client;
 use actix_web::http::StatusCode;
-use actix_web::{middleware, App, HttpRequest, HttpResponse, HttpServer, Result};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 mod cluster;
 mod official;
 mod result_response;
 mod utils;
 mod wx_handler;
+mod wx_msg;
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
     // response
@@ -72,6 +73,7 @@ async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
             .data(Client::new())
             .service(index_handler)
             .service(wx_handler::receive_ticket)
+            .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
     })
     .bind(ip)?
     .run()
