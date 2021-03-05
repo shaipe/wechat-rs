@@ -2,11 +2,12 @@
 //! 用于记录微信appid与域名的对应关系
 
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::File;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 
+use wechat_sdk::{get_redis_conf, RedisStorage, SessionStore};
 /// 从缓存中获取配置信息
 pub fn get_domain(key: String) -> String {
     let cache = get_domains();
@@ -19,7 +20,7 @@ pub fn get_domain(key: String) -> String {
 
 /// 添加域名
 pub fn add_domain(key: String, val: String) {
-    let mut domains: HashMap<String, String> = get_domains();
+    let mut domains: BTreeMap<String, String> = get_domains();
     domains.insert(key, val);
     // 写入文件存储
     write_clusters("", domains.clone());
@@ -28,7 +29,7 @@ pub fn add_domain(key: String, val: String) {
 }
 
 /// 写入文件
-fn write_clusters(config_path: &str, content: HashMap<String, String>) {
+fn write_clusters(config_path: &str, content: BTreeMap<String, String>) {
     let file_path = if config_path.is_empty() {
         "domains.conf"
     } else {
@@ -83,44 +84,65 @@ pub fn load_cluster(config_path: &str) {
     };
     // println!("{}", str_val);
 
-    let domains: HashMap<String, String> = serde_json::from_str(&str_val).unwrap();
-    // 加载出来后写入缓存 
+    let domains: BTreeMap<String, String> = serde_json::from_str(&str_val).unwrap();
+    // 加载出来后写入缓存
     set_domains(domains);
-    // let d = domains.get("wxf9d78c09d2efa1ba");
-    // println!("has {:?}", d);
-    // // 第三方配置处理
-    // match cnf {
-    //     Ok(val) => {
-    //         let t:Ticket=val;
-    //         set_ticket(t.clone());
-    //         t
-    //     }
-    //     Err(e) => {
-    //         println!("Ticket文件配置错误! {:?}", e);
-    //         Ticket::default()
-    //     }
-    // }
 }
 
 // 默认加载静态全局
 lazy_static! {
-    pub static ref APP_DOMAIN_CACHES: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref APP_DOMAIN_CACHES: Arc<Mutex<HashMap<String, String>>> =
+        Arc::new(Mutex::new(HashMap::new()));
 }
-
+const SALF_DOMAIN_CATCHE_KEY: &str = "SALF_DOMAIN_CATCHE_KEY";
 // 设置缓存对象
-pub fn set_domains(dict: HashMap<String, String>) {
-    let domains=Arc::clone(&APP_DOMAIN_CACHES);
-    let mut cache = domains.lock().unwrap();
-    *cache = dict;
+pub fn set_domains(dict: BTreeMap<String, String>) {
+    // let domains = Arc::clone(&APP_DOMAIN_CACHES);
+    // let mut cache = domains.lock().unwrap();
+    // *cache = dict;
+
+    let redisconfig = get_redis_conf();
+    let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+    let url = format!(
+        "{}:{}:{}/{}",
+        redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+    );
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            session.set(SALF_DOMAIN_CATCHE_KEY, dict, None);
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
+    }
 }
 
 /// 设置配置信息到缓存中
-pub fn get_domains() -> HashMap<String, String>{
-    let domains=Arc::clone(&APP_DOMAIN_CACHES);
-    let cache = domains.lock().unwrap();
-    cache.clone()
+pub fn get_domains() -> BTreeMap<String, String> {
+    // let domains = Arc::clone(&APP_DOMAIN_CACHES);
+    // let cache = domains.lock().unwrap();
+    // cache.clone()
+    let redisconfig = get_redis_conf();
+    let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+    let url = format!(
+        "{}:{}:{}/{}",
+        redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+    );
+    let obj = BTreeMap::new();
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            if let Some(v) = session.get(SALF_DOMAIN_CATCHE_KEY, None) {
+                v
+            } else {
+                obj
+            }
+        }
+        Err(e) => {
+            println!("{:?}", e);
+            obj
+        }
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -129,7 +151,6 @@ mod tests {
     use std::collections::HashMap;
     #[test]
     fn load() {
-
         // let mut x:HashMap<String, String> = HashMap::new();
         // x.insert("wxf9d78c09d2efa1bc".to_owned(), "http://b2b3231a.366ec.net".to_owned());
         // x.insert("wxf9d78c09d2efa1ba".to_owned(), "http://b2b3231a.366ec.net".to_owned());

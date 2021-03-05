@@ -13,7 +13,7 @@ extern crate serde_json;
 extern crate lazy_static;
 
 pub mod ticket;
-pub use ticket::{get_ticket, set_ticket, Ticket};
+pub use ticket::Ticket;
 
 pub mod config;
 pub use config::{get_tripartite_config, set_tripartite_config, TripartiteConfig};

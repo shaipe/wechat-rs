@@ -43,52 +43,52 @@ impl Default for Ticket {
 
 impl Ticket {
     /// 加载配置
-    pub fn new(config_path: &str) -> Self {
-        let file_path = if config_path.is_empty() {
-            "ticket.conf"
-        } else {
-            config_path
-        };
+    // pub fn new(config_path: &str) -> Self {
+    //     let file_path = if config_path.is_empty() {
+    //         "ticket.conf"
+    //     } else {
+    //         config_path
+    //     };
 
-        // 如果没有配置ticket文件,返回默认值
-        if !std::path::Path::new(file_path).exists() {
-            return Ticket::default();
-        }
+    //     // 如果没有配置ticket文件,返回默认值
+    //     if !std::path::Path::new(file_path).exists() {
+    //         return Ticket::default();
+    //     }
 
-        // 打开文件
-        let mut file = match File::open(file_path) {
-            Ok(f) => f,
-            Err(e) => {
-                println!("no such file {} exception: {}", file_path, e);
-                return Ticket::default();
-            }
-        };
+    //     // 打开文件
+    //     let mut file = match File::open(file_path) {
+    //         Ok(f) => f,
+    //         Err(e) => {
+    //             println!("no such file {} exception: {}", file_path, e);
+    //             return Ticket::default();
+    //         }
+    //     };
 
-        // 读取文件到字符串变量
-        let mut str_val = String::new();
-        match file.read_to_string(&mut str_val) {
-            Ok(s) => s,
-            Err(e) => {
-                println!("Error Reading file:{}", e);
-                return Ticket::default();
-            }
-        };
+    //     // 读取文件到字符串变量
+    //     let mut str_val = String::new();
+    //     match file.read_to_string(&mut str_val) {
+    //         Ok(s) => s,
+    //         Err(e) => {
+    //             println!("Error Reading file:{}", e);
+    //             return Ticket::default();
+    //         }
+    //     };
 
-        let cnf = serde_json::from_str(&str_val);
-        // println!("{:?}", cnf);
-        // 第三方配置处理
-        match cnf {
-            Ok(val) => {
-                let t: Ticket = val;
-                set_ticket(t.clone());
-                t
-            }
-            Err(e) => {
-                println!("Ticket文件配置错误! {:?}", e);
-                Ticket::default()
-            }
-        }
-    }
+    //     let cnf = serde_json::from_str(&str_val);
+    //     // println!("{:?}", cnf);
+    //     // 第三方配置处理
+    //     match cnf {
+    //         Ok(val) => {
+    //             let t: Ticket = val;
+    //             set_ticket(t.clone());
+    //             t
+    //         }
+    //         Err(e) => {
+    //             println!("Ticket文件配置错误! {:?}", e);
+    //             Ticket::default()
+    //         }
+    //     }
+    // }
 
     /// 解析ticket
     pub fn parse_ticket(
@@ -112,29 +112,29 @@ impl Ticket {
     }
 
     /// 保存ticket到文件
-    pub fn save(&self, config_path: &str) {
-        let file_path = if config_path.is_empty() {
-            "ticket.conf"
-        } else {
-            config_path
-        };
-        // 打开文件
-        let mut file = match File::create(file_path) {
-            Ok(f) => f,
-            Err(e) => panic!("no such file {} exception: {}", file_path, e),
-        };
+    // pub fn save(&self, config_path: &str) {
+    //     let file_path = if config_path.is_empty() {
+    //         "ticket.conf"
+    //     } else {
+    //         config_path
+    //     };
+    //     // 打开文件
+    //     let mut file = match File::create(file_path) {
+    //         Ok(f) => f,
+    //         Err(e) => panic!("no such file {} exception: {}", file_path, e),
+    //     };
 
-        // 读取文件到字符串变量
-        let str_val = json!(self).to_string();
-        // println!("path={:?}", str_val);
-        match file.write_all(str_val.as_bytes()) {
-            Ok(s) => {
-                set_ticket(self.clone());
-                s
-            }
-            Err(e) => panic!("Error Reading file:{}", e),
-        };
-    }
+    //     // 读取文件到字符串变量
+    //     let str_val = json!(self).to_string();
+    //     // println!("path={:?}", str_val);
+    //     match file.write_all(str_val.as_bytes()) {
+    //         Ok(s) => {
+    //             set_ticket(self.clone());
+    //             s
+    //         }
+    //         Err(e) => panic!("Error Reading file:{}", e),
+    //     };
+    // }
 
     /// 获取access_token
     pub async fn get_token(&mut self, conf: TripartiteConfig) -> String {
@@ -147,7 +147,7 @@ impl Ticket {
         //比较过期时间
         if expires_at <= timestamp {
             let c = Component::new(conf);
-            let result = c.fetch_access_token().await;
+            let result = c.fetch_access_token(self.access_ticket.clone()).await;
             // println!("result={:?},access_ticket={:?}", result, self.access_ticket);
             match result {
                 Ok(token) => token.0,
@@ -210,22 +210,22 @@ impl Ticket {
 }
 const TICKET_CATCHE_KEY: &str = "TICKET_CATCHE_KEY_";
 // // 默认加载静态全局
-lazy_static! {
-    pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
-        Arc::new(Mutex::new(Ticket::default()));
-}
+// lazy_static! {
+//     pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
+//         Arc::new(Mutex::new(Ticket::default()));
+// }
 
-/// 设置ticket
-pub fn set_ticket(cnf: Ticket) {
-    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    let mut cache = counter.lock().unwrap();
-    *cache = cnf;
-}
+// /// 设置ticket
+// pub fn set_ticket(cnf: Ticket) {
+//     let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+//     let mut cache = counter.lock().unwrap();
+//     *cache = cnf;
+// }
 
-/// 获取ticket
-pub fn get_ticket() -> Ticket {
-    let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-    let cache = counter.lock().unwrap();
-    let obj = cache.clone();
-    obj
-}
+// /// 获取ticket
+// pub fn get_ticket() -> Ticket {
+//     let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
+//     let cache = counter.lock().unwrap();
+//     let obj = cache.clone();
+//     obj
+// }

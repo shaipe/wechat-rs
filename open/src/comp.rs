@@ -3,7 +3,7 @@
 
 use super::TripartiteConfig;
 
-use super::{get_ticket, Ticket};
+use super::Ticket;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use wechat_sdk::{
@@ -18,29 +18,26 @@ const REFETCH_ACCESS_TOKEN_ERRCODES: [i32; 3] = [40001, 40014, 42001];
 
 pub struct Component {
     config: TripartiteConfig,
-    ticket: Ticket,
+    // ticket: Ticket,
 }
 
 impl Component {
     pub fn new(conf: TripartiteConfig) -> Self {
         Component {
             config: conf,
-            ticket: get_ticket(),
+            // ticket: get_ticket(),
         }
     }
 
     /// 获取Aceess Token
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/component_access_token.html
-    pub async fn fetch_access_token(&self) -> WechatResult<(String, i64)> {
+    pub async fn fetch_access_token(&self, access_ticket: String) -> WechatResult<(String, i64)> {
         let url = format!("{}{}", API_DOMAIN, "/cgi-bin/component/api_component_token");
         let mut hash = HashMap::new();
         let conf = self.config.clone();
         hash.insert("component_appid".to_string(), conf.app_id);
         hash.insert("component_appsecret".to_string(), conf.secret);
-        hash.insert(
-            "component_verify_ticket".to_string(),
-            self.ticket.access_ticket.clone(),
-        );
+        hash.insert("component_verify_ticket".to_string(), access_ticket);
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
         let data = match api.json_decode(&res) {
@@ -76,7 +73,7 @@ impl Component {
             )
         );
         logs!(format!("uri::: {}", uri));
-
+        let ticket = Ticket::get_ticket(&self.config);
         let conf = self.config.clone();
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), conf.app_id.clone());
@@ -88,7 +85,8 @@ impl Component {
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
+                        self.fetch_access_token(ticket.access_ticket.clone())
+                            .await?;
                         return Err(err);
                     } else {
                         return Err(err);
@@ -112,7 +110,7 @@ impl Component {
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
     pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
         let conf = self.config.clone();
-        let mut t = self.ticket.clone();
+        let mut t = Ticket::get_ticket(&self.config);
         // 获取
         let acc_token = t.get_token(conf.clone()).await;
         let uri = format!(
@@ -133,7 +131,7 @@ impl Component {
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
+                        self.fetch_access_token(t.access_ticket.clone()).await?;
                         return Err(err);
                     } else {
                         return Err(err);
@@ -165,7 +163,7 @@ impl Component {
         refresh_token: &str,
     ) -> WechatResult<(String, String)> {
         let conf = self.config.clone();
-        let mut t = self.ticket.clone();
+        let mut t = Ticket::get_ticket(&self.config);
         let acc_token = t.get_token(conf.clone()).await;
         let url = format!(
             "{}/cgi-bin/component/api_authorizer_token?component_access_token={}",
@@ -186,7 +184,7 @@ impl Component {
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
+                        self.fetch_access_token(t.access_ticket.clone()).await?;
                         return Err(err);
                     } else {
                         return Err(err);
@@ -255,7 +253,7 @@ impl Component {
         count: i64,
     ) -> WechatResult<(i64, Vec<(String, String, i64)>)> {
         let conf = self.config.clone();
-        let mut ticket = get_ticket();
+        let mut ticket = Ticket::get_ticket(&self.config);
         let acc_token = ticket.get_token(conf.clone()).await;
         let uri = format!(
             "{}/cgi-bin/component/api_get_authorizer_list?component_access_token={}",
@@ -291,7 +289,8 @@ impl Component {
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
                     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token().await?;
+                        self.fetch_access_token(ticket.access_ticket.clone())
+                            .await?;
                         return Err(err);
                     } else {
                         return Err(err);

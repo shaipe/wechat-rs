@@ -7,12 +7,16 @@ extern crate actix_web;
 
 #[macro_use]
 extern crate wechat;
+#[macro_use]
+extern crate wechat_sdk;
 
 #[macro_use]
 extern crate lazy_static;
 use actix_web::client::Client;
 use actix_web::http::StatusCode;
 use actix_web::{middleware, App, HttpRequest, HttpResponse, HttpServer, Result};
+mod cluster;
+mod official;
 mod result_response;
 mod utils;
 mod wx_handler;
