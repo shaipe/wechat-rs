@@ -1,15 +1,29 @@
 use super::WechatResult;
-use redis::{self, Commands, FromRedisValue, ToRedisArgs};
-use std::collections::{BTreeMap, HashMap};
+use redis::{self, FromRedisValue, ToRedisArgs};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 pub trait SessionStruct {}
 
 pub trait SessionStore: Clone {
-    fn get<K: AsRef<str>, T: FromRedisValue>(&self, key: K, default: Option<T>) -> Option<T>;
-    fn set<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>);
+    //根据cmd类型获取指定 key 值
+    //简单类型（string,vec,int):get; 哈希:hgetall(btreemap); set(btreeset)：smembers
+    fn get<K: AsRef<str>, T: FromRedisValue>(
+        &self,
+        key: K,
+        cmd: K,
+        default: Option<T>,
+    ) -> Option<T>;
+    //设置多个哈希btreemap
+    fn hmsets<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>);
+    //设置单个哈希btreemap
+    fn hmset<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, map: T);
+    //删除
     fn del<K: AsRef<str>>(&self, key: K);
+    //set(btreeset) 添加
+    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T);
+    //简单类型（string,vec,int) set，带过期时间
+    fn set<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>);
+    //发布订阅
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>));
-    fn set_hashs<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>);
-    fn set_hash<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, key: K, map: BTreeMap<T, T>);
 }
 
 #[derive(Debug, Clone)]
@@ -47,14 +61,22 @@ impl RedisStorage {
 }
 
 impl SessionStore for RedisStorage {
-    fn get<K: AsRef<str>, T: FromRedisValue>(&self, key: K, default: Option<T>) -> Option<T> {
+    //根据cmd类型获取指定 key 值
+    //简单类型（string,vec,int):get; 哈希:hgetall(btreemap); set(btreeset)：smembers
+    fn get<K: AsRef<str>, T: FromRedisValue>(
+        &self,
+        key: K,
+        cmd: K,
+        default: Option<T>,
+    ) -> Option<T> {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return default;
         }
         let mut conn = conn.unwrap();
-        let data = conn.hgetall(key.as_ref());
+        let data = redis::cmd(cmd.as_ref()).arg(key.as_ref()).query(&mut conn);
         if data.is_err() {
+            println!("data:is_err");
             return default;
         }
         if let Ok(value) = data {
@@ -63,7 +85,8 @@ impl SessionStore for RedisStorage {
             default
         }
     }
-    fn set_hashs<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>) {
+    //设置多个哈希btreemap
+    fn hmsets<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
@@ -85,27 +108,45 @@ impl SessionStore for RedisStorage {
             Err(_) => {}
         }
     }
-    fn set_hash<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, key: K, map: BTreeMap<T, T>) {
+    //设置单个哈希btreemap
+    fn hmset<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, map: T) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
         }
         let mut conn = conn.unwrap();
-        println!("{}", map.len());
-        for (f, val) in map {
-            match redis::cmd("HSET")
-                .arg(key.as_ref())
-                .arg(f.clone())
-                .arg(val.clone())
-                .query(&mut conn)
-            {
-                Ok(v) => v,
-                Err(e) => {
-                    println!("{:?},{:?}", key.as_ref(), e);
-                }
+        match redis::cmd("HSET")
+            .arg(key.as_ref())
+            .arg(map)
+            .query(&mut conn)
+        {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{:?},{:?}", key.as_ref(), e);
+            }
+        };
+    }
+    //set(btreeset) 添加
+    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T) {
+        let key = key.as_ref();
+        let conn = self.client.get_connection();
+        if conn.is_err() {
+            return;
+        }
+        let mut conn = conn.unwrap();
+        match redis::pipe()
+            .cmd("SADD")
+            .arg(key)
+            .arg(value)
+            .query(&mut conn)
+        {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{:?},{:?}", key, e);
             }
         }
     }
+    //简单类型（string,vec,int) set，带过期时间
     fn set<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>) {
         let key = key.as_ref();
         let conn = self.client.get_connection();
@@ -121,26 +162,28 @@ impl SessionStore for RedisStorage {
                 .unwrap_or(());
         } else {
             let v: () = redis::pipe()
-                .cmd("SADD")
+                .cmd("set")
                 .set(key, value)
                 .query(&mut conn)
                 .unwrap_or(());
             println!("{:?}", v)
         }
     }
-
+    //根据key删除
     fn del<K: AsRef<str>>(&self, key: K) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
         }
         let mut conn = conn.unwrap();
-        let _: () = redis::pipe()
-            .del(key.as_ref())
-            .ignore()
-            .query(&mut conn)
-            .unwrap_or(());
+        match redis::pipe().del(key.as_ref()).ignore().query(&mut conn) {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{:?},{:?}", key.as_ref(), e);
+            }
+        };
     }
+    //发布订阅
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>)) {
         let conn = self.client.get_connection();
         if conn.is_err() {
@@ -224,8 +267,39 @@ fn test_err() {
     println!("{:?}", url);
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            println!("执行了set");
-            session.set("hello", "18981772611", Some(10000));
+            println!("测试btreemap");
+            let mut hdic = BTreeMap::new();
+            let def_hdic: BTreeMap<String, String> = BTreeMap::new();
+            hdic.insert(2, 2);
+            session.hmset("hello-btreemap", hdic);
+            match session.get("hello-btreemap", "hgetall", Some(def_hdic)) {
+                Some(s) => {
+                    println!("hello-btreemap {:?}", s);
+                }
+                None => {}
+            };
+            println!("测试简单类型");
+            session.set("hello", "18981772611", Some(1000));
+            let v = String::from("");
+            match session.get("hello", "get", Some(v)) {
+                Some(s) => {
+                    println!("cccc {:?}", s);
+                }
+                None => {}
+            };
+
+            println!("测试btreeset");
+            let mut sdic = BTreeSet::new();
+            let def_sdic: BTreeSet<String> = BTreeSet::new();
+            sdic.insert("setset".to_owned());
+            sdic.insert("setset2".to_owned());
+            session.sadd("hello-btreeset", sdic);
+            match session.get("hello-btreeset", "smembers", Some(def_sdic)) {
+                Some(s) => {
+                    println!("hello-btreeset {:?}", s);
+                }
+                None => {}
+            };
         }
         Err(e) => {
             println!("error==={:?}", e);

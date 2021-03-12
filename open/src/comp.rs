@@ -333,7 +333,7 @@ impl Component {
         let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
         match RedisStorage::from_url(url) {
             Ok(session) => {
-                session.set(key, c, None);
+                session.set(key, c, Some(7000));
             }
             Err(e) => {
                 println!("{:?}", e);
@@ -352,7 +352,7 @@ impl Component {
         let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
         match RedisStorage::from_url(url) {
             Ok(session) => {
-                if let Some(v) = session.get(key, None) {
+                if let Some(v) = session.get(key, "GET".to_owned(), None) {
                     Ok(v)
                 } else {
                     Err(error!("没有相应的键"))

@@ -187,7 +187,7 @@ impl Ticket {
         let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
         match RedisStorage::from_url(url) {
             Ok(session) => {
-                if let Some(v) = session.get(key, None) {
+                if let Some(v) = session.get(key, "GET".to_owned(), None) {
                     obj.access_ticket = v;
                 } else {
                 }

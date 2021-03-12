@@ -40,7 +40,6 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
         .body("success"))
 }
 
-
 // async fn forward(
 //     req: HttpRequest,
 //     pr: web::Data<Proxy>,
@@ -91,7 +90,6 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 //     Ok(client_resp.body(res.body().await?))
 // }
 
-
 /// 代理消息业务转发
 pub async fn proxy_reply(app_id: &str, req: HttpRequest, body: web::Bytes) -> Result<HttpResponse> {
     use crate::cluster::get_domain;
@@ -106,14 +104,14 @@ pub async fn proxy_reply(app_id: &str, req: HttpRequest, body: web::Bytes) -> Re
     let mut new_url = Url::parse(&format!("{}/WxCallback.axd", domain)).unwrap();
     new_url.set_query(req.uri().query());
 
-    match Client::new().post_betyes(new_url.as_str(), body).await {
-        Ok(res) => {
-            return Ok(HttpResponse::build(StatusCode::OK)
-                .content_type("text/html; charset=utf-8")
-                .body(res))
-        }
-        Err(err) => println!("{:?}", err),
-    };
+    // match Client::new().post_betyes(new_url.as_str(), body).await {
+    //     Ok(res) => {
+    //         return Ok(HttpResponse::build(StatusCode::OK)
+    //             .content_type("text/html; charset=utf-8")
+    //             .body(res))
+    //     }
+    //     Err(err) => println!("{:?}", err),
+    // };
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")

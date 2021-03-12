@@ -109,7 +109,7 @@ pub fn set_domains(dict: BTreeMap<String, String>) {
     );
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            session.set(SALF_DOMAIN_CATCHE_KEY, dict, None);
+            session.hmset(SALF_DOMAIN_CATCHE_KEY, dict);
         }
         Err(e) => {
             println!("{:?}", e);
@@ -131,7 +131,7 @@ pub fn get_domains() -> BTreeMap<String, String> {
     let obj = BTreeMap::new();
     match RedisStorage::from_url(url) {
         Ok(session) => {
-            if let Some(v) = session.get(SALF_DOMAIN_CATCHE_KEY, None) {
+            if let Some(v) = session.get(SALF_DOMAIN_CATCHE_KEY, "hgetall", None) {
                 v
             } else {
                 obj
