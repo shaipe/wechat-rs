@@ -5,8 +5,8 @@
 #[macro_use]
 extern crate actix_web;
 
-#[macro_use]
-extern crate wechat;
+// #[macro_use]
+// extern crate wechat;
 #[macro_use]
 extern crate wechat_sdk;
 
