@@ -25,7 +25,7 @@ pub trait SessionStore: Clone {
     //发布订阅
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>));
     //使用锁并设置过期时间
-    fn setnx<K: AsRef<str>>(&self,key:K,argv1:K,argv2:K)->Option<i32>;
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: K) -> Option<i32>;
 }
 
 #[derive(Debug, Clone)]
@@ -239,24 +239,26 @@ impl SessionStore for RedisStorage {
             thread::sleep(StdDuration::new(interval, 0));
         }
     }
-    fn setnx<K: AsRef<str>>(&self,key:K,argv1:K,argv2:K)->Option<i32>{
-        let lua_scripts = redis::Script::new(r#"if redis.call('setnx',KEYS[1],ARGV[1]) == 1 then
-            redis.call('expire',KEYS[1],ARGV[2]) return 1 else return 0 end"#);
-           
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: K) -> Option<i32> {
+        let key = key.as_ref();
+        let lua_scripts = redis::Script::new(
+            r#"if redis.call('setnx',KEYS[1],ARGV[1]) == 1 then
+            redis.call('expire',KEYS[1],ARGV[2]) return 1 else return 0 end"#,
+        );
         let conn = self.client.get_connection();
         if conn.is_err() {
             return None;
         }
         let mut conn = conn.unwrap();
 
-        let result = script.key(key).arg(argv1).arg(argv2).invoke(&mut con);
-        match result{
-            Ok(v)=>{
-                Some(v)
-            },
-            Err=>{
-                None
-            }
+        let result = lua_scripts
+            .key(key)
+            .arg(argv1.as_ref())
+            .arg(argv2.as_ref())
+            .invoke(&mut conn);
+        match result {
+            Ok(v) => Some(v),
+            Err(v) => None,
         }
     }
 }
