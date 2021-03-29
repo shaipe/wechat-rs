@@ -25,7 +25,9 @@ pub trait SessionStore: Clone {
     //发布订阅
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>));
     //使用锁并设置过期时间
-    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: u64) -> Option<i32>;
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, seconds: usize) -> Option<i32>;
+    //设置过期时间
+    fn setex<K: AsRef<str>>(&self, key: K, seconds: usize);
 }
 
 #[derive(Debug, Clone)]
@@ -240,7 +242,7 @@ impl SessionStore for RedisStorage {
         }
     }
     //设置过期时间
-    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: u64) -> Option<i32> {
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: usize) -> Option<i32> {
         let key = key.as_ref();
         let lua_scripts = redis::Script::new(
             r#"if redis.call('setnx',KEYS[1],ARGV[1]) == 1 then
@@ -261,6 +263,23 @@ impl SessionStore for RedisStorage {
             Ok(v) => Some(v),
             Err(v) => None,
         }
+    }
+    fn setex<K: AsRef<str>>(&self, key: K, seconds: usize) {
+        let conn = self.client.get_connection();
+        if conn.is_err() {
+            return;
+        }
+        let mut conn = conn.unwrap();
+        match redis::pipe()
+            .expire(key.as_ref(), seconds)
+            .ignore()
+            .query(&mut conn)
+        {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{:?},{:?}", key.as_ref(), e);
+            }
+        };
     }
 }
 use std::sync::{Arc, Mutex};
@@ -340,6 +359,8 @@ fn test_err() {
                 }
                 None => {}
             }
+            //设置过期
+            session.setex("hello-btreeset", 0);
         }
         Err(e) => {
             println!("error==={:?}", e);
