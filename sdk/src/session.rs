@@ -25,7 +25,7 @@ pub trait SessionStore: Clone {
     //发布订阅
     fn sub(&self, func: fn(Option<BTreeMap<String, String>>));
     //使用锁并设置过期时间
-    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: K) -> Option<i32>;
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: u64) -> Option<i32>;
 }
 
 #[derive(Debug, Clone)]
@@ -239,7 +239,8 @@ impl SessionStore for RedisStorage {
             thread::sleep(StdDuration::new(interval, 0));
         }
     }
-    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: K) -> Option<i32> {
+    //设置过期时间
+    fn setnx<K: AsRef<str>>(&self, key: K, argv1: K, argv2: u64) -> Option<i32> {
         let key = key.as_ref();
         let lua_scripts = redis::Script::new(
             r#"if redis.call('setnx',KEYS[1],ARGV[1]) == 1 then
@@ -254,7 +255,7 @@ impl SessionStore for RedisStorage {
         let result = lua_scripts
             .key(key)
             .arg(argv1.as_ref())
-            .arg(argv2.as_ref())
+            .arg(argv2)
             .invoke(&mut conn);
         match result {
             Ok(v) => Some(v),
@@ -324,6 +325,21 @@ fn test_err() {
                 }
                 None => {}
             };
+
+            println!("添加锁并设置过期时间");
+            match session.setnx("cctv", "18981772611", 60) {
+                Some(x) => {
+                    println!("锁 {:?}", x);
+                    let v = String::from("");
+                    match session.get("cctv", "get", Some(v)) {
+                        Some(s) => {
+                            println!("锁 {:?}", s);
+                        }
+                        None => {}
+                    };
+                }
+                None => {}
+            }
         }
         Err(e) => {
             println!("error==={:?}", e);
