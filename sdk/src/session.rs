@@ -13,7 +13,18 @@ pub trait SessionStore: Clone {
         default: Option<T>,
     ) -> Option<T>;
     //设置多个哈希btreemap
-    fn hmsets<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>);
+    fn hmget<K: AsRef<str>, T: FromRedisValue>(
+        &self,
+        key: K,
+        key2: K,
+        default: Option<T>,
+    ) -> Option<T>;
+    //设置多个哈希btreemap
+    fn hmsets<K: AsRef<str>, T: ToRedisArgs + std::cmp::Ord + serde::ser::Serialize>(
+        &self,
+        key: &str,
+        map: BTreeMap<K, BTreeMap<T, T>>,
+    );
     //设置单个哈希btreemap
     fn hmset<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, map: T);
     //删除
@@ -89,27 +100,63 @@ impl SessionStore for RedisStorage {
             default
         }
     }
+    fn hmget<K: AsRef<str>, T: FromRedisValue>(
+        &self,
+        key: K,
+        key2: K,
+        default: Option<T>,
+    ) -> Option<T> {
+        let conn = self.client.get_connection();
+        if conn.is_err() {
+            return default;
+        }
+        let mut conn = conn.unwrap();
+        println!("{:?}-{:?}", key.as_ref(), key2.as_ref());
+        let data = redis::cmd("HGET")
+            .arg(key.as_ref())
+            .arg(key2.as_ref())
+            .query(&mut conn);
+        if data.is_err() {
+            println!("data:is_err:{:?}", data.err());
+            return default;
+        }
+        if let Ok(value) = data {
+            let ss: String = value;
+            if let Ok(v) = serde_json::from_value(!serde_json::json(ss)) {
+                let dic: T = v;
+                Some(dic)
+            } else {
+                default
+            }
+        } else {
+            default
+        }
+        //default
+    }
     //设置多个哈希btreemap
-    fn hmsets<K: AsRef<str>, T: ToRedisArgs + Copy>(&self, map: BTreeMap<K, BTreeMap<T, T>>) {
+    fn hmsets<K: AsRef<str>, T: ToRedisArgs + std::cmp::Ord + serde::ser::Serialize>(
+        &self,
+        key: &str,
+        map: BTreeMap<K, BTreeMap<T, T>>,
+    ) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
         }
         let mut conn = conn.unwrap();
-        // redis::pipe().set_multiple(map);
-        println!("{}", map.len());
         let mut pip = redis::pipe();
-        for (key, h) in map.iter() {
-            for (f, val) in h {
-                pip.cmd("HSET")
-                    .arg(key.as_ref())
-                    .arg(f.clone())
-                    .arg(val.clone());
-            }
+        for (account, h) in map.iter() {
+            let v = h.clone();
+            pip.cmd("HSET")
+                .arg(key)
+                .arg(account.as_ref())
+                .arg(serde_json::to_string(h).unwrap());
         }
         match pip.query(&mut conn) {
             Ok(v) => v,
-            Err(_) => {}
+            Err(e) => {
+                print!("error:{:?}", e);
+            }
         }
     }
     //设置单个哈希btreemap
@@ -312,55 +359,71 @@ fn test_err() {
     match RedisStorage::from_url(url) {
         Ok(session) => {
             println!("测试btreemap");
-            let mut hdic = BTreeMap::new();
+            // let mut hdic = BTreeMap::new();
+            // let def_hdic: BTreeMap<String, String> = BTreeMap::new();
+            // hdic.insert(2, 2);
+            // session.hmset("hello-btreemap", hdic.clone());
+            // match session.get("hello-btreemap", "hgetall", Some(def_hdic)) {
+            //     Some(s) => {
+            //         println!("hello-btreemap {:?}", s);
+            //     }
+            //     None => {}
+            // };
             let def_hdic: BTreeMap<String, String> = BTreeMap::new();
-            hdic.insert(2, 2);
-            session.hmset("hello-btreemap", hdic);
-            match session.get("hello-btreemap", "hgetall", Some(def_hdic)) {
+            let mut def_hdic2: BTreeMap<String, BTreeMap<u32, u32>> = BTreeMap::new();
+            let mut v: BTreeMap<u32, u32> = BTreeMap::new();
+            v.insert(10, 1);
+            v.insert(8, 1);
+            def_hdic2.insert("123456".to_owned(), v);
+            session.hmsets("bbb", def_hdic2);
+
+            match session.hmget("bbb", "123456", None) {
                 Some(s) => {
-                    println!("hello-btreemap {:?}", s);
-                }
-                None => {}
-            };
-            println!("测试简单类型");
-            session.set("hello", "18981772611", Some(1000));
-            let v = String::from("");
-            match session.get("hello", "get", Some(v)) {
-                Some(s) => {
-                    println!("cccc {:?}", s);
+                    let ss: BTreeMap<String, String> = s;
+                    println!("123456 {:?}", ss);
                 }
                 None => {}
             };
 
-            println!("测试btreeset");
-            let mut sdic = BTreeSet::new();
-            let def_sdic: BTreeSet<String> = BTreeSet::new();
-            sdic.insert("setset".to_owned());
-            sdic.insert("setset2".to_owned());
-            session.sadd("hello-btreeset", sdic);
-            match session.get("hello-btreeset", "smembers", Some(def_sdic)) {
-                Some(s) => {
-                    println!("hello-btreeset {:?}", s);
-                }
-                None => {}
-            };
+            // println!("测试简单类型");
+            // session.set("hello", "18981772611", Some(1000));
+            // let v = String::from("");
+            // match session.get("hello", "get", Some(v)) {
+            //     Some(s) => {
+            //         println!("cccc {:?}", s);
+            //     }
+            //     None => {}
+            // };
 
-            println!("添加锁并设置过期时间");
-            match session.setnx("cctv", "18981772611", 60) {
-                Some(x) => {
-                    println!("锁 {:?}", x);
-                    let v = String::from("");
-                    match session.get("cctv", "get", Some(v)) {
-                        Some(s) => {
-                            println!("锁 {:?}", s);
-                        }
-                        None => {}
-                    };
-                }
-                None => {}
-            }
-            //设置过期
-            session.setex("hello-btreeset", 0);
+            // println!("测试btreeset");
+            // let mut sdic = BTreeSet::new();
+            // let def_sdic: BTreeSet<String> = BTreeSet::new();
+            // sdic.insert("setset".to_owned());
+            // sdic.insert("setset2".to_owned());
+            // session.sadd("hello-btreeset", sdic);
+            // match session.get("hello-btreeset", "smembers", Some(def_sdic)) {
+            //     Some(s) => {
+            //         println!("hello-btreeset {:?}", s);
+            //     }
+            //     None => {}
+            // };
+
+            // println!("添加锁并设置过期时间");
+            // match session.setnx("cctv", "18981772611", 60) {
+            //     Some(x) => {
+            //         println!("锁 {:?}", x);
+            //         let v = String::from("");
+            //         match session.get("cctv", "get", Some(v)) {
+            //             Some(s) => {
+            //                 println!("锁 {:?}", s);
+            //             }
+            //             None => {}
+            //         };
+            //     }
+            //     None => {}
+            // }
+            // //设置过期
+            // session.setex("hello-btreeset", 0);
         }
         Err(e) => {
             println!("error==={:?}", e);
