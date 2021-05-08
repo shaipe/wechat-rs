@@ -13,7 +13,7 @@ pub trait SessionStore: Clone {
         default: Option<T>,
     ) -> Option<T>;
     //设置多个哈希btreemap
-    fn hmget<K: AsRef<str>, T: FromRedisValue>(
+    fn hmget<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
         &self,
         key: K,
         key2: K,
@@ -100,7 +100,7 @@ impl SessionStore for RedisStorage {
             default
         }
     }
-    fn hmget<K: AsRef<str>, T: FromRedisValue>(
+    fn hmget<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
         &self,
         key: K,
         key2: K,
@@ -111,7 +111,6 @@ impl SessionStore for RedisStorage {
             return default;
         }
         let mut conn = conn.unwrap();
-        println!("{:?}-{:?}", key.as_ref(), key2.as_ref());
         let data = redis::cmd("HGET")
             .arg(key.as_ref())
             .arg(key2.as_ref())
@@ -122,12 +121,16 @@ impl SessionStore for RedisStorage {
         }
         if let Ok(value) = data {
             let ss: String = value;
-            if let Ok(v) = serde_json::from_value(!serde_json::json(ss)) {
-                let dic: T = v;
-                Some(dic)
-            } else {
-                default
-            }
+            let dic: T = serde_json::from_str(&ss).unwrap();
+            Some(dic)
+        // if let Ok(v) = serde_json::from_value(j) {
+        //     let dic: T = v;
+        //     println!("ok:{:?}", key.as_ref());
+        //     Some(dic)
+        // } else {
+        //     println!("error:{:?}", key.as_ref());
+        //     default
+        // }
         } else {
             default
         }
@@ -369,7 +372,7 @@ fn test_err() {
             //     }
             //     None => {}
             // };
-            let def_hdic: BTreeMap<String, String> = BTreeMap::new();
+            let def_hdic: BTreeMap<u32, u32> = BTreeMap::new();
             let mut def_hdic2: BTreeMap<String, BTreeMap<u32, u32>> = BTreeMap::new();
             let mut v: BTreeMap<u32, u32> = BTreeMap::new();
             v.insert(10, 1);
@@ -377,10 +380,9 @@ fn test_err() {
             def_hdic2.insert("123456".to_owned(), v);
             session.hmsets("bbb", def_hdic2);
 
-            match session.hmget("bbb", "123456", None) {
+            match session.hmget("bbb", "123456", Some(def_hdic)) {
                 Some(s) => {
-                    let ss: BTreeMap<String, String> = s;
-                    println!("123456 {:?}", ss);
+                    println!("123456 {:?}", s);
                 }
                 None => {}
             };
