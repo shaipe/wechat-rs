@@ -4,11 +4,11 @@
 use super::{Component, TripartiteConfig};
 use form_urlencoded;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+// use serde_json::json;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::prelude::*;
-use std::sync::{Arc, Mutex};
+// use std::fs::File;
+// use std::io::prelude::*;
+// use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use wechat_sdk::{get_redis_conf, xmlutil, RedisStorage, SessionStore, WeChatCrypto, WechatResult};
 
@@ -21,7 +21,7 @@ pub struct Ticket {
     pub at_expired_time: i64,
 }
 impl redis::ToRedisArgs for Ticket {
-    fn write_redis_args<W>(&self, out: &mut W)
+    fn write_redis_args<W>(&self, _out: &mut W)
     where
         W: ?Sized + redis::RedisWrite,
     {

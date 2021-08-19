@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 }
 
 /// web服务启动
-async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
+async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 

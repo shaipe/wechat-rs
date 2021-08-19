@@ -33,7 +33,7 @@ impl Official {
         // 打开文件
         let mut file = match File::open(file_path) {
             Ok(f) => f,
-            Err(e) =>{
+            Err(_e) =>{
                 return Official::default();
             },
         };

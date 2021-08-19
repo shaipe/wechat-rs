@@ -5,7 +5,7 @@ use super::TripartiteConfig;
 
 use super::Ticket;
 use serde_json::Value;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use wechat_sdk::{
     current_timestamp, get_redis_conf, Client, RedisStorage, SessionStore, WechatError,
     WechatResult,
@@ -358,7 +358,7 @@ impl Component {
                     Err(error!("没有相应的键"))
                 }
             }
-            Err(e) => Err(error!(format!("{:?}", e))),
+            Err(e) => Err(error!("{:?}", e)),
         }
     }
 }

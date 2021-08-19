@@ -188,7 +188,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
 }
 // 业务系统在完成授权以后把appid和对应的服务器机组域名回传
 #[post("/wx/common_official")]
-async fn fetch_common_official(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
+async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Result<HttpResponse> {
     use crate::official::{get_common_official, Official};
     let empty_dic: HashMap<String, String> = HashMap::new();
     let mut conf: Official = get_common_official();

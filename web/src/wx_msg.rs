@@ -91,9 +91,9 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 // }
 
 /// 代理消息业务转发
-pub async fn proxy_reply(app_id: &str, req: HttpRequest, body: web::Bytes) -> Result<HttpResponse> {
+pub async fn proxy_reply(app_id: &str, req: HttpRequest, _body: web::Bytes) -> Result<HttpResponse> {
     use crate::cluster::get_domain;
-    use wechat_sdk::Client;
+    // use wechat_sdk::Client;
     let mut domain = get_domain(app_id.to_owned());
 
     if domain.is_empty() {

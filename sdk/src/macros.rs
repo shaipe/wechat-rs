@@ -81,19 +81,12 @@ macro_rules! error {
         crate::WechatError::custom($code, $msg)
     }};
 
-    // error!(msg);
-    ($e: expr) => {{
-        crate::WechatError::msg($e)
-        // ::std::io::WechatError::new(::std::io::ErrorKind::Other, "wewe")
+    // error!("msg {}", msg)
+    ($($arg:tt)*) => {{
+        let content = format!($($arg)*);
+        // 调试模式下直接使用println!()
+        crate::WechatError::msg(content)
     }};
-
-    ($code: expr, $msg: expr) => {{
-        crate::WechatError::custom($code, $msg)
-    }};
-
-    // ($code: expr, $msg: expr, $s: tt) => {{
-    //     crate::WechatError::custom_err($code, $msg, $s)
-    // }};
 }
 
 

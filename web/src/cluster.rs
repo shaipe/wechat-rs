@@ -52,6 +52,7 @@ fn write_clusters(config_path: &str, content: BTreeMap<String, String>) {
 }
 
 /// 加载
+#[allow(dead_code)]
 pub fn load_cluster(config_path: &str) {
     let file_path = if config_path.is_empty() {
         "domains.conf"
@@ -148,7 +149,7 @@ pub fn get_domains() -> BTreeMap<String, String> {
 mod tests {
 
     use super::*;
-    use std::collections::HashMap;
+    // use std::collections::HashMap;
     #[test]
     fn load() {
         // let mut x:HashMap<String, String> = HashMap::new();
