@@ -25,7 +25,7 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    logs!(format!(
+    log!(format!(
         " ^^^^^ Ticket ^^^^^:  url_param: {:?} \n post_str: {:?}",
         req.query_string(),
         post_str
@@ -33,7 +33,7 @@ pub async fn receive_ticket(
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Err(t) = Ticket::parse_ticket(config, &post_str, dic) {
-        logs!(format!(" ticket parse_ticket: {:?}", t));
+        log!(format!(" ticket parse_ticket: {:?}", t));
     };
 
     // 告诉服务器接收成功
@@ -363,7 +363,7 @@ pub async fn callback(
             Ok(s) => s,
             Err(_e) => "",
         };
-        logs!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
+        log!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
         //wx_msg::global_publish(dic, post_str.to_owned()).await
         watch_time!(
             "global",

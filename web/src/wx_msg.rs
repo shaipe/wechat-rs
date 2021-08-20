@@ -124,7 +124,7 @@ pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
 ) -> Result<HttpResponse> {
-    logs!(format!("--- callback --- {:?}, {:?}", dic, post_str));
+    log!(format!("--- callback --- {:?}, {:?}", dic, post_str));
 
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密
@@ -168,7 +168,7 @@ pub async fn global_publish(
                                     .await;
                                 }
                             }
-                            Err(e) => logs!(format!("query auth_code error: {:?}", e)),
+                            Err(e) => log!(format!("query auth_code error: {:?}", e)),
                         };
                     }
                     // 文本消息回复处理
@@ -179,7 +179,7 @@ pub async fn global_publish(
                             &format!("{}_callback", &m.content),
                         );
                         let txt = tr.render();
-                        logs!(format!(
+                        log!(format!(
                             "---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}",
                             txt
                         ));
@@ -200,17 +200,17 @@ pub async fn global_publish(
                         let txt = tr.render();
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                        logs!(format!("---- send OTHER xml :{}", txt));
+                        log!(format!("---- send OTHER xml :{}", txt));
                         return Ok(HttpResponse::build(StatusCode::OK)
                             .content_type("text/xml; charset=utf-8")
                             .body(encrypt_text.unwrap()));
                     }
                 }
                 Message::EventMessage(ref m) => {
-                    logs!(format!("**** EVENT *** {:?}", m));
+                    log!(format!("**** EVENT *** {:?}", m));
                 }
                 Message::UnknownMessage(ref m) => {
-                    logs!(format!("**** Unknown *** {:?}", m));
+                    log!(format!("**** Unknown *** {:?}", m));
                 }
             }
         } else {

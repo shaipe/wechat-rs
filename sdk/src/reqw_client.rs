@@ -116,30 +116,5 @@ impl Client {
         }
     }
 
-    ///
-    #[inline]
-    pub fn json_decode(&self, data: &str) -> WechatResult<serde_json::Value> {
-        let obj: serde_json::Value = match serde_json::from_str(data) {
-            Ok(decoded) => decoded,
-            Err(ref e) => {
-                return Err(error! {
-                    code: -3,
-                    msg: format!("Json decode error: {}", e),
-                });
-            }
-        };
-        let code = match obj["code"].as_i64() {
-            Some(v) => v,
-            None => 0,
-        };
-        if code != 0 {
-            let msg: String = obj["msg"].to_string();
-            return Err(error! {
-                code: code as i32,
-                msg: msg,
-            });
-        }
-        println!("obj====={:?}", obj);
-        Ok(obj)
-    }
+    
 }

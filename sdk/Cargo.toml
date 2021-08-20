@@ -9,16 +9,15 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.127", features = ["derive"] }
 serde_json = "1.0.66"
-reqwest = { version = "0.11.4", features = ["blocking", "json"] }
 
 # 加解密
 rust-crypto = "0.2.36"
 rand = "0.8.4"
 byteorder = "1.4.3"
 base64 = "0.13.0"
-bytes = "1.0.1"
 redis = "0.21.0"
 lazy_static = "1.4.0"
+chrono= "0.4.19"
 
 # Xml解析
 sxd-document = "0.3.2"
@@ -26,3 +25,24 @@ sxd-xpath = "0.4.2"
 
 # yml配置
 yaml-rust = "0.4.5"
+
+# reqwest
+bytes = { version = "1.0.1", optional = true }
+reqwest = { version = "0.11.4", features = ["blocking", "json"], optional = true }
+tokio = { version = "1.10.0", features = ["full"], optional = true }
+indicatif = { version = "0.16.2", optional = true }
+
+# actix 请求
+actix-rt = { version = "2.2.0", optional = true }
+actix-web = { version = "3.3.2", features = ["openssl"], optional = true }
+mime = { version = "0.3.16", optional = true }
+encoding_rs = { version = "0.8.28", optional = true }
+openssl = { version = "0.10.35", optional = true }
+
+
+[features]
+default = ["actix"]
+# 基于actix实现的Client
+actix = ["openssl","encoding_rs","mime","actix-web","actix-rt"]
+# 依赖 tokio, indicatif
+req_async = ["bytes","tokio","reqwest","indicatif"]

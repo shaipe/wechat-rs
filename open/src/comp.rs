@@ -40,7 +40,7 @@ impl Component {
         hash.insert("component_verify_ticket".to_string(), access_ticket);
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
-        let data = match api.json_decode(&res) {
+        let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
                 return Err(err);
@@ -72,7 +72,7 @@ impl Component {
                 access_token
             )
         );
-        logs!(format!("uri::: {}", uri));
+        log!("uri::: {}", uri);
         let ticket = Ticket::get_ticket(&self.config);
         let conf = self.config.clone();
         let mut hash = HashMap::new();
@@ -80,7 +80,7 @@ impl Component {
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
         println!("uri::: {:?}", res);
-        let data = match api.json_decode(&res) {
+        let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
@@ -126,7 +126,7 @@ impl Component {
         //post
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let data = match api.json_decode(&res) {
+        let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {
@@ -179,7 +179,7 @@ impl Component {
         );
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
-        let data = match api.json_decode(&res) {
+        let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
                 if let WechatError::ClientError { errcode, .. } = err {

@@ -32,9 +32,10 @@ weapp = ["wechat_weapp"]
 work = ["wechat_work"]
 full = ["wechat_mp", "wechat_open", "wechat_pay", "wechat_store", "wechat_weapp", "wechat_work"]
 
+
 [workspace]
 members = [
-  "web",
+  "web", # web应用
   "weapp", # 小程序
   "work", # 企业微信
   "open", # 开放平台

@@ -28,5 +28,5 @@ http = "0.2.4"
 form_urlencoded= "1.0.1"
 
 [[bin]]
-name = "web"
+name = "wweb"
 path = "src/main.rs"

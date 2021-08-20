@@ -14,8 +14,18 @@ pub use errors::WechatError;
 mod wxcrypto;
 pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
 
-mod client;
-pub use client::Client;
+// 请求默认AGENT
+pub const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3534.4 Safari/537.36";
+
+
+#[cfg(feature="req_async")]
+mod reqw_client;
+#[cfg(feature="req_async")]
+pub use reqw_client::Client;
+#[cfg(feature="actix")]
+mod actix_client;
+#[cfg(feature="actix")]
+pub use actix_client::Client;
 
 pub mod xmlutil;
 // pub use xmlutil::
@@ -34,6 +44,34 @@ pub fn current_timestamp() -> i64 {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs() as i64
+}
+
+
+///
+#[inline]
+pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
+    let obj: serde_json::Value = match serde_json::from_str(data) {
+        Ok(decoded) => decoded,
+        Err(ref e) => {
+            return Err(error! {
+                code: -3,
+                msg: format!("Json decode error: {}", e),
+            });
+        }
+    };
+    let code = match obj["code"].as_i64() {
+        Some(v) => v,
+        None => 0,
+    };
+    if code != 0 {
+        let msg: String = obj["msg"].to_string();
+        return Err(error! {
+            code: code as i32,
+            msg: msg,
+        });
+    }
+    println!("obj====={:?}", obj);
+    Ok(obj)
 }
 
 #[cfg(test)]

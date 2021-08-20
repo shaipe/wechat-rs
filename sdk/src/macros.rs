@@ -4,33 +4,15 @@
 
 /// 获取错误信息对象
 #[macro_export]
-macro_rules! logs {
-    ($e: expr) => {{
-        use std::fs::OpenOptions;
-        use std::io::prelude::*;
-        use std::time::SystemTime;
-
-        let now = SystemTime::now();
-
-        let file_path = "./logs.log";
-        let content = format!("[{:?}]\n {}\n", now, $e);
-
-        // 以读,写,创建,追加的方式打开文件
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .append(true)
-            .open(file_path);
-
-        // 向文件中写入内容
-        match file {
-            Ok(mut stream) => {
-                stream.write_all(content.as_bytes()).unwrap();
-            }
-            Err(err) => {
-                println!("{:?}", err);
-            }
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {{
+        let content = format!($($arg)*);
+        // 调试模式下直接使用println!()
+        if cfg!(debug_assertions) {
+            println!("{}", content);
+        } else {
+            crate::WechatError::write_to_file(content);
         }
     }};
 }
@@ -84,6 +66,7 @@ macro_rules! error {
     // error!("msg {}", msg)
     ($($arg:tt)*) => {{
         let content = format!($($arg)*);
+        println!("content: {}", content);
         // 调试模式下直接使用println!()
         crate::WechatError::msg(content)
     }};

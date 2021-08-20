@@ -5,7 +5,7 @@
 
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{Client, WechatResult};
+use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
@@ -33,7 +33,7 @@ impl Auth {
     );
         let api = Client::new();
         let res = api.get(&url).await?;
-        match api.json_decode(&res) {
+        match wechat_sdk::json_decode(&res) {
             Ok(data) => Ok(data),
             Err(err) => {
                 return Err(err);
@@ -53,5 +53,36 @@ impl Auth {
     /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
     pub fn get_access_token() -> WechatResult<String> {
         Ok(String::from(""))
+    }
+
+    /// 解析小程的手机号数据
+    pub fn parse_phone_number(
+        encrypt_text: &str,
+        session_key: &str,
+        iv: &str,
+    ) -> WechatResult<serde_json::Value> {
+        // 需要先进行Base64解密
+        let b64decoded = base64::decode(encrypt_text).unwrap();
+        let keys = base64::decode(session_key).unwrap();
+        let ivs = base64::decode(iv).unwrap();
+
+        match aes128_cbc_decrypt(&b64decoded, &keys, &ivs) {
+            Ok(v) => {
+                // 需要后前移7位,不解出来的对象不是正确的json
+                // 对称解密使用的算法为 AES-128-CBC，数据采用PKCS#7填充
+                let xv = &v[0..v.len() - 14];
+                match std::str::from_utf8(xv) {
+                    Ok(s) => {
+                        let val: serde_json::Value = match serde_json::from_str(s) {
+                            Ok(v) => v,
+                            Err(err) => return Err(error!("parse json error: {:?}", err)),
+                        };
+                        Ok(val)
+                    }
+                    Err(e) => return Err(error!("parse string failed: {:?}", e)),
+                }
+            }
+            Err(err) => return Err(error!("failed to decrypt {:?}", err)),
+        }
     }
 }
