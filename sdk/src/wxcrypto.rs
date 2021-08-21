@@ -6,7 +6,7 @@ use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use crypto::{aes, blockmodes, buffer, symmetriccipher};
+use crypto::{aes, blockmodes, buffer};
 use std::collections::HashMap;
 use std::io::Cursor;
 

@@ -4,7 +4,6 @@
 
 /// 获取错误信息对象
 #[macro_export]
-#[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {{
         let content = format!($($arg)*);

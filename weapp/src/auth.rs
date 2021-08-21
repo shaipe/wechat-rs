@@ -68,9 +68,11 @@ impl Auth {
 
         match aes128_cbc_decrypt(&b64decoded, &keys, &ivs) {
             Ok(v) => {
+                // log!("v {:?} str {:?}", &v, std::str::from_utf8(&v));
                 // 需要后前移7位,不解出来的对象不是正确的json
                 // 对称解密使用的算法为 AES-128-CBC，数据采用PKCS#7填充
                 let xv = &v[0..v.len() - 14];
+                // log!("v {:?}", xv);
                 match std::str::from_utf8(xv) {
                     Ok(s) => {
                         let val: serde_json::Value = match serde_json::from_str(s) {
