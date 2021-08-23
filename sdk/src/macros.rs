@@ -13,7 +13,7 @@ macro_rules! log {
         } else {
             crate::WechatError::write_to_file(content);
         }
-    }};
+    }}
 }
 
 
