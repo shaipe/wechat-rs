@@ -2,19 +2,6 @@
 //! 宏处理
 //! created by shaipe 20210228
 
-/// 获取错误信息对象
-#[macro_export]
-macro_rules! log {
-    ($($arg:tt)*) => {{
-        let content = format!($($arg)*);
-        // 调试模式下直接使用println!()
-        if cfg!(debug_assertions) {
-            println!("{}", content);
-        } else {
-            crate::WechatError::write_to_file(content);
-        }
-    }}
-}
 
 
 /// ## Usage
@@ -65,12 +52,25 @@ macro_rules! error {
     // error!("msg {}", msg)
     ($($arg:tt)*) => {{
         let content = format!($($arg)*);
-        println!("content: {}", content);
+        // println!("content: {}", content);
         // 调试模式下直接使用println!()
         crate::WechatError::msg(content)
     }};
 }
 
+/// 获取错误信息对象
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {{
+        let content = format!($($arg)*);
+        // 调试模式下直接使用println!()
+        if cfg!(debug_assertions) {
+            println!("{}", content);
+        } else {
+            crate::WechatError::write_to_file(content);
+        }
+    }}
+}
 
 
 /// 宏测试

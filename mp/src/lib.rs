@@ -6,8 +6,7 @@
 
 #[macro_use]
 extern crate wechat_sdk;
-
-// use wechat_sdk::WechatError;
+use wechat_sdk::WechatError;
 
 #[macro_use]
 extern crate serde_json;
