@@ -7,6 +7,7 @@
 // use std::io::Cursor;
 use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
+// 接口域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
 pub struct Auth;
