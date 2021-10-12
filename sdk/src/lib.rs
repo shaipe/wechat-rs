@@ -14,6 +14,10 @@ pub use errors::WechatError;
 mod wxcrypto;
 pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
 
+// 公共AccessToken管理
+mod token;
+pub use token::AccessToken;
+
 // 请求默认AGENT
 pub const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3534.4 Safari/537.36";
 

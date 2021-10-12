@@ -1,4 +1,6 @@
 //! copyright © ecdata.cn 2021 - present
+//! 基于actix的client封装的接口请求
+//! created by shaipe 20210228
 
 use crate::DEFAULT_USER_AGENT;
 use actix_web::client::{Client as HttpClient, Connector};

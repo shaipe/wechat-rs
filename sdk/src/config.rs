@@ -1,5 +1,5 @@
-//! copyright
-//! 微信三方信息配置
+//! copyright © ecdata.cn 2021 - present
+//! 微信接口调用时的文件配置信息
 
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -19,6 +19,7 @@ impl RedisConfig {
         }
     }
 }
+
 use std::sync::{Arc, Mutex};
 // 默认加载静态全局
 lazy_static! {
