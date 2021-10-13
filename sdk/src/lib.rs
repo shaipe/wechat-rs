@@ -8,6 +8,9 @@ pub type WechatResult<T> = Result<T, WechatError>;
 #[macro_use]
 pub mod macros;
 
+#[macro_use]
+extern crate lazy_static;
+
 mod errors;
 pub use errors::WechatError;
 
@@ -32,15 +35,32 @@ mod actix_client;
 pub use actix_client::Client;
 
 pub mod xmlutil;
-// pub use xmlutil::
-mod session;
-pub use session::{RedisStorage, SessionStore};
 
-#[macro_use]
-extern crate lazy_static;
 
-mod config;
-pub use config::{get_redis_conf, set_redis_conf, RedisConfig};
+/// 写入文件到日志
+// #[allow(dead_code)]
+pub fn write_to_file(conf_path: &str, content: String) -> WechatResult<bool> {
+    use std::fs::OpenOptions;
+    use std::io::prelude::*;
+
+    // 以读,写,创建,追加的方式打开文件
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        // .append(true)
+        .open(conf_path);
+
+    // 向文件中写入内容
+    match file {
+        Ok(mut stream) => match stream.write_all(content.as_bytes()) {
+            Ok(_) => Ok(true),
+            Err(err) => Err(error!("{:?}", err)),
+        },
+        Err(err) => Err(error!("{:?}", err)),
+    }
+}
+
 /// 获取当前时间戮
 pub fn current_timestamp() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};

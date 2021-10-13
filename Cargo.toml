@@ -41,7 +41,8 @@ members = [
   "open", # 开放平台
   "mp",   # 公众号
   "store",
-  "sdk" # 工具类
+  "sdk", # 工具类
+  "redis"
 ]
 
 

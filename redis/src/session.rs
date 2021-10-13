@@ -1,4 +1,4 @@
-use super::WechatResult;
+use wechat_sdk::WechatResult;
 use redis::{self, FromRedisValue, ToRedisArgs};
 use std::collections::{BTreeMap, HashMap};
 pub trait SessionStruct {}
