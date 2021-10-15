@@ -2,26 +2,16 @@
 //! 接口凭证管理，直接使用文件进行管理
 //! created by shaipe 20211012
 
-use crate::WechatResult as Result;
+use crate::{constant::API_DOMAIN, Client, WechatResult as Result};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::prelude::*;
 use std::sync::Mutex;
-use yaml_rust::{
-    yaml::{Hash, Yaml},
-    YamlEmitter, YamlLoader,
-};
-
-// 配置文件路径
-const CONFIG_PATH: &'static str = "conf/wechat.yml";
 
 // 缓存key
-const SMS_CONFIG_KEY: &'static str = "wechat_config_cache";
+const WECHAT_CONFIG_KEY: &'static str = "wechat_config_cache";
 
 // 默认加载静态全局
 lazy_static! {
-    pub static ref SMS_CONFIG_CACHES: Mutex<HashMap<String, AccessToken>> =
-        Mutex::new(HashMap::new());
+    pub static ref WECHAT_CONFIG_CACHES: Mutex<HashMap<String, Token>> = Mutex::new(HashMap::new());
 }
 
 /// Access Token对象
@@ -29,6 +19,15 @@ lazy_static! {
 pub struct AccessToken {
     // 应用类型
     pub app_type: String,
+    // 应用id
+    pub app_id: String,
+    // 密钥
+    pub secret: String,
+}
+
+/// Token信息
+#[derive(Debug, Clone, Default)]
+pub struct Token {
     // 访问token
     pub access_token: String,
     // access_token获取时间
@@ -39,81 +38,62 @@ pub struct AccessToken {
 
 impl AccessToken {
     /// 创建一个短信配置实例
-    pub fn new() -> Result<AccessToken> {
-        AccessToken::load_yaml(CONFIG_PATH)
-    }
-
-    pub fn load(file_path: &str) -> Self {
+    pub fn new(app_type: &str, app_id: &str, secret: &str) -> AccessToken {
         AccessToken {
-            app_type: "weapp".to_owned(),
-            access_token: "".to_owned(),
-            create_time: 0,
-            expires: 0,
+            app_type: app_type.to_owned(),
+            app_id: app_id.to_owned(),
+            secret: secret.to_owned(),
         }
     }
 
-    /// 获取一个配置的新实例，并从指定的配置中加载配置信息
-    /// @param1: 配置文件路径
-    pub fn load_yaml(conf_path: &str) -> Result<AccessToken> {
-        match AccessToken::load_string(conf_path) {
-            Ok(s) => {
-                let docs = YamlLoader::load_from_str(&s).unwrap();
-                // get first yaml hash doc
-                let yaml_doc = &docs[0];
-                log!("load_yaml == {:?}", yaml_doc);
+    /// 获取微信授权的accessToken
+    pub async fn get_access_token(&self, grant_type: &str) -> Result<Token> {
+        // 组装请求地址
+        let url = format!(
+            "{domain}/cgi-bin/token?grant_type={grant_type}&appid={app_id}&secret={secret}",
+            domain = API_DOMAIN,
+            grant_type = if grant_type == "" {
+                "client_credential"
+            } else {
+                grant_type
+            },
+            app_id = self.app_id,
+            secret = self.secret
+        );
 
-                let cnf = AccessToken {
-                    app_type: if let Some(s) = yaml_doc["app_type"].as_str() {
-                        s.to_owned()
-                    } else {
-                        "".to_owned()
-                    },
-                    access_token: if let Some(s) = yaml_doc["access_token"].as_str() {
-                        s.to_owned()
-                    } else {
-                        "".to_owned()
-                    },
-                    create_time: if let Some(s) = yaml_doc["create_time"].as_i64() {
-                        s
-                    } else {
-                        0
-                    },
-                    expires: if let Some(s) = yaml_doc["expires"].as_i64() {
-                        s.to_owned()
-                    } else {
-                        0
-                    },
-                };
-                Ok(cnf)
+        // 调用远程接口
+        match Client::new().get(&url).await {
+            Ok(res) => {
+                match crate::json_decode(&res) {
+                    Ok(data) => {
+                        let token = match data["access_token"].as_str(){
+                            Some(s) => s.to_owned(),
+                            None => return Err(error!("access token error"))
+                        };
+
+                        // 将Token返出去
+                        return Ok(Token {
+                            access_token: token,
+                            create_time: crate::current_timestamp(),
+                            expires: 7200,
+                        });
+                    }
+                    Err(err) => {
+                        return Err(err);
+                    }
+                }
             }
-            Err(err) => return Err(err),
+            Err(err) => log!("error{:?}", err),
         }
-    }
 
-    /// 加载配置文件的字符串
-    /// @param1: 配置文件路径
-    fn load_string(conf_path: &str) -> Result<String> {
-        // open file
-        let mut f = match File::open(conf_path) {
-            Ok(f) => f,
-            Err(e) => {
-                return Err(error! {
-                    code: 4004,
-                    msg: format!("{}", e)
-                });
-            }
-        };
-        let mut s = String::new();
-        f.read_to_string(&mut s).unwrap(); // read file content to s
-
-        Ok(s)
+        Err(error!("access token is invalid"))
     }
 
     /// 把字符串对象写入缓存中,并指定有有效期单位秒
-    pub fn set(val: AccessToken) {
-        let key = SMS_CONFIG_KEY;
+    pub fn set(&self, val: Token) {
+        let key = WECHAT_CONFIG_KEY;
         // log!("setting config");
-        SMS_CONFIG_CACHES
+        WECHAT_CONFIG_CACHES
             .lock()
             .unwrap()
             .insert(key.to_owned(), val);
@@ -121,54 +101,23 @@ impl AccessToken {
     }
 
     /// 获取cache中的缓存数据
-    pub fn get() -> Option<AccessToken> {
-        let key = SMS_CONFIG_KEY;
-        let cache = SMS_CONFIG_CACHES.lock().unwrap();
+    pub async fn get(&self) -> Option<Token> {
+        let key = WECHAT_CONFIG_KEY;
+        let cache = WECHAT_CONFIG_CACHES.lock().unwrap();
 
         if let Some(cnf) = cache.get(key) {
             return Some(cnf.clone());
+        } else {
+            match self.get_access_token("client_credential").await {
+                Ok(access) => {
+                    return Some(access.clone());
+                }
+                Err(err) => {
+                    log!("get access token error{:?}", err);
+                }
+            }
         }
-        // else {
-        //     match AccessToken::load_yaml() {
-        //         Ok(c) => {
-        //             Some(c)
-        //         }
-        //         Err(err) => {
-        //             log!("sms config get error {}", err);
-        //             None
-        //         }
-        //     }
-        // }
         None
-    }
-
-    /// 保存修改后的配置信息
-    pub fn save(&mut self) -> Result<bool> {
-        let mut doc = Hash::new();
-        doc.insert(
-            Yaml::String("access_token".into()),
-            Yaml::String(self.access_token.clone()),
-        );
-        doc.insert(
-            Yaml::String("app_type".into()),
-            Yaml::String(self.app_type.clone()),
-        );
-        doc.insert(
-            Yaml::String("create_time".into()),
-            Yaml::Integer(self.create_time),
-        );
-        doc.insert(Yaml::String("expires".into()), Yaml::Integer(self.expires));
-
-        let mut out_str = String::new();
-        {
-            let mut emitter = YamlEmitter::new(&mut out_str);
-            emitter.dump(&Yaml::Hash(doc)).unwrap(); // dump the YAML object to a String
-        }
-
-        // println!("{}", out_str);
-        crate::write_to_file(CONFIG_PATH, out_str)
-
-        // Ok(())
     }
 }
 
@@ -181,7 +130,8 @@ mod tests {
         // conf.username = "dlxumin1".to_owned();
         // conf.password = "dlxumin1123".to_owned();
         // conf.sign = "宏推".to_owned();
-        let _ = conf.save();
+        // let _ = conf.save();
+
         println!("test");
     }
 }

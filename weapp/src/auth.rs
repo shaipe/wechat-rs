@@ -46,12 +46,6 @@ impl Auth {
         Ok("".to_string())
     }
 
-    /// 获取小程序全局唯一后台接口调用凭据（access_token）。调用绝大多数后台接口时都需使用 access_token，开发者需要进行妥善保存。
-    /// GET https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
-    /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-    pub fn get_access_token() -> WechatResult<String> {
-        Ok(String::from(""))
-    }
 
     /// 解析小程的手机号数据
     pub fn parse_phone_number(

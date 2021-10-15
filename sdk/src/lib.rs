@@ -11,9 +11,11 @@ pub mod macros;
 #[macro_use]
 extern crate lazy_static;
 
+// 错误信息处理定义
 mod errors;
 pub use errors::WechatError;
 
+// 加解密处理
 mod wxcrypto;
 pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
 
@@ -21,9 +23,8 @@ pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
 mod token;
 pub use token::AccessToken;
 
-// 请求默认AGENT
-pub const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3534.4 Safari/537.36";
-
+// 导出常量配置
+pub mod constant;
 
 #[cfg(feature="req_async")]
 mod reqw_client;

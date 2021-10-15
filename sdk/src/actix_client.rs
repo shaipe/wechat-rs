@@ -2,7 +2,7 @@
 //! 基于actix的client封装的接口请求
 //! created by shaipe 20210228
 
-use crate::DEFAULT_USER_AGENT;
+use crate::constant::DEFAULT_USER_AGENT;
 use actix_web::client::{Client as HttpClient, Connector};
 use actix_web::{http::header, http::Method, web::Bytes};
 
@@ -12,9 +12,9 @@ use serde::Serialize;
 use crate::WechatResult as Result;
 use std::time::Duration;
 // use tube_value::{ToValue, Value};
-use std::borrow::Cow;
 use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
+use std::borrow::Cow;
 
 /// 请求客户端
 #[derive(Clone)]
@@ -66,7 +66,6 @@ pub(crate) fn text_with_charset(
         Ok(String::from_utf8_unchecked(bs.to_vec()))
     }
 }
-
 
 impl Client {
     /// 创建一个新的连接客户端
@@ -163,7 +162,6 @@ impl Client {
         self.request(Method::DELETE, url, params).await
     }
 
-
     // /// 解析并转换为tube_value::Value
     // pub fn parse_value(&self, text: &str) -> Result<Value> {
 
@@ -178,6 +176,43 @@ impl Client {
     //     Ok(val.to_value())
 
     // }
+
+    /// 请求
+    pub async fn request_betyes<T: Serialize>(
+        self,
+        method_str: &str,
+        url: &str,
+        params: &T,
+    ) -> Result<Vec<u8>> {
+        // log!("params === {:?}", params);
+        let method = match Method::from_bytes(method_str.as_bytes()) {
+            Ok(s) => s,
+            Err(_e) => Method::POST,
+        };
+        match self.client.request(method, url).send_json(params).await {
+            Ok(mut res) => {
+                // log!("response: {:?}", res);
+                if res.status().is_success() {
+                    match res.body().await {
+                        Ok(bs) => Ok(bs.to_vec()),
+                        Err(err) => Err(error! {
+                            code: -1,
+                            msg: format!("error: {}", err)
+                        }),
+                    }
+                } else {
+                    Err(error! {
+                        code: 500,
+                        msg: format!("status={}", res.status())
+                    })
+                }
+            }
+            Err(e) => Err(error! {
+                code: 500,
+                msg: format!("Send request error: {}", e)
+            }),
+        }
+    }
 
     /// 请求
     pub async fn request<T: Serialize>(
