@@ -71,7 +71,8 @@ impl QRCode {
 
     // 转为bas64
     pub fn base64_image_bytes(bs: Vec<u8>) -> String {
-        tube_img::vec_to_base64(bs)
+        //tube_img::vec_to_base64(bs)
+        "".to_string()
     }
 
     /// 获取小程序码，适用于需要的码数量极多的业务场景

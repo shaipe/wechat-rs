@@ -3,11 +3,7 @@
 
 #[macro_use]
 extern crate wechat_sdk;
-use wechat_sdk::WechatError;
-
-
-
-
+//use wechat_sdk::WechatError;
 pub mod open {
     #[cfg(feature = "open")]
     pub use wechat_open::*;
@@ -42,7 +38,6 @@ pub mod work {
     pub use wechat_work::*;
 }
 
-mod config;
-pub use config::Config;
+
 
 pub use wechat_sdk::*;

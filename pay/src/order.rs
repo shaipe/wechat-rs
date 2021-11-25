@@ -1,8 +1,10 @@
 //! copyright © ecdata.cn 2021 - present
-use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
+use wechat_sdk::{Client, WechatResult};
+use itertools::Itertools;
+use wechat_sdk::Config;
+pub struct Order{
 
-
-pub struct Order;
+}
 
 
 /// // 请求body参数
@@ -22,26 +24,40 @@ pub struct Order;
 
 impl Order {
     // 统一下单
-    pub fn create() -> WechatResult<serde_json::Value> {
-        let api_url ="https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi";
-
-        let data = json!({
-            "amount": { 
-                "total": 0.01,
-                "currency": "CNY"
-            },
-            "mchid": "",
-            "description": "",
-            "notify_url": "",
-            "payer": {
-                "openid": "",
-                "out_trade_no": "",
-                "goods_tag": "",
-                "appid": ""
+    pub async fn create(mut params: serde_json::Value) -> WechatResult<serde_json::Value> {
+        let api_url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
+        let conf = Config::get();
+        params["appid"] = serde_json::Value::String(conf.app_id);
+        params["mch_id"] = serde_json::Value::String(conf.mch_id);
+        //api 
+        let secret_key = conf.secret_key;
+   
+        let mut vs = vec![];
+        if let Some(map) = params.as_object() {
+            for key in map.keys().sorted() {
+                vs.push(format!("{}={}", key,map[key].to_string().trim_matches(&['"','"'] as &[_])));
             }
-        });
+            vs.push(format!("{}={}", "key",secret_key));    
+            let wait_md5_str = format!("{}",vs.join("&"));
+            let sign = format!("{:x}",md5::compute(&wait_md5_str)).to_uppercase();
+            params["sign"] = serde_json::Value::String(sign);
+        }
 
-        Ok(data)
+        let body = format!("<xml>{}</xml>",serde_xml_rs::to_string(&params).unwrap_or_default());
+        let request = Client::new();
+        let r = request.post(&api_url,&body).await.unwrap_or_default();
+
+        let ps = serde_xml_rs::from_str::<serde_json::Value>(&r).unwrap_or_default();
+      
+        if let Some(root_doms) = ps.as_object() {
+            let rr: serde_json::Map<String,serde_json::Value> = root_doms.iter().map(|(i,vo)| (i.clone(),vo["$value"].clone())).collect();
+            return Ok(serde_json::Value::Object(rr));
+        }
+
+        Ok(json!({
+            "return_code": "FAIL",
+            "return_msg": "请求网络问题"
+        }))
         
     }
 }

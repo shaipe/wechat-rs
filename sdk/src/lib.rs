@@ -35,6 +35,9 @@ mod actix_client;
 #[cfg(feature="actix")]
 pub use actix_client::Client;
 
+pub mod config;
+pub use config::*;
+
 pub mod xmlutil;
 
 

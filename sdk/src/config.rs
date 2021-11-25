@@ -6,18 +6,24 @@
 
 
 
-use wechat_sdk::WechatResult;
+use crate::WechatResult;
 use std::fs::File;
+use once_cell::sync::OnceCell;
+// 默认加载静态全局
+static CONFIGS: OnceCell<Config> = OnceCell::new();
 
 /// 微们接口平台类型
 // #[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum PlatformType {
     OfficialAccount, // 公众号
     OpenPlatfrom,    // 开放平台
     MiniProgram,     // 小程序
 }
 
+
 /// 微信sdk配置
+#[derive(Debug, Clone)]
 pub struct Config {
     pub app_id: String, // 应用id
     pub secret: String, // 密钥
@@ -25,9 +31,53 @@ pub struct Config {
     pub platform: PlatformType, // 配置的平台类型
                         // pub msg_type: MessageFormat,    // 消息格式
                         // pub encrypt_mode: EncryptMode   // 加密方式
+    pub mch_id: String, //商户id
+    pub private_key: String, //商户证书私钥
+    pub certificate: String, //商户证书路径
+    pub secret_key: String,  //API 秘钥
+    
 }
 
 impl Config {
+
+    /// 设置配置
+    pub fn load(params: serde_json::Value) -> WechatResult<Config> {
+        match CONFIGS.get() {
+            Some(conf) => {
+                Ok(conf.clone())
+            },
+            None => {
+                //保存值
+                let conf = Config{
+                    app_id: params["app_id"].to_string(),
+                    secret: params["secret"].to_string(),
+                    token: params["token"].to_string(),
+                    platform: PlatformType::MiniProgram,
+                    mch_id: params["mch_id"].to_string(),
+                    private_key: params["private_key"].to_string(),
+                    certificate: params["certificate"].to_string(),
+                    secret_key: params["secret_key"].to_string()
+                };
+                let _ = CONFIGS.set(conf.clone());
+
+                Ok(conf)
+            }
+        }
+        
+    }
+
+    /// 获取对应参数 
+    pub fn get() -> Config {
+        match CONFIGS.get() {
+            Some(conf) => {
+                conf.clone()
+            },
+            None => {
+                Config::default()
+            }
+        }
+    }
+
     /// 加载yml配置文件
     pub fn load_yaml(conf_path: &str) -> WechatResult<Config> {
         use yaml_rust::yaml;
@@ -72,6 +122,10 @@ impl Default for Config {
             secret: String::new(),
             token: String::new(),
             platform: PlatformType::MiniProgram,
+            mch_id: "".to_string(),
+            private_key: "".to_string(),
+            certificate: "".to_string(),
+            secret_key: "".to_string(),
             // msg_type: MessageFormat::Json,
             // encrypt_mode: EncryptMode::Plaintext
         }
