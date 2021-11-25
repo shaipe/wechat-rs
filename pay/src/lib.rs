@@ -21,9 +21,9 @@ mod tests {
         println!("{:?}","=============");
         //初始化 配置
         let _ = wechat_sdk::Config::load(json!({
-            "app_id": "wx455639023de66adb",
-            "mch_id": "1614479327",
-            "secret_key": "chengduhongtuikeji20210911888888",
+            "app_id": "wx45563902x3de66adbx",
+            "mch_id": "16132479f327",
+            "secret_key": "chengduhongtuikeji20210911sfsfd888888",
         }));
 
         rt::System::new("test").block_on(async {

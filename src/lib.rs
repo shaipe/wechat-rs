@@ -47,7 +47,6 @@ pub use wechat_sdk::*;
 mod tests {
     use super::*;
     use serde_json::*;
-    //use pay::
     use wechat_pay::Order;
     use actix_web::rt;
     //
@@ -56,9 +55,9 @@ mod tests {
         println!("{:?}","=======================");
         //初始化 配置
         let _ = wechat_sdk::Config::load(json!({
-            "app_id": "wx455639023de66adb",
-            "mch_id": "1614479327",
-            "secret_key": "chengduhongtuikeji20210911888888",
+            "app_id": "wx455639023de66axx",
+            "mch_id": "1414479327",
+            "secret_key": "chengduhxongtuikejxi20210911888888",
         }));
 
         rt::System::new("test").block_on(async {
