@@ -23,10 +23,12 @@ pub struct Order{
 // + "\"appid\": \"wxdace645e0bc2c424\"" + "}"; 
 
 impl Order {
+
     // 统一下单
     pub async fn create(mut params: serde_json::Value) -> WechatResult<serde_json::Value> {
         let api_url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
         let conf = Config::get();
+        println!("ss:{:?}",conf);
         params["appid"] = serde_json::Value::String(conf.app_id);
         params["mch_id"] = serde_json::Value::String(conf.mch_id);
         //api 

@@ -49,14 +49,14 @@ impl Config {
             None => {
                 //保存值
                 let conf = Config{
-                    app_id: params["app_id"].to_string(),
-                    secret: params["secret"].to_string(),
-                    token: params["token"].to_string(),
+                    app_id: format!("{}",params["app_id"].as_str().unwrap_or_default()),
+                    secret: format!("{}",params["secret"].as_str().unwrap_or_default()),
+                    token: format!("{}",params["token"].as_str().unwrap_or_default()),
                     platform: PlatformType::MiniProgram,
-                    mch_id: params["mch_id"].to_string(),
-                    private_key: params["private_key"].to_string(),
-                    certificate: params["certificate"].to_string(),
-                    secret_key: params["secret_key"].to_string()
+                    mch_id: format!("{}",params["mch_id"].as_str().unwrap_or_default()),
+                    private_key: format!("{}",params["private_key"].as_str().unwrap_or_default()),
+                    certificate: format!("{}",params["certificate"].as_str().unwrap_or_default()),
+                    secret_key: format!("{}",params["secret_key"].as_str().unwrap_or_default())
                 };
                 let _ = CONFIGS.set(conf.clone());
 

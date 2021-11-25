@@ -3,6 +3,8 @@
 //! created by shaipe 20210914
 
 mod order;
+pub use order::Order;
+
 #[macro_use]
 extern crate serde_json;
 
