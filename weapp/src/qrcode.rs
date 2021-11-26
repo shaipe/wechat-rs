@@ -70,8 +70,8 @@ impl QRCode {
     }
 
     // 转为bas64
-    pub fn base64_image_bytes(bs: Vec<u8>) -> String {
-        //tube_img::vec_to_base64(bs)
+    pub fn base64_image_bytes(_bs: Vec<u8>) -> String {
+        // tube_img::vec_to_base64(bs)
         "".to_string()
     }
 

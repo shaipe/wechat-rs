@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 byteorder = "1.4.3"
 serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
+serde_json = "1.0.72"
 base64 = "0.13.0"
 yaml-rust = "0.4.5"
 wechat_sdk = {path = "../sdk", version = "0.1.0", features=["actix"]}
@@ -25,7 +25,7 @@ wechat_sdk = {path = "../sdk", version = "0.1.0", features=["actix"]}
 
 [dev-dependencies]
 actix-web = { version = "3.3.2", features = ["openssl"] }
-openssl = "0.10.36"
+openssl = "0.10.38"
 
 
 [features]
