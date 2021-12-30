@@ -111,7 +111,7 @@ impl Client {
     pub async fn get(self, url: &str) -> Result<String> {
         match self.client.get(url).send().await {
             Ok(mut res) => {
-                log!("{:?}", res);
+                // log!("{:?}", res);
                 if res.status().is_success() {
                     // match res.json() {
                     //     Ok(res) => {},
