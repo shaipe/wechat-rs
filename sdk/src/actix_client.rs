@@ -3,8 +3,8 @@
 //! created by shaipe 20210228
 
 use crate::constant::DEFAULT_USER_AGENT;
-use actix_web::client::{Client as HttpClient, Connector};
 use actix_web::{http::header, http::Method, web::Bytes};
+use awc::{Client as HttpClient, Connector};
 
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use serde::Serialize;
@@ -79,8 +79,7 @@ impl Client {
 
         let connector = Connector::new()
             .timeout(Duration::from_secs(5))
-            .ssl(builder.build())
-            .finish();
+            .ssl(builder.build());
 
         let client = HttpClient::builder()
             .connector(connector)
