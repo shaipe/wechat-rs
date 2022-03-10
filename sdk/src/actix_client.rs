@@ -3,7 +3,7 @@
 //! created by shaipe 20210228
 
 use crate::constant::DEFAULT_USER_AGENT;
-use actix_web::client::{Client as HttpClient, Connector};
+use awc::{Client as HttpClient, Connector};
 use actix_web::{http::header, http::Method, web::Bytes};
 
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
@@ -79,12 +79,12 @@ impl Client {
 
         let connector = Connector::new()
             .timeout(Duration::from_secs(5))
-            .ssl(builder.build())
-            .finish();
+            .openssl(builder.build())
+            ;
 
         let client = HttpClient::builder()
             .connector(connector)
-            .header(header::USER_AGENT, DEFAULT_USER_AGENT)
+            .add_default_header((header::USER_AGENT, DEFAULT_USER_AGENT))
             // .header(header::AUTHORIZATION, token)
             // .header(header::REFERER, "http://localhost")
             // .initial_window_size(100)

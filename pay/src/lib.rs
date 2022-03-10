@@ -14,7 +14,6 @@ mod tests {
     use super::*;
     use serde_json::*;
     use order::Order;
-    use actix_web::rt;
     //
     #[test]
     fn it_pay_works() {
@@ -26,7 +25,7 @@ mod tests {
             "secret_key": "chengduhongtuikeji20210911sfsfd888888",
         }));
 
-        rt::System::new("test").block_on(async {
+        actix_rt::System::new().block_on(async {
             let params = json!({
                 "attach": "支付测试",
                 "body": "testx",
