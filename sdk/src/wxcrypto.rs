@@ -9,7 +9,7 @@ use crypto::sha1::Sha1;
 use crypto::{aes, blockmodes, buffer};
 use std::collections::HashMap;
 use std::io::Cursor;
-
+use crate:: AesCrypt;
 // use rand::thread_rng;
 // use rand::Rng;
 
@@ -26,12 +26,6 @@ impl WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
         let key = base64::decode(&aes_key).unwrap();
-        // println!("{:?}",encoding_aes_key);
-        // let c= Config::new(CharacterSet::Crypt,true);
-        // c.decode_allow_trailing_bits(true);
-
-        // let key = base64::decode_config(&aes_key,c).unwrap();
-        // println!("{:?}",key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
@@ -99,6 +93,7 @@ impl WeChatCrypto {
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
         let b64decoded = base64::decode(ciphertext).unwrap();
+       
         // aes descrypt
         let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
 

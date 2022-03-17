@@ -20,13 +20,7 @@ pub struct Ticket {
     pub access_token: String,
     pub at_expired_time: i64,
 }
-impl redis::ToRedisArgs for Ticket {
-    fn write_redis_args<W>(&self, _out: &mut W)
-    where
-        W: ?Sized + redis::RedisWrite,
-    {
-    }
-}
+
 // impl redis::FromRedisValue for Ticket {
 //     fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {}
 // }

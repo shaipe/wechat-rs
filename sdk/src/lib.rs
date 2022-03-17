@@ -39,7 +39,8 @@ pub mod config;
 pub use config::*;
 
 pub mod xmlutil;
-
+pub mod aes_crypt;
+pub use aes_crypt::AesCrypt;
 
 /// 写入文件到日志
 // #[allow(dead_code)]
