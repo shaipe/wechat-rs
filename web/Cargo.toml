@@ -1,6 +1,6 @@
 [package]
 name = "wweb"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["shaipe <shaipe@sina.com>"]
 edition = "2021"
 
@@ -21,8 +21,8 @@ serde = "1.0.136"
 serde_json = "1.0.79"
 serde_derive = "1.0.136"
 base64 = "0.13.0"
-wechat={path="../", version="0.1.0", features=["mp", "open"]}
-wechat_sdk = {path = "../sdk", version = "0.1.0"}
+wechat={path="../", version="0.2.0", features=["mp", "open"]}
+wechat_sdk = {path = "../sdk", version = "0.2.0"}
 json = "0.12.4"
 url = "2.2.2"
 http = "0.2.6"
