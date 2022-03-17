@@ -70,6 +70,7 @@ mod tests {
                 "total_fee": 1,
                 "trade_type": "APP"
             });
+           
             let r = Order::create(params).await.unwrap();
             println!("{:?}",r);
         });

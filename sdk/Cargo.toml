@@ -1,8 +1,8 @@
 [package]
-name = "wechat_sdk"
-version = "0.1.0"
 authors = ["shaipe <shaipe@live.com>"]
 edition = "2018"
+name = "wechat_sdk"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,8 +15,8 @@ rust-crypto = "0.2.36"
 rand = "0.8.5"
 byteorder = "1.4.3"
 base64 = "0.13.0"
+chrono = "0.4.19"
 lazy_static = "1.4.0"
-chrono= "0.4.19"
 
 # Xml解析
 sxd-document = "0.3.2"
@@ -45,4 +45,4 @@ default = ["actix"]
 # 基于actix实现的Client
 actix = ["openssl","encoding_rs","mime","actix-web","actix-rt","awc"]
 # 依赖 tokio, indicatif
-req_async = ["bytes","tokio","reqwest","indicatif"]
+req_async = ["bytes", "tokio", "reqwest", "indicatif"]
