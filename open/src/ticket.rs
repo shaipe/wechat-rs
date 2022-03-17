@@ -10,7 +10,7 @@ use std::collections::HashMap;
 // use std::io::prelude::*;
 // use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat_sdk::{get_redis_conf, xmlutil, RedisStorage, SessionStore, WeChatCrypto, WechatResult};
+use wechat_sdk::{xmlutil, WeChatCrypto, WechatResult};
 
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -158,44 +158,44 @@ impl Ticket {
         }
     }
     pub fn set_ticket(conf: &TripartiteConfig, ticket_str: String) {
-        let redisconfig = get_redis_conf();
-        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        let url = format!(
-            "{}:{}:{}/{}",
-            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        );
-        let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
-        match RedisStorage::from_url(url) {
-            Ok(session) => {
-                session.set(key, ticket_str, Some(10 * 1000));
-            }
-            Err(e) => {
-                println!("{:?}", e);
-            }
-        }
+        // let redisconfig = get_redis_conf();
+        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        // let url = format!(
+        //     "{}:{}:{}/{}",
+        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        // );
+        // let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
+        // match RedisStorage::from_url(url) {
+        //     Ok(session) => {
+        //         session.set(key, ticket_str, Some(10 * 1000));
+        //     }
+        //     Err(e) => {
+        //         println!("{:?}", e);
+        //     }
+        // }
     }
     /// 获取ticket
     pub fn get_ticket(conf: &TripartiteConfig) -> Ticket {
         let mut obj = Ticket::default();
-        let redisconfig = get_redis_conf();
+        // let redisconfig = get_redis_conf();
 
-        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        let url = format!(
-            "{}:{}:{}/{}",
-            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        );
-        let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
-        match RedisStorage::from_url(url) {
-            Ok(session) => {
-                if let Some(v) = session.get(key, "GET".to_owned(), None) {
-                    obj.access_ticket = v;
-                } else {
-                }
-            }
-            Err(e) => {
-                println!("redis read {:?}", e);
-            }
-        };
+        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        // let url = format!(
+        //     "{}:{}:{}/{}",
+        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        // );
+        // let key = format!("{}{}", TICKET_CATCHE_KEY, conf.app_id);
+        // match RedisStorage::from_url(url) {
+        //     Ok(session) => {
+        //         if let Some(v) = session.get(key, "GET".to_owned(), None) {
+        //             obj.access_ticket = v;
+        //         } else {
+        //         }
+        //     }
+        //     Err(e) => {
+        //         println!("redis read {:?}", e);
+        //     }
+        // };
         match Component::get_access_token(conf) {
             Ok(s) => {
                 obj.access_token = s.1;

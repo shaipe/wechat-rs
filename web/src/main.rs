@@ -10,12 +10,16 @@ extern crate actix_web;
 #[macro_use]
 extern crate wechat_sdk;
 
+use wechat_sdk::WechatError;
+
 #[macro_use]
 extern crate lazy_static;
-use actix_web::client::Client;
+
+use awc::Client;
+
 use actix_web::http::StatusCode;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
-mod cluster;
+// mod cluster;
 mod official;
 mod result_response;
 mod utils;
@@ -70,7 +74,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
             //         .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             //         .max_age(3600),
             // )
-            .data(Client::new())
+            .app_data(Client::new())
             .service(index_handler)
             .service(wx_handler::receive_ticket)
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))

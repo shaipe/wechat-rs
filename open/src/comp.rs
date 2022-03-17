@@ -6,10 +6,7 @@ use super::TripartiteConfig;
 use super::Ticket;
 use serde_json::Value;
 use std::collections::HashMap;
-use wechat_sdk::{
-    current_timestamp, get_redis_conf, Client, RedisStorage, SessionStore, WechatError,
-    WechatResult,
-};
+use wechat_sdk::{current_timestamp, Client, WechatError, WechatResult};
 
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
@@ -83,17 +80,17 @@ impl Component {
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WechatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token(ticket.access_ticket.clone())
-                            .await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
+                // if let WechatError::ClientError { errcode, .. } = err {
+                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                //         self.fetch_access_token(ticket.access_ticket.clone())
+                //             .await?;
+                //         return Err(err);
+                //     } else {
+                //         return Err(err);
+                //     }
+                // } else {
+                return Err(err);
+                // }
             }
         };
 
@@ -129,16 +126,16 @@ impl Component {
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WechatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token(t.access_ticket.clone()).await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
+                // if let WechatError::ClientError { errcode, .. } = err {
+                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                //         self.fetch_access_token(t.access_ticket.clone()).await?;
+                //         return Err(err);
+                //     } else {
+                //         return Err(err);
+                //     }
+                // } else {
+                return Err(err);
+                // }
             }
         };
         Ok(data)
@@ -182,16 +179,16 @@ impl Component {
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                if let WechatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token(t.access_ticket.clone()).await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
+                // if let WechatError::ClientError { errcode, .. } = err {
+                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                //         self.fetch_access_token(t.access_ticket.clone()).await?;
+                //         return Err(err);
+                //     } else {
+                //         return Err(err);
+                //     }
+                // } else {
+                return Err(err);
+                // }
             }
         };
         let acc_token = match data["authorizer_access_token"].as_str() {
@@ -284,20 +281,16 @@ impl Component {
                     // println!("{:?}", v);
                     Ok((c, list))
                 }
-                Err(_) => Err(WechatError::InvalidValue),
+                Err(_) => Err(WechatError::custom(500, "msg")),
             },
             Err(err) => {
-                if let WechatError::ClientError { errcode, .. } = err {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                        self.fetch_access_token(ticket.access_ticket.clone())
-                            .await?;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-                } else {
-                    return Err(err);
-                }
+                // if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
+                //     self.fetch_access_token(ticket.access_ticket.clone())
+                //         .await?;
+                //     return Err(err);
+                // } else {
+                return Err(err);
+                // }
             }
         }
     }
@@ -323,43 +316,45 @@ impl Component {
         uri
     }
     pub fn set_access_token(conf: &TripartiteConfig, c: (i64, String)) {
-        let redisconfig = get_redis_conf();
+        // let redisconfig = get_redis_conf();
 
-        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        let url = format!(
-            "{}:{}:{}/{}",
-            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        );
-        let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
-        match RedisStorage::from_url(url) {
-            Ok(session) => {
-                session.set(key, c, Some(7000));
-            }
-            Err(e) => {
-                println!("{:?}", e);
-            }
-        };
+        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        // let url = format!(
+        //     "{}:{}:{}/{}",
+        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        // );
+        // let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
+        // match RedisStorage::from_url(url) {
+        //     Ok(session) => {
+        //         session.set(key, c, Some(7000));
+        //     }
+        //     Err(e) => {
+        //         println!("{:?}", e);
+        //     }
+        // };
+        
     }
     /// 获取access_token
     pub fn get_access_token(conf: &TripartiteConfig) -> WechatResult<(i64, String)> {
-        let redisconfig = get_redis_conf();
+        // let redisconfig = get_redis_conf();
 
-        let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        let url = format!(
-            "{}:{}:{}/{}",
-            redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        );
-        let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
-        match RedisStorage::from_url(url) {
-            Ok(session) => {
-                if let Some(v) = session.get(key, "GET".to_owned(), None) {
-                    Ok(v)
-                } else {
-                    Err(error!("没有相应的键"))
-                }
-            }
-            Err(e) => Err(error!("{:?}", e)),
-        }
+        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
+        // let url = format!(
+        //     "{}:{}:{}/{}",
+        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
+        // );
+        // let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
+        // match RedisStorage::from_url(url) {
+        //     Ok(session) => {
+        //         if let Some(v) = session.get(key, "GET".to_owned(), None) {
+        //             Ok(v)
+        //         } else {
+        //             Err(error!("没有相应的键"))
+        //         }
+        //     }
+        //     Err(e) => Err(error!("{:?}", e)),
+        // }
+        Err(error!("we"))
     }
 }
 const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";

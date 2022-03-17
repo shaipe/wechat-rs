@@ -25,15 +25,15 @@ pub async fn receive_ticket(
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
     let post_str = utils::get_request_body(payload).await;
-    log!(format!(
+    log!(
         " ^^^^^ Ticket ^^^^^:  url_param: {:?} \n post_str: {:?}",
         req.query_string(),
         post_str
-    ));
+    );
 
     let config: TripartiteConfig = get_tripartite_config();
     if let Err(t) = Ticket::parse_ticket(config, &post_str, dic) {
-        log!(format!(" ticket parse_ticket: {:?}", t));
+        log!(" ticket parse_ticket: {:?}", t);
     };
 
     // 告诉服务器接收成功
@@ -163,7 +163,7 @@ async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
 /// 业务系统在完成授权以后把appid和对应的服务器机组域名回传
 #[post("/wx/offical")]
 async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpResponse> {
-    use crate::cluster::add_domain;
+    // use crate::cluster::add_domain;
     let post_str = utils::get_request_body(payload).await;
     let dic = utils::parse_query(&post_str);
     let app_id = utils::get_hash_value(&dic, "appid");
@@ -174,7 +174,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
         Ok(v) => v,
         Err(_) => false,
     };
-    add_domain(app_id.clone(), domain.clone());
+    // add_domain(app_id.clone(), domain.clone());
     if is_common {
         use crate::official::Official;
         let mut conf = Official::new("");
@@ -341,7 +341,7 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     // println!("path={:?}", path);
     // response
     Ok(HttpResponse::build(StatusCode::FOUND)
-        .header(http::header::LOCATION, path)
+        // .add_default_header(http::header::LOCATION, path)
         .body(""))
 }
 
@@ -354,8 +354,8 @@ pub async fn callback(
     body: web::Bytes,
 ) -> Result<HttpResponse> {
     use super::wx_msg;
-    let app_id = path.0;
-    let app_id = &app_id.0;
+    let app_id = "path";
+    let app_id = "&app_id";
     // 全网发布
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
         let dic = utils::parse_query(req.query_string());
@@ -363,7 +363,7 @@ pub async fn callback(
             Ok(s) => s,
             Err(_e) => "",
         };
-        log!(format!("--- callback --- \n{:?}\n {:?}", dic, post_str));
+        log!("--- callback --- \n{:?}\n {:?}", dic, post_str);
         //wx_msg::global_publish(dic, post_str.to_owned()).await
         watch_time!(
             "global",

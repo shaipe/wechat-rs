@@ -92,9 +92,9 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 
 /// 代理消息业务转发
 pub async fn proxy_reply(app_id: &str, req: HttpRequest, _body: web::Bytes) -> Result<HttpResponse> {
-    use crate::cluster::get_domain;
+    // use crate::cluster::get_domain;
     // use wechat_sdk::Client;
-    let mut domain = get_domain(app_id.to_owned());
+    let mut domain = "ds".to_owned(); // get_domain(app_id.to_owned());
 
     if domain.is_empty() {
         domain = "http://366kmpf.com".to_owned();
@@ -124,7 +124,7 @@ pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
 ) -> Result<HttpResponse> {
-    log!(format!("--- callback --- {:?}, {:?}", dic, post_str));
+    log!("--- callback --- {:?}, {:?}", dic, post_str);
 
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密
@@ -168,7 +168,7 @@ pub async fn global_publish(
                                     .await;
                                 }
                             }
-                            Err(e) => log!(format!("query auth_code error: {:?}", e)),
+                            Err(e) => log!("query auth_code error: {:?}", e),
                         };
                     }
                     // 文本消息回复处理
@@ -179,10 +179,10 @@ pub async fn global_publish(
                             &format!("{}_callback", &m.content),
                         );
                         let txt = tr.render();
-                        log!(format!(
+                        log!(
                             "---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}",
                             txt
-                        ));
+                        );
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
 
@@ -200,17 +200,17 @@ pub async fn global_publish(
                         let txt = tr.render();
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                        log!(format!("---- send OTHER xml :{}", txt));
+                        log!("---- send OTHER xml :{}", txt);
                         return Ok(HttpResponse::build(StatusCode::OK)
                             .content_type("text/xml; charset=utf-8")
                             .body(encrypt_text.unwrap()));
                     }
                 }
                 Message::EventMessage(ref m) => {
-                    log!(format!("**** EVENT *** {:?}", m));
+                    log!("**** EVENT *** {:?}", m);
                 }
                 Message::UnknownMessage(ref m) => {
-                    log!(format!("**** Unknown *** {:?}", m));
+                    log!("**** Unknown *** {:?}", m);
                 }
             }
         } else {
