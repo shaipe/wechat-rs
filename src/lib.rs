@@ -1,9 +1,11 @@
 //! copyright © shaipe 2020 - persent
 //!
 
+#[allow(unused_imports)]
 #[macro_use]
 extern crate wechat_sdk;
 //use wechat_sdk::WechatError;
+
 pub mod open {
     #[cfg(feature = "open")]
     pub use wechat_open::*;
@@ -48,7 +50,6 @@ mod tests {
     use super::*;
     use serde_json::*;
     use wechat_pay::Order;
-    use actix_web::rt;
     //
     #[test]
     fn it_pay_ok_works() {
@@ -60,7 +61,7 @@ mod tests {
             "secret_key": "chengduhxongtuikejxi20210911888888",
         }));
 
-        rt::System::new("test").block_on(async {
+        actix_rt::System::new().block_on(async {
             let params = json!({
                 "attach": "支付测试",
                 "body": "testx",

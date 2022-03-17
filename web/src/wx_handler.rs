@@ -290,11 +290,12 @@ pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<H
     let dic = utils::parse_query(&post_str);
     //随机数
     let app_id = utils::get_hash_value(&dic, "app_id");
-    let domain = if config.wap_domain.starts_with("http") {
-        config.wap_domain
-    } else {
-        format!("{}://{}", scheme, config.wap_domain)
-    };
+    let domain = "".to_owned();
+    // let domain = if config.wap_domain.starts_with("http") {
+    //     config.wap_domain
+    // } else {
+    //     format!("{}://{}", scheme, config.wap_domain)
+    // };
 
     let redirect_uri = format!("{}/wx/user_auth_calback", &domain);
     let state = utils::get_hash_value(&dic, "state");
