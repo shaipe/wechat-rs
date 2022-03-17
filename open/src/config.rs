@@ -4,6 +4,10 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
+use std::fs::File;
+use std::io::prelude::*;
+use std::collections::BTreeMap;
+
 ///tripartite 配置
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TripartiteConfig {
@@ -18,10 +22,6 @@ pub struct TripartiteConfig {
     // 已获取的token
     pub token: String,
     pub encoding_aes_key: String,
-    pub wap_domain: String,
-    pub webview_domain: String,
-    pub request_domain: String,
-    pub extjson: String,
 }
 
 impl TripartiteConfig {
@@ -33,10 +33,6 @@ impl TripartiteConfig {
             secret: String::from(""),
             token: String::from(""),
             encoding_aes_key: String::from(""),
-            wap_domain: String::from(""),
-            webview_domain: String::from(""),
-            request_domain: String::from(""),
-            extjson: String::from(""),
         }
     }
 }
@@ -58,10 +54,7 @@ pub fn get_tripartite_config() -> TripartiteConfig {
      cache.clone()
     
 }
-use crate::redis::{RedisStorage, SessionStore};
-use std::fs::File;
-use std::io::prelude::*;
-use std::collections::BTreeMap;
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppSecret {
     pub name: String,
@@ -97,34 +90,4 @@ pub fn read_tripartite_config() -> TripartiteConfig {
         }
     };
     cnf
-}
-const DBID: u16 = 6;
-pub const APP_SECRET_CACHES: &str = "APP_SECRET_CACHES";
-pub const APP_SECRET_DEFAULT: &str = "096d4009072c927c";
-/// 批量设置
-pub fn set_ticket_cache(redis_con: &str, cnf: BTreeMap<String, String>) {
-    let url = format!("{}/{}", redis_con, DBID);
-   
-    match RedisStorage::from_url(url) {
-        Ok(session) => {
-            session.hmset(APP_SECRET_CACHES, cnf.clone());
-        }
-        Err(e) => {
-            println!("{:?}", e);
-        }
-    }
-}
-/// 获取
-pub fn get_ticket_cache(redis_con: &str) -> BTreeMap<String, String> {
-    let d= BTreeMap::new();
-    match RedisStorage::from_url(format!("{}/{}", redis_con, DBID)) {
-        Ok(session) => {
-            if let Some(v) = session.get(APP_SECRET_CACHES, "hgetall", None) {
-                v
-            } else {
-                d
-            }
-        }
-        Err(_) => d,
-    }
 }

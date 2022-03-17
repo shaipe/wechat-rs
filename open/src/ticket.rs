@@ -201,25 +201,36 @@ impl Ticket {
         };
         obj
     }
+    
 }
-const TICKET_CATCHE_KEY: &str = "TICKET_CATCHE_KEY_";
-// // 默认加载静态全局
-// lazy_static! {
-//     pub static ref TRIPARTITE_TICKET_CACHES: Arc<Mutex<Ticket>> =
-//         Arc::new(Mutex::new(Ticket::default()));
-// }
-
-// /// 设置ticket
-// pub fn set_ticket(cnf: Ticket) {
-//     let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-//     let mut cache = counter.lock().unwrap();
-//     *cache = cnf;
-// }
-
-// /// 获取ticket
-// pub fn get_ticket() -> Ticket {
-//     let counter = Arc::clone(&TRIPARTITE_TICKET_CACHES);
-//     let cache = counter.lock().unwrap();
-//     let obj = cache.clone();
-//     obj
-// }
+const DBID: u16 = 6;
+pub const APP_SECRET_CACHES: &str = "APP_SECRET_CACHES";
+pub const APP_SECRET_DEFAULT: &str = "096d4009072c927c";
+use crate::redis::{RedisStorage, SessionStore};
+/// 批量设置
+pub fn set_ticket_cache(redis_con: &str, cnf: BTreeMap<String, String>) {
+    let url = format!("{}/{}", redis_con, DBID);
+   
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            session.hmset(APP_SECRET_CACHES, cnf.clone());
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
+    }
+}
+/// 获取
+pub fn get_ticket_cache(redis_con: &str) -> BTreeMap<String, String> {
+    let d= BTreeMap::new();
+    match RedisStorage::from_url(format!("{}/{}", redis_con, DBID)) {
+        Ok(session) => {
+            if let Some(v) = session.get(APP_SECRET_CACHES, "hgetall", None) {
+                v
+            } else {
+                d
+            }
+        }
+        Err(_) => d,
+    }
+}
