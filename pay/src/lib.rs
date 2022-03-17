@@ -8,7 +8,6 @@ pub use order::Order;
 #[macro_use]
 extern crate serde_json;
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -26,13 +25,13 @@ mod tests {
             "secret_key": "chengduhongtuikeji20210911888888",
         }));
 
-        rt::System::new("test").block_on(async {
+        rt::System::new().block_on(async {
             let params = json!({
                 "attach": "支付测试",
                 "body": "testx",
                 "nonce_str": "1212312312",
                 "out_trade_no": "1111z",
-                "notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2.php",
+                "notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2",
                 "total_fee": 1,
                 "trade_type": "APP"
             });
