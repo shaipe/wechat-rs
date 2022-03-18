@@ -76,7 +76,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
             // )
             // .app_data(Client::new())
             .service(index_handler)
-            .service(wx_handler::receive_ticket)
+            .service(wx_handler::verify_ticket)
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
     })
     .bind(ip)?

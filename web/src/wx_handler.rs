@@ -16,12 +16,9 @@ use redis::{
     get_redis_conf,
     RedisConfig
 };
-// use std::thread;
-// use std::time::Duration;
-
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
-pub async fn receive_ticket(
+pub async fn verify_ticket(
     req: HttpRequest,
     payload: web::Payload,
 ) -> Result<HttpResponse, Error> {
