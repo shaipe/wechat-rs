@@ -23,6 +23,7 @@ serde_derive = "1.0.136"
 base64 = "0.13.0"
 wechat={path="../", version="0.2.0", features=["mp", "open"]}
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
+redis = {path = "../redis", version = "0.2.0"}
 json = "0.12.4"
 url = "2.2.2"
 http = "0.2.6"

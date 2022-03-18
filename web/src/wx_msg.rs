@@ -13,6 +13,11 @@ use wechat::{
     open::{get_tripartite_config, Component, TripartiteConfig},
 };
 use wechat_sdk::{current_timestamp, WeChatCrypto};
+use redis::{
+    get_redis_conf,
+    RedisConfig
+};
+
 /// 消息回复处理
 pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
     match msg {
@@ -139,13 +144,15 @@ pub async fn global_publish(
 
         // 全网发布时的测试用户
         if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
+            let tripart_config: TripartiteConfig = get_tripartite_config();
+            let redis_config:RedisConfig=get_redis_conf();
+            let comp=Component::new(tripart_config.clone(),redis_config.clone());
+
             match msg {
                 Message::TextMessage(ref m) => {
                     // 公网发布的授权消息处理
                     if m.content.starts_with("QUERY_AUTH_CODE:") {
                         let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-
-                        let comp = Component::new(conf);
                         // 根据授权码获取公众号对应的accesstoken
                         match comp.query_auth(&auth_code).await {
                             Ok(v) => {

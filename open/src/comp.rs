@@ -1,37 +1,42 @@
 //! copyright
 //! 微信第三方平台基础接口对接
 
-use super::TripartiteConfig;
 
 use super::Ticket;
 use serde_json::Value;
 use std::collections::HashMap;
-use wechat_sdk::{current_timestamp, Client, WechatError, WechatResult};
-
+use wechat_sdk::{current_timestamp, Client, WechatResult};
+use super::{TripartiteConfig};
+use std::time::{SystemTime, UNIX_EPOCH};
+use redis::RedisConfig;
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 // 需要刷新AccessToken
 const REFETCH_ACCESS_TOKEN_ERRCODES: [i32; 3] = [40001, 40014, 42001];
 
 pub struct Component {
-    config: TripartiteConfig,
-    // ticket: Ticket,
+    tripart_conf: TripartiteConfig,
+    redis_conf:RedisConfig,
+    redis_con:String
 }
 
 impl Component {
-    pub fn new(conf: TripartiteConfig) -> Self {
-        Component {
-            config: conf,
-            // ticket: get_ticket(),
-        }
+    pub fn new(tripart_conf:TripartiteConfig,redis_conf:RedisConfig)->Self{
+        let redis_con=format!("redis://{}{}:{}/{}",&redis_conf.password, &redis_conf.server,&redis_conf.port,redis_conf.dbid);
+        Component{  
+            redis_con:redis_con,
+            redis_conf:redis_conf,
+            tripart_conf:tripart_conf
+           }
     }
 
     /// 获取Aceess Token
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/component_access_token.html
+   
     pub async fn fetch_access_token(&self, access_ticket: String) -> WechatResult<(String, i64)> {
         let url = format!("{}{}", API_DOMAIN, "/cgi-bin/component/api_component_token");
         let mut hash = HashMap::new();
-        let conf = self.config.clone();
+        let conf = self.tripart_conf.clone();
         hash.insert("component_appid".to_string(), conf.app_id);
         hash.insert("component_appsecret".to_string(), conf.secret);
         hash.insert("component_verify_ticket".to_string(), access_ticket);
@@ -54,13 +59,44 @@ impl Component {
         // t.access_token = token.clone();
         // t.at_expired_time = current_timestamp() + 7000;
         // t.save("");
-        Component::set_access_token(&self.config, (expired_time, token.clone()));
+        set_comp_token(&self.redis_con,&self.tripart_conf.app_id ,(token.clone(),expired_time));
         Ok((token, expired_time))
     }
-
+    /// 获取access_token
+    pub async fn get_access_token(&self) -> String {
+        let (token,_)=self.get_access_tokens().await;
+        token
+    }
+    pub async fn get_access_tokens(&self) -> (String,i64) {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let token=match get_comp_token(&self.redis_con, &self.tripart_conf.app_id){
+            Ok(s)=>s,
+            Err(_)=>{
+                ("".to_owned(),0)
+            }
+        };
+        let expires_at: i64 = token.1;
+        //比较过期时间
+        if expires_at <= timestamp {
+            let ticket=Ticket::new(self.tripart_conf.clone(), self.redis_conf.clone());
+            let result = self.fetch_access_token(ticket.get_ticket()).await;
+           
+            match result {
+                Ok(token) => token,
+                Err(_) => ("".to_owned(),0),
+            }
+        } else {
+            token
+        }
+    }
     /// 生成预授权码
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/pre_auth_code.html
-    pub async fn create_preauthcode(&self, access_token: &str) -> WechatResult<String> {
+    /// 
+    pub async fn create_preauthcode(&self) -> WechatResult<String> {
+        let access_token=self.get_access_token().await;
         let uri = format!(
             "{}{}",
             API_DOMAIN,
@@ -70,86 +106,55 @@ impl Component {
             )
         );
         log!("uri::: {}", uri);
-        let ticket = Ticket::get_ticket(&self.config);
-        let conf = self.config.clone();
+
         let mut hash = HashMap::new();
-        hash.insert("component_appid".to_string(), conf.app_id.clone());
+        hash.insert("component_appid".to_string(), self.tripart_conf.app_id.clone());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        println!("uri::: {:?}", res);
+        let data=self.parse_post(&res).await?;
+        //pre_auth_code
+        match data["pre_auth_code"].as_str() {
+            Some(v) => Ok(v.to_owned()),
+            None => Err(error!{code:600,msg:"pre_auth_code"}),
+        }
+    }
+    pub async fn parse_post(&self,res:&str)->WechatResult<Value>{
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
-                // if let WechatError::ClientError { errcode, .. } = err {
-                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                //         self.fetch_access_token(ticket.access_ticket.clone())
-                //             .await?;
-                //         return Err(err);
-                //     } else {
-                //         return Err(err);
-                //     }
-                // } else {
+                use wechat_sdk:: ErrorKind;
+                if let ErrorKind::Custom { code, .. } = err.kind {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&code) {
+                        self.get_access_token().await;
+                        return Err(err);
+                    } else {
+                        return Err(err);
+                    }
+            } else {
                 return Err(err);
-                // }
-            }
+            }}
         };
-
-        //pre_auth_code
-        let pre_auth_code = match data["pre_auth_code"].as_str() {
-            Some(v) => v,
-            None => "",
-        };
-
-        Ok(pre_auth_code.to_owned())
+        Ok(data)
     }
-
     /// 查询授权
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
     pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
-        let conf = self.config.clone();
-        let mut t = Ticket::get_ticket(&self.config);
+     
         // 获取
-        let acc_token = t.get_token(conf.clone()).await;
+        let acc_token =self.get_access_token().await;
         let uri = format!(
             "{}/cgi-bin/component/api_query_auth?component_access_token={}",
             API_DOMAIN, acc_token
         );
 
-        // println!("query auth {}", uri);
-
         let mut hash = HashMap::new();
-        hash.insert("component_appid".to_string(), conf.app_id.clone());
+        hash.insert("component_appid".to_string(), self.tripart_conf.app_id.clone());
         hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
         //post
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                // if let WechatError::ClientError { errcode, .. } = err {
-                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                //         self.fetch_access_token(t.access_ticket.clone()).await?;
-                //         return Err(err);
-                //     } else {
-                //         return Err(err);
-                //     }
-                // } else {
-                return Err(err);
-                // }
-            }
-        };
-        Ok(data)
-        // match api.post(&uri, &hash).await {
-        //     Ok(res) => match serde_json::from_str(&res) {
-        //         Ok(v) => {
-        //             let dic: Value = v;
-        //             // println!("auth ::: ==== {:?}", dic);
-        //             Ok(dic)
-        //         }
-        //         Err(_) => Err(WechatError::InvalidValue),
-        //     },
-        //     Err(e) => Err(e),
-        // }
+        self.parse_post(&res).await
+       
     }
 
     /// 获取或者刷新指定小程序或公众号的授权token
@@ -159,15 +164,13 @@ impl Component {
         authorizer_appid: &str,
         refresh_token: &str,
     ) -> WechatResult<(String, String)> {
-        let conf = self.config.clone();
-        let mut t = Ticket::get_ticket(&self.config);
-        let acc_token = t.get_token(conf.clone()).await;
+        let acc_token = self.get_access_token().await;
         let url = format!(
             "{}/cgi-bin/component/api_authorizer_token?component_access_token={}",
             API_DOMAIN, acc_token
         );
         let mut hash = HashMap::new();
-        let conf = self.config.clone();
+        let conf = self.tripart_conf.clone();
         hash.insert("component_appid".to_string(), conf.app_id);
         hash.insert("authorizer_appid".to_string(), authorizer_appid.to_owned());
         hash.insert(
@@ -176,21 +179,7 @@ impl Component {
         );
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                // if let WechatError::ClientError { errcode, .. } = err {
-                //     if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                //         self.fetch_access_token(t.access_ticket.clone()).await?;
-                //         return Err(err);
-                //     } else {
-                //         return Err(err);
-                //     }
-                // } else {
-                return Err(err);
-                // }
-            }
-        };
+        let data=self.parse_post(&res).await?;
         let acc_token = match data["authorizer_access_token"].as_str() {
             Some(v) => v,
             None => "",
@@ -199,28 +188,8 @@ impl Component {
             Some(v) => v,
             None => "",
         };
-        // let acc_token = data["authorizer_access_token"].to_string();
-        // let ref_token = data["authorizer_refresh_token"].to_string();
         Ok((acc_token.to_string(), ref_token.to_string()))
 
-        // match Client::new().post(&url, &hash).await {
-        //     Ok(res) => match serde_json::from_str(&res) {
-        //         Ok(v) => {
-        //             let v: Value = v;
-        //             let acc_token = match v["authorizer_access_token"].as_str() {
-        //                 Some(v) => v,
-        //                 None => "",
-        //             };
-        //             let ref_token = match v["authorizer_refresh_token"].as_str() {
-        //                 Some(v) => v,
-        //                 None => "",
-        //             };
-        //             Ok((acc_token.to_string(), ref_token.to_string()))
-        //         }
-        //         Err(_) => Err(WechatError::InvalidValue),
-        //     },
-        //     Err(e) => Err(e),
-        // }
     }
 
     /// 获取授权信息
@@ -249,50 +218,35 @@ impl Component {
         offset: i64,
         count: i64,
     ) -> WechatResult<(i64, Vec<(String, String, i64)>)> {
-        let conf = self.config.clone();
-        let mut ticket = Ticket::get_ticket(&self.config);
-        let acc_token = ticket.get_token(conf.clone()).await;
+        let acc_token = self.get_access_token().await;
         let uri = format!(
             "{}/cgi-bin/component/api_get_authorizer_list?component_access_token={}",
             API_DOMAIN, acc_token
         );
         let mut hash = HashMap::new();
-        hash.insert("component_appid".to_string(), conf.app_id.clone());
+        hash.insert("component_appid".to_string(), self.tripart_conf.app_id.clone());
         hash.insert("offset".to_string(), offset.to_string());
         hash.insert("count".to_string(), count.to_string());
-
-        match Client::new().post(&uri, &hash).await {
-            Ok(res) => match serde_json::from_str(&res) {
-                Ok(v) => {
-                    let v: Value = v;
-                    let c = v["total_count"].as_i64().unwrap();
-                    let mut list: Vec<(String, String, i64)> = vec![];
-                    match v["list"].as_array() {
-                        Some(a) => {
-                            for x in a {
-                                let appid = x["authorizer_appid"].as_str().unwrap();
-                                let ref_token = x["refresh_token"].as_str().unwrap();
-                                let auth_time = x["auth_time"].as_i64().unwrap();
-                                list.push((appid.to_string(), ref_token.to_string(), auth_time))
-                            }
-                        }
-                        None => {}
-                    }
-                    // println!("{:?}", v);
-                    Ok((c, list))
+        let res=Client::new().post(&uri, &hash).await? ;
+        let data=self.parse_post(&res).await?;
+       
+        let c = data["total_count"].as_i64().unwrap();
+        let mut list: Vec<(String, String, i64)> = vec![];
+        match data["list"].as_array() {
+            Some(a) => {
+                for x in a {
+                    let appid = x["authorizer_appid"].as_str().unwrap();
+                    let ref_token = x["refresh_token"].as_str().unwrap();
+                    let auth_time = x["auth_time"].as_i64().unwrap();
+                    list.push((appid.to_string(), ref_token.to_string(), auth_time))
                 }
-                Err(_) => Err(WechatError::custom(500, "msg")),
-            },
-            Err(err) => {
-                // if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&errcode) {
-                //     self.fetch_access_token(ticket.access_ticket.clone())
-                //         .await?;
-                //     return Err(err);
-                // } else {
-                return Err(err);
-                // }
+                Ok((c,list))
+            }
+            None => {
+                Err(error!{code:600,msg:"error"})
             }
         }
+
     }
 
     /// 授权页面
@@ -310,51 +264,60 @@ impl Component {
             utf8_percent_encode(&format!("http://{}", redirect_uri), NON_ALPHANUMERIC).to_string()
         };
 
-        let conf = self.config.clone();
+        let conf = self.tripart_conf.clone();
         let uri=format!("https://mp.weixin.qq.com/{}",format!("/cgi-bin/componentloginpage?component_appid={}&pre_auth_code={}&auth_type={}&redirect_uri={}",
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
-    pub fn set_access_token(conf: &TripartiteConfig, c: (i64, String)) {
-        // let redisconfig = get_redis_conf();
-
-        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        // let url = format!(
-        //     "{}:{}:{}/{}",
-        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        // );
-        // let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
-        // match RedisStorage::from_url(url) {
-        //     Ok(session) => {
-        //         session.set(key, c, Some(7000));
-        //     }
-        //     Err(e) => {
-        //         println!("{:?}", e);
-        //     }
-        // };
-        
-    }
-    /// 获取access_token
-    pub fn get_access_token(conf: &TripartiteConfig) -> WechatResult<(i64, String)> {
-        // let redisconfig = get_redis_conf();
-
-        // let pwd: String = form_urlencoded::Serializer::new(redisconfig.password).finish();
-        // let url = format!(
-        //     "{}:{}:{}/{}",
-        //     redisconfig.server, redisconfig.port, pwd, redisconfig.dbid
-        // );
-        // let key = format!("{}{}", COMP_CATCHE_KEY, conf.app_id);
-        // match RedisStorage::from_url(url) {
-        //     Ok(session) => {
-        //         if let Some(v) = session.get(key, "GET".to_owned(), None) {
-        //             Ok(v)
-        //         } else {
-        //             Err(error!("没有相应的键"))
-        //         }
-        //     }
-        //     Err(e) => Err(error!("{:?}", e)),
-        // }
-        Err(error!("we"))
-    }
+   
 }
 const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
+
+use crate::redis::{RedisStorage, SessionStore};
+
+
+/// 设置单个
+pub fn set_comp_token(redis_con: &str, key: &str, cnf: (String, i64)) {
+    let url = format!("{}", redis_con);
+    let cache_key = format!(
+        "{0}_{1}",
+        COMP_CATCHE_KEY,
+        key
+    );
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            session.set(cache_key, format!("{}_{}",cnf.0,cnf.1),Some(2*55*60));
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
+    }
+}
+
+/// 获取
+pub fn get_comp_token(redis_con: &str, key: &str) -> WechatResult<(String, i64)> {
+    let cache_key = format!(
+        "{0}_{1}",
+        COMP_CATCHE_KEY,
+        key
+    );
+    match RedisStorage::from_url(format!("{}", redis_con)) {
+        Ok(session) => {
+            let d="".to_owned();
+            if let Some(v) = session.get(cache_key, "get".to_owned(), Some(d)) {
+                let arr:Vec<_>=v.split('_').collect();
+                if arr.len()==2{
+                    
+                    return Ok((arr[0].to_string(), arr[1].parse::<i64>().unwrap()));
+                }
+                Err(error!{code:600,msg:"数据不准确"})
+            } else {
+                Err(error!{code:600,msg:"数据不准确"})
+            }
+        }
+        Err(e) => {
+            let msg=format!("{:?}", e);
+            Err(error!{code:600,msg:msg})
+        }
+    }
+}

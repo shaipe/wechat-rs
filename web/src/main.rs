@@ -9,7 +9,7 @@ extern crate actix_web;
 // extern crate wechat;
 #[macro_use]
 extern crate wechat_sdk;
-
+extern crate redis;
 use wechat_sdk::WechatError;
 
 #[macro_use]

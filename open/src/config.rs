@@ -2,11 +2,10 @@
 //! 微信三方信息配置
 
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::BTreeMap;
 
 ///tripartite 配置
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -38,31 +37,33 @@ impl TripartiteConfig {
 }
 // // 默认加载静态全局
 lazy_static! {
-    pub static ref TRIPARTITE_CACHES: Mutex<TripartiteConfig> =
-        Mutex::new(TripartiteConfig::default());
+        pub static ref TRIPARTITE_CACHES: Arc<Mutex<TripartiteConfig>> =
+        Arc::new(Mutex::new(TripartiteConfig::default()));
 }
 
 /// 将配置写入缓存
 pub fn set_tripartite_config(cnf: TripartiteConfig) {
-    let mut cache = TRIPARTITE_CACHES.lock().unwrap();
+    let counter = Arc::clone(&TRIPARTITE_CACHES);
+    let mut cache = counter.lock().unwrap();
     *cache = cnf;
+
 }
 
 /// 从缓存中取出第三方配置信息
 pub fn get_tripartite_config() -> TripartiteConfig {
-    let mut cache = TRIPARTITE_CACHES.lock().unwrap();
-     cache.clone()
+    let cache = match Arc::clone(&TRIPARTITE_CACHES).lock(){
+        Ok(s)=>{s.clone()},
+        Err(e)=>{
+            let cnf= read_tripartite_config();
+            set_tripartite_config(cnf.clone());
+            cnf
+        }
+    };
+     cache
     
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct AppSecret {
-    pub name: String,
-    pub appid: String,
-    pub secret: String,
-    pub encrytype: String,
-    pub config: Option<BTreeMap<String, String>>,
-}
+
 // 获取配置信息
 pub fn read_tripartite_config() -> TripartiteConfig {
     // 加载配置文件

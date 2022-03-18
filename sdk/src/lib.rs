@@ -13,7 +13,7 @@ extern crate lazy_static;
 
 // 错误信息处理定义
 mod errors;
-pub use errors::WechatError;
+pub use errors::{WechatError,ErrorKind};
 
 // 加解密处理
 mod wxcrypto;

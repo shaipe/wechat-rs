@@ -12,11 +12,15 @@ use wechat::{
     mp::WechatAuthorize,
     open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
 };
+use redis::{
+    get_redis_conf,
+    RedisConfig
+};
 // use std::thread;
 // use std::time::Duration;
 
 /// 第三方ticket推送接收处理
-#[post("/wx/ticket")]
+#[post("/wx/verify_ticket")]
 pub async fn receive_ticket(
     req: HttpRequest,
     payload: web::Payload,
@@ -31,8 +35,10 @@ pub async fn receive_ticket(
         post_str
     );
 
-    let config: TripartiteConfig = get_tripartite_config();
-    if let Err(t) = Ticket::parse_ticket(config, &post_str, dic) {
+    let tripart_config: TripartiteConfig = get_tripartite_config();
+    let redis_config:RedisConfig=get_redis_conf();
+
+    if let Err(t) = Ticket::new(tripart_config, redis_config).parse_ticket(&post_str, dic) {
         log!(" ticket parse_ticket: {:?}", t);
     };
 
@@ -80,17 +86,14 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
         }
         Err(_) => 1,
     };
-    let config: TripartiteConfig = get_tripartite_config();
-    let mut ticket = Ticket::get_ticket(&config);
-    let token = ticket.get_token(config.clone()).await;
-    //println!("access_token={:?}", token);
-    let c = Component::new(config.clone());
-    let result_code = match c.create_preauthcode(&token).await {
+    let tripart_config: TripartiteConfig = get_tripartite_config();
+    let redis_config:RedisConfig=get_redis_conf();
+    let comp=Component::new(tripart_config.clone(),redis_config.clone());
+  
+    let result_code = match comp.create_preauthcode().await {
         Ok(code) => code,
         Err(_) => {
-            // let mut ticket = get_ticket();
-            let token = ticket.get_token(config.clone()).await;
-            match c.create_preauthcode(&token).await {
+            match comp.create_preauthcode().await {
                 Ok(code) => code,
                 Err(e) => {
                     return Ok(HttpResponse::build(StatusCode::OK)
@@ -100,16 +103,14 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
             }
         }
     };
-
-    // println!("code={:?}", code);
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
     //println!("base_query={:?}",base_query);
-    let path = c.component_login_page(
+    let path = comp.component_login_page(
         &result_code,
         &format!(
             "{}://{}/wx/official_auth_calback?q={}",
-            scheme, config.domain, base_query
+            scheme, tripart_config.domain.clone(), base_query
         ),
         app_type,
     );
@@ -203,9 +204,10 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
         return get_success_result(&empty_dic);
     }
     if current_expires_in > expires_in {
-        let config: TripartiteConfig = get_tripartite_config();
-        let c = Component::new(config.clone());
-        let auth_token: String = match c
+        let tripart_config: TripartiteConfig = get_tripartite_config();
+        let redis_config:RedisConfig=get_redis_conf();
+        let comp=Component::new(tripart_config.clone(),redis_config.clone());
+        let auth_token: String = match comp
             .fetch_auth_token(&conf.appid, &conf.authorizer_refresh_token)
             .await
         {
@@ -257,19 +259,20 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     if md5_value != token_md5 {
         return get_exception_result("校验失败", 500);
     }
-    let config: TripartiteConfig = get_tripartite_config();
-    let mut ticket = Ticket::get_ticket(&config);
+    let tripart_config: TripartiteConfig = get_tripartite_config();
+    let redis_config:RedisConfig=get_redis_conf();
+    let comp=Component::new(tripart_config.clone(),redis_config.clone());
 
-    let token = ticket.get_token(config.clone()).await;
+    let token = comp.get_access_tokens().await;
 
-    if token.is_empty() {
+    if token.1==0 {
         get_exception_result("获取token为空，请检查ticket是否正确推送", 500)
     } else {
         let mut content_dic: HashMap<String, String> = HashMap::new();
-        content_dic.insert("token".to_owned(), token);
+        content_dic.insert("token".to_owned(), token.0);
         content_dic.insert(
             "expires_in".to_owned(),
-            format!("{}", ticket.at_expired_time),
+            format!("{}", token.1),
         );
         get_success_result(&content_dic)
     }
