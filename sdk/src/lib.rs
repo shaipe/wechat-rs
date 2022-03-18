@@ -17,7 +17,7 @@ pub use errors::{WechatError,ErrorKind};
 
 // 加解密处理
 mod wxcrypto;
-pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
+pub use wxcrypto::{WeChatCrypto};
 
 // 公共AccessToken管理
 mod token;

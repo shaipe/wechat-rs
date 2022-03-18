@@ -110,16 +110,6 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
-
-    // //随机数
-    // fn get_random_string(&self) -> String {
-    //     if cfg!(test) {
-    //         "1234567890123456".to_owned()
-    //     } else {
-    //        thread_rng().gen_ascii_chars().take(16).collect()
-    //     }
-    // }
-
     /// 对消息进行加密
     pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> Result<String> {
         let rnd_str = get_random_string(16);
@@ -190,97 +180,7 @@ fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
         None => "".to_owned(),
     }
 }
-/// Decrypts a buffer with the given key and iv using AES-128/CBC/Pkcs encryption.
-pub fn aes128_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
-    // log!("decrypt: {:?} == key {:?} == iv {:?}", encrypted_data, key, iv);
-    // 此处的最后一个参数要使用不直充的方式才行
-    let mut decryptor =
-        aes::cbc_decryptor(aes::KeySize::KeySize128, key, iv, blockmodes::NoPadding);
-    let mut final_result = Vec::<u8>::new();
-    let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
-    let mut buffer = [0; 4096];
-    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
-    loop {
-        match decryptor.decrypt(&mut read_buffer, &mut write_buffer, true) {
-            Ok(result) => {
-                final_result.extend(
-                    write_buffer
-                        .take_read_buffer()
-                        .take_remaining()
-                        .iter()
-                        .map(|&i| i),
-                );
-                match result {
-                    BufferResult::BufferUnderflow => break,
-                    BufferResult::BufferOverflow => {}
-                }
-            }
-            Err(e) => return Err(error!("decryptor error:{:?}", e)),
-        }
-    }
-    Ok(final_result)
-}
 
-/// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-pub fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
-    // 此处的最后一个参数要使用不直充的方式才行
-    let mut decryptor =
-        aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::NoPadding);
-    let mut final_result = Vec::<u8>::new();
-    let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
-    let mut buffer = [0; 4096];
-    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
-    loop {
-        match decryptor.decrypt(&mut read_buffer, &mut write_buffer, true) {
-            Ok(result) => {
-                final_result.extend(
-                    write_buffer
-                        .take_read_buffer()
-                        .take_remaining()
-                        .iter()
-                        .map(|&i| i),
-                );
-                match result {
-                    BufferResult::BufferUnderflow => break,
-                    BufferResult::BufferOverflow => {}
-                }
-            }
-            Err(e) => return Err(error!("decryptor error:{:?}", e)),
-        }
-    }
-    Ok(final_result)
-}
-// Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
-    let mut encryptor =
-        aes::cbc_encryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
-
-    let mut final_result = Vec::<u8>::new();
-    let mut read_buffer = buffer::RefReadBuffer::new(data);
-    let mut buffer = [0; 4096];
-    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
-    loop {
-        let result = match encryptor.encrypt(&mut read_buffer, &mut write_buffer, true) {
-            Ok(result) => result,
-            Err(err) => return Err(error! {"encryptor failed: {:?}", err}),
-        };
-
-        final_result.extend(
-            write_buffer
-                .take_read_buffer()
-                .take_remaining()
-                .iter()
-                .map(|&i| i),
-        );
-
-        match result {
-            BufferResult::BufferUnderflow => break,
-            BufferResult::BufferOverflow => {}
-        }
-    }
-
-    Ok(final_result)
-}
 
 #[cfg(test)]
 mod tests {
