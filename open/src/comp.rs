@@ -252,6 +252,7 @@ impl Component {
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
+    //获取模版列表
     pub async fn get_template_list(&self, template_type: u32) -> WechatResult<Vec<serde_json::Value>> {
      
         // 获取
