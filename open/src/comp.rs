@@ -252,6 +252,38 @@ impl Component {
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
+    pub async fn get_template_list(&self, template_type: u32) -> WechatResult<Vec<serde_json::Value>> {
+     
+        // 获取
+        let acc_token =self.get_access_token().await;
+        let uri = format!(
+            "{}/wxa/gettemplatelist?access_token={}",
+            API_DOMAIN, acc_token
+        );
+
+        let mut hash = HashMap::new();
+        hash.insert("template_type".to_string(), template_type);
+        //post
+        let api = Client::new();
+        let res = api.post(&uri, &hash).await?;
+        let data=self.parse_post(&res).await?;
+        let list_temp=data["template_list"].as_array().unwrap();
+        let mut list:Vec<Value>=vec![];
+        for a in list_temp{
+            let mut v: serde_json::map::Map<
+                std::string::String,
+                serde_json::value::Value,
+            > = serde_json::map::Map::new();
+            let template_id=a["template_id"].as_str().unwrap();
+            let user_version=a["user_version"].as_str().unwrap();
+            v.insert("template_id".to_owned(), Value::String(template_id.to_string()));
+            v.insert("user_version".to_owned(), Value::String(user_version.to_string()));
+            list.push(serde_json::to_value(v).unwrap());
+        }
+        Ok(list)
+    }
+
+    //解析post请求结果
     pub async fn parse_post(&self,res:&str)->WechatResult<Value>{
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
