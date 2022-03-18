@@ -118,24 +118,7 @@ impl Component {
             None => Err(error!{code:600,msg:"pre_auth_code"}),
         }
     }
-    pub async fn parse_post(&self,res:&str)->WechatResult<Value>{
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                use wechat_sdk:: ErrorKind;
-                if let ErrorKind::Custom { code, .. } = err.kind {
-                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&code) {
-                        self.get_access_token().await;
-                        return Err(err);
-                    } else {
-                        return Err(err);
-                    }
-            } else {
-                return Err(err);
-            }}
-        };
-        Ok(data)
-    }
+
     /// 查询授权
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
     pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
@@ -269,7 +252,24 @@ impl Component {
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
-   
+    pub async fn parse_post(&self,res:&str)->WechatResult<Value>{
+        let data = match wechat_sdk::json_decode(&res) {
+            Ok(_data) => _data,
+            Err(err) => {
+                use wechat_sdk:: ErrorKind;
+                if let ErrorKind::Custom { code, .. } = err.kind {
+                    if REFETCH_ACCESS_TOKEN_ERRCODES.contains(&code) {
+                        self.get_access_token().await;
+                        return Err(err);
+                    } else {
+                        return Err(err);
+                    }
+            } else {
+                return Err(err);
+            }}
+        };
+        Ok(data)
+    }
 }
 const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
 

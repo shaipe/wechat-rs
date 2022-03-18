@@ -4,36 +4,36 @@
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::{aes, blockmodes, buffer, symmetriccipher};
 use std::str;
-
+///aes 加减密
 pub struct AesCrypt {
     key: Vec<u8>,
     iv: Vec<u8>,
     key_size: aes::KeySize,
 }
 impl AesCrypt {
-    pub fn new(_key: String, iv: Vec<u8>) -> AesCrypt {
+    //针对key的长度，keysize动态变化
+    pub fn new(_key: Vec<u8>, iv: Vec<u8>) -> AesCrypt {
         let l = _key.len();
         let mut key = _key.clone();
         let mut key_size = aes::KeySize::KeySize128;
         if l < 16 {
-            key = str_pad(&_key, 16);
+            key = vec_pad(_key, 16);
         } else if l > 16 && l < 24 {
-            key = _key[0..16].to_owned();
+            key = _key[0..16].to_vec();
         } else if l > 24 && l < 32 {
             key_size = aes::KeySize::KeySize192;
-            key = _key[0..24].to_owned();
+            key = _key[0..24].to_vec();
         } else if l >= 32 {
             key_size = aes::KeySize::KeySize256;
-            key = _key[0..32].to_owned();
+            key = _key[0..32].to_vec();
         }
         AesCrypt {
-            key: key.as_bytes().to_vec(),
+            key: key,
             iv: iv,
             key_size: key_size,
         }
     }
-    /// aes 加密
-    /// param1: 待加密数据
+    /// 针对字符串进行加密
     pub fn encrypt(&self, text: String) -> String {
         //aes 加密
         let encrypted_data = aes_cbc_encrypt(self.key_size, text.as_bytes(), &self.key, &self.iv)
@@ -45,7 +45,18 @@ impl AesCrypt {
 
         base64_encode
     }
+    //针对byte进行加密
+    pub fn encrypt_byte(&self, text: Vec<u8>) -> String {
+        //aes 加密
+        let encrypted_data = aes_cbc_encrypt(self.key_size, &text, &self.key, &self.iv)
+            .ok()
+            .unwrap();
+        //编码成base64
+        let mut base64_encode = String::new();
+        base64::encode_config_buf(&encrypted_data, base64::STANDARD, &mut base64_encode);
 
+        base64_encode
+    }
     /// aes解密
     /// param1: 待解密数据
     pub fn decrypt(&self, text: String) -> String {
@@ -138,14 +149,15 @@ fn aes_cbc_decrypt(
 
     Ok(final_result)
 }
-fn str_pad(txt: &str, length: usize) -> String {
+//补0
+fn vec_pad(txt: Vec<u8>, length: usize) -> Vec<u8> {
     if txt.len() < length {
         let s = length - txt.len();
-        let mut xs = Vec::new();
+        let mut xs = txt;
         for i in 0..s {
-            xs.push("0");
+            xs.push(0u8);
         }
-        return format!("{}{}", txt, xs.join(""));
+        return xs;
     }
-    txt.to_owned()
+    txt
 }

@@ -92,10 +92,11 @@ impl WeChatCrypto {
 
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        let b64decoded = base64::decode(ciphertext).unwrap();
-       
+        
+        let aes=AesCrypt::new(self.key.clone(),self.key[..16].to_vec());
+        let content=aes.decrypt(ciphertext.to_owned());
         // aes descrypt
-        let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
+        let text =content.as_bytes();
 
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
@@ -132,7 +133,8 @@ impl WeChatCrypto {
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
         //aes 加密
-        let encrypted = aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
+        let aes=AesCrypt::new(self.key.clone(),self.key[..16].to_vec());
+        let encrypted =aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
         //base64 编码
         let b64encoded = base64::encode(&encrypted);
         //获得签名
