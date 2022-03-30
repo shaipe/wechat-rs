@@ -3,7 +3,7 @@
 
 #[macro_use]
 extern crate wechat_sdk;
-extern crate redis;
+
 // 此句一定不能少
 use wechat_sdk::WechatError;
 

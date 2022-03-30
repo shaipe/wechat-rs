@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use wechat_sdk::{current_timestamp, Client, WechatResult};
 use super::{TripartiteConfig};
 use std::time::{SystemTime, UNIX_EPOCH};
-use redis::RedisConfig;
+use wechat_redis::RedisConfig;
 // 定义接口请求域名
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 // 需要刷新AccessToken
@@ -306,7 +306,7 @@ impl Component {
 }
 const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
 
-use crate::redis::{RedisStorage, SessionStore};
+use wechat_redis::{RedisStorage, SessionStore};
 
 
 /// 设置单个

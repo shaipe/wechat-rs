@@ -219,7 +219,7 @@ impl SessionStore for RedisStorage {
         let mut conn = conn.unwrap();
         let mut pip = redis::pipe();
         for (account, h) in map.iter() {
-            let v = h.clone();
+            // let v = h.clone();
             pip.cmd("HSET")
                 .arg(key)
                 .arg(account.as_ref())
@@ -321,7 +321,7 @@ impl SessionStore for RedisStorage {
         };
     }
     //发布订阅
-    fn sub(&self, func: fn(Option<BTreeMap<String, String>>)) {
+    fn sub(&self, _func: fn(Option<BTreeMap<String, String>>)) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
@@ -394,7 +394,7 @@ impl SessionStore for RedisStorage {
             .invoke(&mut conn);
         match result {
             Ok(v) => Some(v),
-            Err(v) => None,
+            Err(_v) => None,
         }
     }
     fn setex<K: AsRef<str>>(&self, key: K, seconds: usize) {

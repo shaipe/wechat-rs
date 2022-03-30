@@ -7,12 +7,12 @@ use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use md5;
-use redis::{get_redis_conf, RedisConfig};
 use std::collections::HashMap;
 use wechat::{
     mp::WechatAuthorize,
     open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
 };
+use wechat_redis::{get_redis_conf, RedisConfig};
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
 pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse, Error> {
@@ -108,7 +108,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
-   
+
     //加密参数
     let base_query = utils::get_hash_value(&dic, "q");
     // 授权码
@@ -283,7 +283,7 @@ async fn user_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     //随机数
     let base_query = utils::get_hash_value(&dic, "state");
     let auth_code = utils::get_hash_value(&dic, "code");
-    let path = match base64::decode(&base_query) {
+    match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
             let arr: Vec<&str> = s.split("|").collect();
@@ -340,4 +340,3 @@ pub async fn callback(
         wx_msg::proxy_reply(app_id, req, body).await
     }
 }
-
