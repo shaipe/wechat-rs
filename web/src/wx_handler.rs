@@ -175,7 +175,7 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
         let redis_config: RedisConfig = get_redis_conf();
         let comp = Component::new(tripart_config.clone(), redis_config.clone());
         let auth_token: String = match comp
-            .fetch_auth_token(&conf.appid, &conf.authorizer_refresh_token)
+            .fetch_authorizer_token(&conf.appid, &conf.authorizer_refresh_token)
             .await
         {
             Ok(v) => v.0.clone(),

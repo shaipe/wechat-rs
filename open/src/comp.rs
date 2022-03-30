@@ -55,10 +55,6 @@ impl Component {
         };
         println!("{:?}", data);
         let expired_time = current_timestamp() + 7000;
-        // let mut t = self.ticket.clone();
-        // t.access_token = token.clone();
-        // t.at_expired_time = current_timestamp() + 7000;
-        // t.save("");
         set_comp_token(&self.redis_con,&self.tripart_conf.app_id ,(token.clone(),expired_time));
         Ok((token, expired_time))
     }
@@ -67,6 +63,7 @@ impl Component {
         let (token,_)=self.get_access_tokens().await;
         token
     }
+    /// 获取第三方access_token
     pub async fn get_access_tokens(&self) -> (String,i64) {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -119,7 +116,7 @@ impl Component {
         }
     }
 
-    /// 查询授权
+    /// 使用授权码获取授权信息
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
     pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
      
@@ -140,9 +137,9 @@ impl Component {
        
     }
 
-    /// 获取或者刷新指定小程序或公众号的授权token
-    /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_authorizer_token.html
-    pub async fn fetch_auth_token(
+    /// 获取或者刷新指定小程序或公众号的调用令牌
+    /// POST https://api.weixin.qq.com/cgi-bin/component/api_authorizer_token?component_access_token=COMPONENT_ACCESS_TOKEN
+    pub async fn fetch_authorizer_token(
         &self,
         authorizer_appid: &str,
         refresh_token: &str,
@@ -176,23 +173,26 @@ impl Component {
     }
 
     /// 获取授权信息
-    /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_info.html
-    pub async fn fetch_auth_info(&self, _auth_appid: &str) -> WechatResult<String> {
-        Ok("".to_string())
+    /// POST https://api.weixin.qq.com/cgi-bin/component/api_get_authorizer_info?component_access_token=COMPONENT_ACCESS_TOKEN
+    pub async fn fetch_authorizer_info(&self, _auth_appid: &str, authorizer_appid: &str,) -> WechatResult<Value> {
+        let acc_token = self.get_access_token().await;
+        let url = format!(
+            "{}/cgi-bin/component/api_get_authorizer_info?component_access_token={}",
+            API_DOMAIN, acc_token
+        );
+        let mut hash = HashMap::new();
+        let conf = self.tripart_conf.clone();
+        hash.insert("component_appid".to_string(), conf.app_id);
+        hash.insert("authorizer_appid".to_string(), authorizer_appid.to_owned());
+        hash.insert("component_appid".to_owned(), self.tripart_conf.app_id.clone());
+ 
+        let api = Client::new();
+        let res = api.post(&url, &hash).await?;
+        let data=self.parse_post(&res).await?;
+        Ok(data)
     }
 
-    /// 获取授权方的选项信息
-    /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_option.html
-    pub async fn fetch_auth_option(&self, _auth_appid: &str) -> WechatResult<String> {
-        Ok("".to_string())
-    }
-
-    /// 设置授权方选项信息
-    /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_set_authorizer_option.html
-    pub async fn set_auth_option(&self, _auth_appid: &str) -> WechatResult<String> {
-        Ok("".to_string())
-    }
-
+   
     /// 拉取所有已授权的帐号信息
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/api_get_authorizer_list.html
     /// returns: (count, vec<appid, refresh_token, auth_time>)

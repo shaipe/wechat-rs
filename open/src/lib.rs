@@ -21,3 +21,6 @@ pub use config::{get_tripartite_config, set_tripartite_config, TripartiteConfig}
 
 mod comp;
 pub use comp::Component;
+
+mod open;
+pub use open::OpenAccount;
