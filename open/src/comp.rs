@@ -22,7 +22,7 @@ pub struct Component {
 
 impl Component {
     pub fn new(tripart_conf:TripartiteConfig,redis_conf:RedisConfig)->Self{
-        let redis_con=format!("redis://{}{}:{}/{}",&redis_conf.password, &redis_conf.server,&redis_conf.port,redis_conf.dbid);
+        let redis_con=format!("redis://:{}@{}:{}/{}",&redis_conf.password, &redis_conf.server,&redis_conf.port,redis_conf.dbid);
         Component{  
             redis_con:redis_con,
             redis_conf:redis_conf,
