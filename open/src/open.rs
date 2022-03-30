@@ -3,10 +3,9 @@
 
 use wechat_sdk::{Client, WechatResult};
 use std::time::{SystemTime, UNIX_EPOCH};
-use redis::RedisConfig;
+
 use std::collections::HashMap;
-use serde_json::Value;
-use crate::redis::{RedisStorage, SessionStore};
+
 const WECHAT_OPEN_URI: &'static str = "https://open.weixin.qq.com";
 const API_DOMAIN: &'static str ="https://api.weixin.qq.com";
 
@@ -24,13 +23,13 @@ impl OpenAccount {
         }
     }
     //创建开放平台帐号并绑定公众号或小程序
-    pub async fn create_open(&self,access_token:&str)->WechatResult<String>{
+    pub async fn create_open(&self)->WechatResult<String>{
         let uri = format!(
             "{}{}",
             API_DOMAIN,
             format!(
                 "/cgi-bin/open/create?access_token={}",
-                access_token
+                self.authorizer_access_token.clone()
             )
         );
         log!("uri::: {}", uri);
@@ -52,13 +51,13 @@ impl OpenAccount {
         Ok(open_appid.to_owned())
     }
     //将公众号或小程序绑定到开放平台帐号
-    pub async fn bind_open(&self,access_token:&str,open_app_id:&str)->WechatResult<bool>{
+    pub async fn bind_open(&self,open_app_id:&str)->WechatResult<bool>{
         let uri = format!(
             "{}{}",
             API_DOMAIN,
             format!(
                 "/cgi-bin/open/bind?access_token={}",
-                access_token
+                self.authorizer_access_token.clone()
             )
         );
         log!("uri::: {}", uri);
@@ -81,13 +80,13 @@ impl OpenAccount {
         Ok(bo)
     }
       //将公众号或小程序从开放平台帐号中解绑
-      pub async fn unbind_open(&self,access_token:&str,open_app_id:&str)->WechatResult<bool>{
+      pub async fn unbind_open(&self,open_app_id:&str)->WechatResult<bool>{
         let uri = format!(
             "{}{}",
             API_DOMAIN,
             format!(
                 "/cgi-bin/open/unbind?access_token={}",
-                access_token
+                self.authorizer_access_token.clone()
             )
         );
         log!("uri::: {}", uri);
