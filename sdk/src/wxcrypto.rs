@@ -25,8 +25,9 @@ impl WeChatCrypto {
     pub fn new(token: &str, encoding_aes_key: &str, _id: &str) -> WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
-        println!("aes_key{:?}",aes_key);
+      
         let key = base64::decode(&aes_key).unwrap();
+        println!("aes_key{:?}",aes_key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
@@ -98,7 +99,6 @@ impl WeChatCrypto {
         let content=aes.decrypt(ciphertext.to_owned());
         // aes descrypt
         let text =content.as_bytes();
-
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];

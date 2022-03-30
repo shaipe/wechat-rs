@@ -15,8 +15,9 @@ impl AesCrypt {
     pub fn new(_key: Vec<u8>, iv: Vec<u8>) -> AesCrypt {
         let l = _key.len();
         let mut key = _key.clone();
+        println!("l={}",l);
         let mut key_size = aes::KeySize::KeySize128;
-        if l < 16 {
+        if l <= 16 {
             key = vec_pad(_key, 16);
         } else if l > 16 && l < 24 {
             key = _key[0..16].to_vec();
@@ -61,6 +62,7 @@ impl AesCrypt {
     /// param1: 待解密数据
     pub fn decrypt(&self, text: String) -> String {
         let mut base64_decode = Vec::<u8>::new();
+
         // 如是不正确的base64则返回空
         match base64::decode_config_buf(&text, base64::STANDARD, &mut base64_decode) {
             Ok(_) => {}
@@ -68,6 +70,7 @@ impl AesCrypt {
                 return "".to_owned();
             }
         };
+        println!("text===={:?}",base64_decode);
         // aes 解码
         let decrypted_data =
             match aes_cbc_decrypt(self.key_size, &base64_decode[..], &self.key, &self.iv) {

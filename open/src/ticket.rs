@@ -23,7 +23,8 @@ pub struct Ticket {
 
 impl Ticket {
     pub fn new(tripart_conf:TripartiteConfig,redis_conf:RedisConfig)->Self{
-        let redis_con=format!("redis://{}{}:{}/{}",&redis_conf.password, &redis_conf.server,&redis_conf.port,redis_conf.dbid);
+        let redis_con=format!("redis://:{}@{}:{}/{}",&redis_conf.password, &redis_conf.server,&redis_conf.port,redis_conf.dbid);
+        println!("redis_con={}",redis_con);
         Ticket{  
             redis_con:redis_con,
             tripart_conf:tripart_conf
@@ -62,13 +63,13 @@ pub const APP_TICKET_CACHES: &str = "APP_TICKET_CACHES";
 use wechat_redis::{RedisStorage, SessionStore};
 /// 批量设置
 pub fn set_ticket_cache(redis_con: &str, key:&str,v:String) {
-    let url = format!("{}/{}", redis_con, DBID);
+  
     let cache_key = format!(
         "{0}_{1}",
         APP_TICKET_CACHES,
         key
     );
-    match RedisStorage::from_url(url) {
+    match RedisStorage::from_url(redis_con) {
         Ok(session) => {
             session.set(cache_key, v,Some(10*60*60));
         }
@@ -81,7 +82,7 @@ pub fn set_ticket_cache(redis_con: &str, key:&str,v:String) {
 pub fn get_ticket_cache(redis_con: &str,key:&str) -> String {
     let cache_key=format!("{}_{}",APP_TICKET_CACHES,key);
     let d="".to_owned();
-    match RedisStorage::from_url(format!("{}/{}", redis_con, DBID)) {
+    match RedisStorage::from_url(redis_con) {
         Ok(session) => {
            
             if let Some(v) = session.get(cache_key, "get".to_owned(), None) {
