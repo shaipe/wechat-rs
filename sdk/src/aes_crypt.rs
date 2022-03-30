@@ -15,7 +15,7 @@ impl AesCrypt {
     pub fn new(_key: Vec<u8>, iv: Vec<u8>) -> AesCrypt {
         let l = _key.len();
         let mut key = _key.clone();
-        println!("l={}",l);
+        println!("l={}", l);
         let mut key_size = aes::KeySize::KeySize128;
         if l <= 16 {
             key = vec_pad(_key, 16);
@@ -70,7 +70,7 @@ impl AesCrypt {
                 return "".to_owned();
             }
         };
-        println!("text===={:?}",base64_decode);
+        println!("=== msg de text===={:?}", text);
         // aes 解码
         let decrypted_data =
             match aes_cbc_decrypt(self.key_size, &base64_decode[..], &self.key, &self.iv) {
@@ -128,13 +128,14 @@ fn aes_cbc_decrypt(
     key: &[u8],
     iv: &[u8],
 ) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+    
     let mut decryptor = aes::cbc_decryptor(key_size, key, iv, blockmodes::PkcsPadding);
 
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
     let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
-
+    println!("=== decrypt key {:?} ", key);
     loop {
         let result = (decryptor.decrypt(&mut read_buffer, &mut write_buffer, true))?;
         final_result.extend(
@@ -149,6 +150,8 @@ fn aes_cbc_decrypt(
             BufferResult::BufferOverflow => {}
         }
     }
+
+    println!("==== aes === result {:?}", final_result);
 
     Ok(final_result)
 }

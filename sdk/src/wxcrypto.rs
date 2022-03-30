@@ -1,17 +1,13 @@
 //! copyright
 //! 微信加解密码处理
 
+use crate::AesCrypt;
 use crate::WechatResult as Result;
 use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use crypto::{aes, blockmodes, buffer};
 use std::collections::HashMap;
 use std::io::Cursor;
-use crate:: AesCrypt;
-// use rand::thread_rng;
-// use rand::Rng;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct WeChatCrypto {
@@ -25,9 +21,10 @@ impl WeChatCrypto {
     pub fn new(token: &str, encoding_aes_key: &str, _id: &str) -> WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
-      
+
+        // println!("=== aes key == {}", aes_key);
         let key = base64::decode(&aes_key).unwrap();
-        println!("aes_key{:?}",aes_key);
+        // println!("aes_key === {:?} === key {:?}", aes_key, key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
@@ -94,11 +91,12 @@ impl WeChatCrypto {
 
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        
-        let aes=AesCrypt::new(self.key.clone(),self.key[..16].to_vec());
-        let content=aes.decrypt(ciphertext.to_owned());
+        println!("=== msg decrypt === {:?}", self.key);
+        let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
+        let content = aes.decrypt(ciphertext.to_owned());
+        println!("=== msg1 decrypt === {:?}", content);
         // aes descrypt
-        let text =content.as_bytes();
+        let text = content.as_bytes();
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];
@@ -117,17 +115,21 @@ impl WeChatCrypto {
         let mut wtr = rnd_str.into_bytes();
 
         // log!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
-
+        
         //采用低位编址
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be())
             .unwrap();
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
+
+        println!("=== msg encrypt === {:?}", self.key);
         //aes 加密
-        let aes=AesCrypt::new(self.key.clone(),self.key[..16].to_vec());
-        let encrypted =aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
-        //base64 编码
+        let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
+        let encrypted = aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
+                                               //base64 编码
         let b64encoded = base64::encode(&encrypted);
+
+        println!("==== msg encrypt base64 {}", b64encoded);
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
@@ -181,7 +183,6 @@ fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
         None => "".to_owned(),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
