@@ -135,7 +135,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
     let post_str = utils::get_request_body(payload).await;
     let dic = utils::parse_query(&post_str);
     let app_id = utils::get_hash_value(&dic, "appid");
-    let domain = utils::get_hash_value(&dic, "domain");
+    // let domain = utils::get_hash_value(&dic, "domain");
     let authorizer_access_token = utils::get_hash_value(&dic, "authorizer_access_token");
     let authorizer_refresh_token = utils::get_hash_value(&dic, "authorizer_refresh_token");
     let is_common = match utils::get_hash_value(&dic, "is_common").parse::<bool>() {
@@ -322,9 +322,8 @@ pub async fn callback(
     body: web::Bytes,
 ) -> Result<HttpResponse> {
     use super::wx_msg;
-    let app_id = "path";
-    let app_id = "&app_id";
-    // 全网发布
+    let app_id = &path.0;
+    // 全网发布的测试公众号和小程序
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
         let dic = utils::parse_query(req.query_string());
         let post_str = match std::str::from_utf8(&body) {
@@ -332,7 +331,6 @@ pub async fn callback(
             Err(_e) => "",
         };
         log!("--- callback --- \n{:?}\n {:?}", dic, post_str);
-        //wx_msg::global_publish(dic, post_str.to_owned()).await
         watch_time!(
             "global",
             wx_msg::global_publish(dic, post_str.to_owned()).await
