@@ -62,6 +62,8 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     // 设置服务器运行ip和端口信息
     // let ip = format!("{}:{}", conf.web.ip, conf.web.port);
     let ip = format!("{}:{}", "0.0.0.0", 999);
+
+    //测试======
     use wechat::{
         open::{get_tripartite_config, TripartiteConfig},
     };
