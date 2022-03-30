@@ -9,7 +9,7 @@ extern crate actix_web;
 // extern crate wechat;
 #[macro_use]
 extern crate wechat_sdk;
-extern crate redis;
+use wechat_redis::{RedisConfig, get_redis_conf};
 use wechat_sdk::WechatError;
 
 #[macro_use]
@@ -64,15 +64,12 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     let ip = format!("{}:{}", "0.0.0.0", 999);
 
     //测试======
-    use wechat::{
-        open::{get_tripartite_config, TripartiteConfig},
-    };
-    use redis::{get_redis_conf, RedisConfig};
+    use wechat::open::{get_tripartite_config, TripartiteConfig};
     let tripart_config: TripartiteConfig = get_tripartite_config();
-    println!("tripart_config={:?}",tripart_config);
+    println!("tripart_config={:?}", tripart_config);
     let redis_config: RedisConfig = get_redis_conf();
- 
-    println!("redis_config={:?}",redis_config);
+
+    println!("redis_config={:?}", redis_config);
     // 启动一个web服务
     HttpServer::new(move || {
         App::new()

@@ -5,7 +5,7 @@ use super::{TripartiteConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap};
 use wechat_sdk::{xmlutil, WeChatCrypto, WechatResult};
-use redis::RedisConfig;
+use wechat_redis::RedisConfig;
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Ticket {
@@ -59,7 +59,7 @@ impl Ticket {
 }
 const DBID: u16 = 6;
 pub const APP_TICKET_CACHES: &str = "APP_TICKET_CACHES";
-use crate::redis::{RedisStorage, SessionStore};
+use wechat_redis::{RedisStorage, SessionStore};
 /// 批量设置
 pub fn set_ticket_cache(redis_con: &str, key:&str,v:String) {
     let url = format!("{}/{}", redis_con, DBID);
