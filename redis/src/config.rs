@@ -7,19 +7,30 @@ use serde::{Deserialize, Serialize};
 pub struct RedisConfig {
     pub server: String,
     pub password: String,
-    pub dbid: i32,
-    pub port: i32,
+    pub dbid: i64,
+    pub port: i64,
 }
 impl RedisConfig {
     pub fn default() -> Self {
         RedisConfig {
-            server: String::from("redis://127.0.0.1"),
+            server: String::from(""),
             password: String::from(""),
             dbid: 0,
             port: 6379,
         }
     }
-    
+    pub fn new(yaml_doc:yaml_rust::yaml::Yaml)->Self{
+        let server=format!("{:?}",yaml_doc["server"].as_str().unwrap_or(""));
+        let password=format!("{:?}",yaml_doc["password"].as_str().unwrap_or(""));
+        let dbid=yaml_doc["dbid"].as_i64().unwrap_or(0);
+        let port=yaml_doc["port"].as_i64().unwrap_or(0);
+        RedisConfig{
+            server:server,
+            password: password,
+            dbid:dbid,
+            port: port
+        }
+    }
 }
 
 use std::sync::{Arc, Mutex};
@@ -39,14 +50,18 @@ pub fn set_redis_conf(cnf: RedisConfig) {
 /// 获取redis config
 pub fn get_redis_conf() -> RedisConfig {
 
-    let cache = match Arc::clone(&REDIS_TICKET_CACHES).lock(){
+    let mut cache = match Arc::clone(&REDIS_TICKET_CACHES).lock(){
         Ok(s)=>{s.clone()},
         Err(_)=>{
-            let cnf= read_redis_config();
-            set_redis_conf(cnf.clone());
-            cnf
+            RedisConfig::default()
         }
     };
+    if cache.server.len()==0{
+        let cnf= read_redis_config();
+     
+        set_redis_conf(cnf.clone());
+        cache=cnf;
+    }
      cache
 }
 // 获取配置信息
@@ -69,11 +84,7 @@ pub fn read_redis_config() -> RedisConfig {
             panic!("Error Reading file:{}", e);
         }
     };
-    let cnf:RedisConfig =match serde_json::from_str(&str_val){
-        Ok(s)=>s,
-        Err(e)=>{
-            panic!("TripartiteConfig load error: {}", e)
-        }
-    };
-    cnf
+    let doc=yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
+    let yaml_doc=doc[0].clone();
+    RedisConfig::new(yaml_doc)
 }

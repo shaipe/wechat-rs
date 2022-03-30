@@ -62,7 +62,15 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     // 设置服务器运行ip和端口信息
     // let ip = format!("{}:{}", conf.web.ip, conf.web.port);
     let ip = format!("{}:{}", "0.0.0.0", 999);
-
+    use wechat::{
+        open::{get_tripartite_config, TripartiteConfig},
+    };
+    use redis::{get_redis_conf, RedisConfig};
+    let tripart_config: TripartiteConfig = get_tripartite_config();
+    println!("tripart_config={:?}",tripart_config);
+    let redis_config: RedisConfig = get_redis_conf();
+ 
+    println!("redis_config={:?}",redis_config);
     // 启动一个web服务
     HttpServer::new(move || {
         App::new()

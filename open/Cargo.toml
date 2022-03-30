@@ -14,3 +14,4 @@ wechat_sdk = {path = "../sdk", version = "0.2.0"}
 redis= {path = "../redis", version = "0.2.0"}
 lazy_static = "1.4.0"
 form_urlencoded= "1.0.1"
+yaml-rust = "0.4.5"
