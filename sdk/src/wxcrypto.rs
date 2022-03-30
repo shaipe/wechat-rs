@@ -25,6 +25,7 @@ impl WeChatCrypto {
     pub fn new(token: &str, encoding_aes_key: &str, _id: &str) -> WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
+        println!("aes_key{:?}",aes_key);
         let key = base64::decode(&aes_key).unwrap();
         WeChatCrypto {
             token: token.to_owned(),

@@ -28,7 +28,10 @@ pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<Ht
 
     let tripart_config: TripartiteConfig = get_tripartite_config();
     let redis_config: RedisConfig = get_redis_conf();
+    
+    println!("encoding_aes_key={:?}", tripart_config.encoding_aes_key);
 
+    println!("redis_config={:?}", redis_config);
     if let Err(t) = Ticket::new(tripart_config, redis_config).parse_ticket(&post_str, dic) {
         log!(" ticket parse_ticket: {:?}", t);
     };
