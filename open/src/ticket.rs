@@ -58,7 +58,6 @@ impl Ticket {
     
     
 }
-const DBID: u16 = 6;
 pub const APP_TICKET_CACHES: &str = "APP_TICKET_CACHES";
 use wechat_redis::{RedisStorage, SessionStore};
 /// 批量设置

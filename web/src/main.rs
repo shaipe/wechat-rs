@@ -63,13 +63,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     // let ip = format!("{}:{}", conf.web.ip, conf.web.port);
     let ip = format!("{}:{}", "0.0.0.0", 999);
 
-    //测试======
-    use wechat::open::{get_tripartite_config, TripartiteConfig};
-    let tripart_config: TripartiteConfig = get_tripartite_config();
-    println!("tripart_config={:?}", tripart_config);
-    let redis_config: RedisConfig = get_redis_conf();
 
-    println!("redis_config={:?}", redis_config);
     // 启动一个web服务
     HttpServer::new(move || {
         App::new()
