@@ -39,9 +39,11 @@ impl Component {
         let conf = self.tripart_conf.clone();
         hash.insert("component_appid".to_string(), conf.app_id);
         hash.insert("component_appsecret".to_string(), conf.secret);
-        hash.insert("component_verify_ticket".to_string(), access_ticket);
+        hash.insert("component_verify_ticket".to_string(), access_ticket.clone());
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
+
+        println!("res=={}",res);
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
@@ -77,7 +79,7 @@ impl Component {
         };
         let expires_at: i64 = token.1;
         //比较过期时间
-        if expires_at <= timestamp {
+        if expires_at <= timestamp || token.0.len()==0 {
             let ticket=Ticket::new(self.tripart_conf.clone(), self.redis_conf.clone());
             let result = self.fetch_access_token(ticket.get_ticket()).await;
            

@@ -81,6 +81,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
             .service(wx_handler::verify_ticket)
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
             .service(wx_handler::auth_transfer)
+            .service(wx_handler::official_auth)
     })
     .bind(ip)?
     .run()
