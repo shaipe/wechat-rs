@@ -1,8 +1,8 @@
 //! copyright © ecdata.cn 2021 - present
 //! 微信接口调用时的文件配置信息
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::prelude::*;
-use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RedisConfig {
     pub server: String,
@@ -19,16 +19,16 @@ impl RedisConfig {
             port: 6379,
         }
     }
-    pub fn new(yaml_doc:yaml_rust::yaml::Yaml)->Self{
-        let server=format!("{:?}",yaml_doc["server"].as_str().unwrap_or(""));
-        let password=format!("{:?}",yaml_doc["password"].as_str().unwrap_or(""));
-        let dbid=yaml_doc["dbid"].as_i64().unwrap_or(0);
-        let port=yaml_doc["port"].as_i64().unwrap_or(0);
-        RedisConfig{
-            server:server,
-            password: password,
-            dbid:dbid,
-            port: port
+    pub fn new(yaml_doc: yaml_rust::yaml::Yaml) -> Self {
+        let server = yaml_doc["server"].as_str().unwrap_or("");
+        let password = yaml_doc["password"].as_str().unwrap_or("");
+        let dbid = yaml_doc["dbid"].as_i64().unwrap_or(0);
+        let port = yaml_doc["port"].as_i64().unwrap_or(0);
+        RedisConfig {
+            server: server.to_owned(),
+            password: password.to_owned(),
+            dbid: dbid,
+            port: port,
         }
     }
 }
@@ -49,20 +49,17 @@ pub fn set_redis_conf(cnf: RedisConfig) {
 
 /// 获取redis config
 pub fn get_redis_conf() -> RedisConfig {
-
-    let mut cache = match Arc::clone(&REDIS_TICKET_CACHES).lock(){
-        Ok(s)=>{s.clone()},
-        Err(_)=>{
-            RedisConfig::default()
-        }
+    let mut cache = match Arc::clone(&REDIS_TICKET_CACHES).lock() {
+        Ok(s) => s.clone(),
+        Err(_) => RedisConfig::default(),
     };
-    if cache.server.len()==0{
-        let cnf= read_redis_config();
-     
+    if cache.server.len() == 0 {
+        let cnf = read_redis_config();
+
         set_redis_conf(cnf.clone());
-        cache=cnf;
+        cache = cnf;
     }
-     cache
+    cache
 }
 // 获取配置信息
 pub fn read_redis_config() -> RedisConfig {
@@ -84,7 +81,7 @@ pub fn read_redis_config() -> RedisConfig {
             panic!("Error Reading file:{}", e);
         }
     };
-    let doc=yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
-    let yaml_doc=doc[0].clone();
+    let doc = yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
+    let yaml_doc = doc[0].clone();
     RedisConfig::new(yaml_doc)
 }

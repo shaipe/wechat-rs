@@ -26,34 +26,31 @@ pub struct TripartiteConfig {
 impl TripartiteConfig {
     pub fn default() -> Self {
         TripartiteConfig {
-            name: String::from(""),
-            domain: String::from(""),
-            app_id: String::from(""),
-            secret: String::from(""),
-            token: String::from(""),
-            encoding_aes_key: String::from(""),
+            name: String::new(),
+            domain: String::new(),
+            app_id: String::new(),
+            secret: String::new(),
+            token: String::new(),
+            encoding_aes_key: String::new(),
         }
     }
-    pub fn new(yaml_doc:yaml_rust::yaml::Yaml)->Self{
-        let name=format!("{:?}",yaml_doc["name"].as_str().unwrap_or(""));
-        let domain=format!("{:?}",yaml_doc["domain"].as_str().unwrap_or(""));
-        let app_id=format!("{:?}",yaml_doc["app_id"].as_str().unwrap_or(""));
-        let secret=format!("{:?}",yaml_doc["secret"].as_str().unwrap_or(""));
-        let token=format!("{:?}",yaml_doc["token"].as_str().unwrap_or(""));
-        let encoding_aes_key=format!("{:?}",yaml_doc["encoding_aes_key"].as_str().unwrap_or(""));
-        TripartiteConfig{
-            name:name,
-            domain: domain,
-            app_id:app_id,
-            secret: secret,
-            token: token,
-            encoding_aes_key: encoding_aes_key
+    pub fn new(yaml_doc: yaml_rust::yaml::Yaml) -> Self {
+        TripartiteConfig {
+            name: yaml_doc["name"].as_str().unwrap_or("").to_owned(),
+            domain: yaml_doc["domain"].as_str().unwrap_or("").to_owned(),
+            app_id: yaml_doc["app_id"].as_str().unwrap_or("").to_owned(),
+            secret: yaml_doc["secret"].as_str().unwrap_or("").to_owned(),
+            token: yaml_doc["token"].as_str().unwrap_or("").to_owned(),
+            encoding_aes_key: yaml_doc["encoding_aes_key"]
+                .as_str()
+                .unwrap_or("")
+                .to_owned(),
         }
     }
 }
 // // 默认加载静态全局
 lazy_static! {
-        pub static ref TRIPARTITE_CACHES: Arc<Mutex<TripartiteConfig>> =
+    pub static ref TRIPARTITE_CACHES: Arc<Mutex<TripartiteConfig>> =
         Arc::new(Mutex::new(TripartiteConfig::default()));
 }
 
@@ -62,29 +59,22 @@ pub fn set_tripartite_config(cnf: TripartiteConfig) {
     let counter = Arc::clone(&TRIPARTITE_CACHES);
     let mut cache = counter.lock().unwrap();
     *cache = cnf;
-
 }
 
 /// 从缓存中取出第三方配置信息
 pub fn get_tripartite_config() -> TripartiteConfig {
-    let mut cache = match Arc::clone(&TRIPARTITE_CACHES).lock(){
-        Ok(s)=>{
-            s.clone()
-        },
-        Err(_)=>{
-            TripartiteConfig::default()
-        }
+    let mut cache = match Arc::clone(&TRIPARTITE_CACHES).lock() {
+        Ok(s) => s.clone(),
+        Err(_) => TripartiteConfig::default(),
     };
-    if cache.app_id.len()==0{
-        let cnf= read_tripartite_config();
-     
-        set_tripartite_config(cnf.clone());
-        cache=cnf;
-    }
-     cache
-    
-}
+    if cache.app_id.len() == 0 {
+        let cnf = read_tripartite_config();
 
+        set_tripartite_config(cnf.clone());
+        cache = cnf;
+    }
+    cache
+}
 
 // 获取配置信息
 pub fn read_tripartite_config() -> TripartiteConfig {
@@ -106,7 +96,7 @@ pub fn read_tripartite_config() -> TripartiteConfig {
             panic!("Error Reading file:{}", e);
         }
     };
-    let doc=yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
-    let yaml_doc=doc[0].clone();
+    let doc = yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
+    let yaml_doc = doc[0].clone();
     TripartiteConfig::new(yaml_doc)
 }
