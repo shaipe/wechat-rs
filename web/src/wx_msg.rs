@@ -130,8 +130,7 @@ pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
 ) -> Result<HttpResponse> {
-    log!("--- callback --- {:?}, {:?}", dic, post_str);
-
+   
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
@@ -151,6 +150,7 @@ pub async fn global_publish(
 
             match msg {
                 Message::TextMessage(ref m) => {
+                    println!("m.content={}",m.content);
                     // 公网发布的授权消息处理
                     if m.content.starts_with("QUERY_AUTH_CODE:") {
                         let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");

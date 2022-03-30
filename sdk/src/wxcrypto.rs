@@ -91,7 +91,7 @@ impl WeChatCrypto {
 
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        println!("=== msg decrypt === {:?}", self.key);
+        println!("=== msg decrypt === {:?}", ciphertext);
         let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
         let content = aes.decrypt(ciphertext.to_owned());
         println!("=== msg1 decrypt === {:?}", content);

@@ -45,6 +45,7 @@ pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<Ht
 /// 发起授权
 #[get("/wx/auth")]
 async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
+    println!("======");
     let query = req.query_string();
     let path = format!("/wx/official_auth?{}", query);
     Ok(HttpResponse::build(StatusCode::OK)
@@ -336,7 +337,7 @@ pub async fn callback(
             Ok(s) => s,
             Err(_e) => "",
         };
-        log!("--- callback --- \n{:?}\n {:?},\n {:?}", dic, post_str,post_str2);
+        log!("--- callback --- \n{} \n{:?}\n {:?}", app_id,post_str2,post_str);
         watch_time!(
             "global",
             wx_msg::global_publish(dic, post_str.to_owned()).await

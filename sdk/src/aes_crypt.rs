@@ -70,7 +70,7 @@ impl AesCrypt {
                 return "".to_owned();
             }
         };
-        println!("=== msg de text===={:?}", text);
+        println!("=== msg de text===={:?}", base64_decode);
         // aes 解码
         let decrypted_data =
             match aes_cbc_decrypt(self.key_size, &base64_decode[..], &self.key, &self.iv) {
