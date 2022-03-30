@@ -7,21 +7,15 @@ use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::{web, Error, HttpRequest, HttpResponse, Result};
 use md5;
+use redis::{get_redis_conf, RedisConfig};
 use std::collections::HashMap;
 use wechat::{
     mp::WechatAuthorize,
     open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
 };
-use redis::{
-    get_redis_conf,
-    RedisConfig
-};
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
-pub async fn verify_ticket(
-    req: HttpRequest,
-    payload: web::Payload,
-) -> Result<HttpResponse, Error> {
+pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse, Error> {
     // 获取地址栏参数
     let dic = utils::parse_query(req.query_string());
     // 获取post数据
@@ -33,7 +27,7 @@ pub async fn verify_ticket(
     );
 
     let tripart_config: TripartiteConfig = get_tripartite_config();
-    let redis_config:RedisConfig=get_redis_conf();
+    let redis_config: RedisConfig = get_redis_conf();
 
     if let Err(t) = Ticket::new(tripart_config, redis_config).parse_ticket(&post_str, dic) {
         log!(" ticket parse_ticket: {:?}", t);
@@ -55,7 +49,7 @@ async fn auth_transfer(req: HttpRequest) -> Result<HttpResponse> {
         .body(format!("<script>location.href='{}'</script>", path)))
 }
 
-/// 公众号授权
+/// 公众号/小程序授权
 #[get("/wx/official_auth")]
 async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
@@ -66,54 +60,47 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     }
 
     println!(" === scheme === {:?}", scheme);
-    //随机数
+    //加密参数
     let base_query = utils::get_hash_value(&dic, "q");
-    // println!("base_query={:?}", base_query);
-    let app_type = match base64::decode(&base_query) {
-        Ok(val) => {
-            let s = String::from_utf8(val).unwrap();
+    // app_type
+    let app_type = utils::get_hash_value(&dic, "app_type");
 
-            let arr: Vec<&str> = s.split("|").collect();
-            // println!("q={:?}", arr[3]);
-            if arr.len() == 5 {
-                arr[3].parse::<u32>().unwrap()
-            } else {
-                1
-            }
-        }
-        Err(_) => 1,
-    };
+    // 基础配置
     let tripart_config: TripartiteConfig = get_tripartite_config();
-    let redis_config:RedisConfig=get_redis_conf();
-    let comp=Component::new(tripart_config.clone(),redis_config.clone());
-  
+    let redis_config: RedisConfig = get_redis_conf();
+    let comp = Component::new(tripart_config.clone(), redis_config.clone());
+
+    // 获取预授权码
     let result_code = match comp.create_preauthcode().await {
         Ok(code) => code,
-        Err(_) => {
-            match comp.create_preauthcode().await {
-                Ok(code) => code,
-                Err(e) => {
-                    return Ok(HttpResponse::build(StatusCode::OK)
-                        .content_type("text/html; charset=utf-8")
-                        .body(format!("error {}", e)))
-                }
+        Err(_) => match comp.create_preauthcode().await {
+            Ok(code) => code,
+            Err(e) => {
+                return Ok(HttpResponse::build(StatusCode::OK)
+                    .content_type("text/html; charset=utf-8")
+                    .body(format!("error {}", e)))
             }
-        }
+        },
     };
+    // 编码
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     let base_query = utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string();
     //println!("base_query={:?}",base_query);
+    // 组装微信url
     let path = comp.component_login_page(
         &result_code,
         &format!(
             "{}://{}/wx/official_auth_calback?q={}",
-            scheme, tripart_config.domain.clone(), base_query
+            scheme,
+            tripart_config.domain.clone(),
+            base_query
         ),
-        app_type,
+        &app_type,
     );
     println!("path={:?}", path);
+    // 跳转到微信url
     Ok(HttpResponse::build(StatusCode::FOUND)
-        .header(http::header::LOCATION, path)
+        .append_header((http::header::LOCATION, path))
         .body(""))
 }
 /// 公众号授权回调
@@ -121,40 +108,23 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 async fn official_auth_calback(req: HttpRequest) -> Result<HttpResponse> {
     let query = req.query_string();
     let dic = utils::parse_query(query);
-    // println!("sss{:?}", req.uri().host());
-    //随机数
+   
+    //加密参数
     let base_query = utils::get_hash_value(&dic, "q");
+    // 授权码
     let auth_code = utils::get_hash_value(&dic, "auth_code");
-    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    // 跳转回业务系统
     let path = match base64::decode(&base_query) {
         Ok(val) => {
             let s = String::from_utf8(val).unwrap();
 
-            let arr: Vec<&str> = s.split("|").collect();
-            let absolute_path = arr[4].to_lowercase();
-            let absolute_path =
-                absolute_path.replace("websupplier/social/wechatset.aspx", "WxComponent.axd");
-            let absolute_path =
-                absolute_path.replace("webzone/social/wechatset.aspx", "WxComponent.axd");
-            //println!("q={:?}", absolute_path);
-            if arr.len() == 5 {
-                format!(
-                    "{}?q={}&auth_code={}",
-                    absolute_path,
-                    utf8_percent_encode(&base_query, NON_ALPHANUMERIC).to_string(),
-                    auth_code
-                )
-            } else {
-                "".to_owned()
-            }
+            format!("{}&auth_code={}", s, auth_code)
         }
         Err(_) => "".to_owned(),
     };
 
-    // println!("path={:?}", path);
-    // response
     Ok(HttpResponse::build(StatusCode::FOUND)
-        .header(http::header::LOCATION, path)
+        .append_header((http::header::LOCATION, path))
         .body(""))
 }
 
@@ -202,8 +172,8 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
     }
     if current_expires_in > expires_in {
         let tripart_config: TripartiteConfig = get_tripartite_config();
-        let redis_config:RedisConfig=get_redis_conf();
-        let comp=Component::new(tripart_config.clone(),redis_config.clone());
+        let redis_config: RedisConfig = get_redis_conf();
+        let comp = Component::new(tripart_config.clone(), redis_config.clone());
         let auth_token: String = match comp
             .fetch_auth_token(&conf.appid, &conf.authorizer_refresh_token)
             .await
@@ -257,20 +227,17 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
         return get_exception_result("校验失败", 500);
     }
     let tripart_config: TripartiteConfig = get_tripartite_config();
-    let redis_config:RedisConfig=get_redis_conf();
-    let comp=Component::new(tripart_config.clone(),redis_config.clone());
+    let redis_config: RedisConfig = get_redis_conf();
+    let comp = Component::new(tripart_config.clone(), redis_config.clone());
 
     let token = comp.get_access_tokens().await;
 
-    if token.1==0 {
+    if token.1 == 0 {
         get_exception_result("获取token为空，请检查ticket是否正确推送", 500)
     } else {
         let mut content_dic: HashMap<String, String> = HashMap::new();
         content_dic.insert("token".to_owned(), token.0);
-        content_dic.insert(
-            "expires_in".to_owned(),
-            format!("{}", token.1),
-        );
+        content_dic.insert("expires_in".to_owned(), format!("{}", token.1));
         get_success_result(&content_dic)
     }
 }

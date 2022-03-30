@@ -237,7 +237,7 @@ impl Component {
         &self,
         pre_auth_code: &str,
         redirect_uri: &str,
-        auth_type: u32,
+        auth_type: &str,
     ) -> String {
         use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
