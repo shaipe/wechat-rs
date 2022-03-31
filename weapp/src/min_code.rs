@@ -45,7 +45,7 @@ impl MinCode {
             "user_version":user_version,
             "user_desc":user_desc
         });
-        println!("ext_json_str={:?}", data);
+        println!("ext_json_str={:?}", data.to_string());
 
         let api = Client::new();
         let res = api.post(&uri, &data).await?;

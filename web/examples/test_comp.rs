@@ -64,9 +64,9 @@ fn test_min_app() -> String {
     // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(app_id,refresh_token));
     // println!("fetch_authorizer_token==={:?}",rs);
 
-    let authorizer_token="55_97kc7FHIy8wtfkiQW__6c0v9PdcnQ2M1ZCYc1QfXEUkp8YxZSFfQekFPTnUuI9MX52ohuEYEwfVgX6ClqkK7C9HaKvSxLD8wmjIyeb_W0xBe5QX_upE0prtvntWaS-eM3XZjqTHUYPznb8K-JPOdALDCIH";
-    let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
-    println!("==={:?}",rs);
+    let authorizer_token="55_gw3ibGNSAMVx6EyymPGpSr16UyCDEiFYhEtd48XnlUhCkZZERY5Slxta9hmolEE3XwzmcV_uZlb6wHKcDkgpMIQi_7WZjDnx08jIOoIq4z4uqYq4CCE9Mih1acaIYLgXa0rAYu66IKiBxcbDZHFdAHDKSQ";
+    // let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
+    // println!("==={:?}",rs);
 
     authorizer_token.to_owned()
 }
@@ -116,7 +116,7 @@ fn test_commit_code(access_token: &str) -> WechatResult<u64> {
     //println!("ext_json_v={:?}",ext_json_v);
     let mincode = MinCode::new(access_token);
     let rs =
-        actix_rt::System::new().block_on(mincode.commit_code("1", ext_json_v, "1.0.0", "测试提交"));
+        actix_rt::System::new().block_on(mincode.commit_code("0", ext_json_v, "1.0.0", "测试提交"));
     println!("==={:?}", rs);
     Ok(0)
 }
