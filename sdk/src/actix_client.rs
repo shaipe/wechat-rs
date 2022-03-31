@@ -221,7 +221,7 @@ impl Client {
         url: &str,
         params: &T,
     ) -> Result<String> {
-        // log!("params === {:?}", params);
+        /// println!("params === {:?}", params);
         match self.client.request(method, url).send_json(params).await {
             Ok(mut res) => {
                 // log!("response: {:?}", res);

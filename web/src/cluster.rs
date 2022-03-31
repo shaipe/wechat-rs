@@ -145,19 +145,19 @@ pub fn get_domains() -> BTreeMap<String, String> {
     }
 }
 
-#[cfg(test)]
-mod tests {
+// #[cfg(test)]
+// mod tests {
 
-    use super::*;
-    // use std::collections::HashMap;
-    #[test]
-    fn load() {
-        // let mut x:HashMap<String, String> = HashMap::new();
-        // x.insert("wxf9d78c09d2efa1bc".to_owned(), "http://b2b3231a.366ec.net".to_owned());
-        // x.insert("wxf9d78c09d2efa1ba".to_owned(), "http://b2b3231a.366ec.net".to_owned());
-        // x.insert("wxf9d78c09d2efa1bc".to_owned(), "http://b2b3231a.366ec.net".to_owned());
-        // write_clusters("", x);
-        load_cluster("");
-        assert_eq!(1 + 1, 3);
-    }
-}
+//     use super::*;
+//     // use std::collections::HashMap;
+//     #[test]
+//     fn load() {
+//         // let mut x:HashMap<String, String> = HashMap::new();
+//         // x.insert("wxf9d78c09d2efa1bc".to_owned(), "http://b2b3231a.366ec.net".to_owned());
+//         // x.insert("wxf9d78c09d2efa1ba".to_owned(), "http://b2b3231a.366ec.net".to_owned());
+//         // x.insert("wxf9d78c09d2efa1bc".to_owned(), "http://b2b3231a.366ec.net".to_owned());
+//         // write_clusters("", x);
+//         load_cluster("");
+//         assert_eq!(1 + 1, 3);
+//     }
+// }

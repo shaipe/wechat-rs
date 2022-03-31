@@ -43,7 +43,6 @@ impl Component {
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
 
-        println!("res=={}",res);
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,
             Err(err) => {
@@ -120,7 +119,7 @@ impl Component {
 
     /// 使用授权码获取授权信息
     /// 接口文档地址: https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/authorization_info.html
-    pub async fn query_auth(&self, pre_auth_code: &str) -> WechatResult<serde_json::Value> {
+    pub async fn query_auth(&self, auth_code: &str) -> WechatResult<serde_json::Value> {
      
         // 获取
         let acc_token =self.get_access_token().await;
@@ -131,7 +130,7 @@ impl Component {
 
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), self.tripart_conf.app_id.clone());
-        hash.insert("authorization_code".to_string(), pre_auth_code.to_owned());
+        hash.insert("authorization_code".to_string(), auth_code.to_owned());
         //post
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
@@ -176,7 +175,7 @@ impl Component {
 
     /// 获取授权信息
     /// POST https://api.weixin.qq.com/cgi-bin/component/api_get_authorizer_info?component_access_token=COMPONENT_ACCESS_TOKEN
-    pub async fn fetch_authorizer_info(&self, _auth_appid: &str, authorizer_appid: &str,) -> WechatResult<Value> {
+    pub async fn fetch_authorizer_info(&self, authorizer_appid: &str,) -> WechatResult<Value> {
         let acc_token = self.get_access_token().await;
         let url = format!(
             "{}/cgi-bin/component/api_get_authorizer_info?component_access_token={}",
@@ -255,20 +254,24 @@ impl Component {
         uri
     }
     //获取模版列表
-    pub async fn get_template_list(&self, template_type: u32) -> WechatResult<Vec<serde_json::Value>> {
+    pub async fn get_template_list(&self, template_type: Option<i32>) -> WechatResult<Vec<serde_json::Value>> {
      
         // 获取
         let acc_token =self.get_access_token().await;
-        let uri = format!(
+        let mut uri = format!(
             "{}/wxa/gettemplatelist?access_token={}",
             API_DOMAIN, acc_token
         );
-
-        let mut hash = HashMap::new();
-        hash.insert("template_type".to_string(), template_type);
-        //post
+        if let Some(t)=template_type{
+            uri = format!(
+                "{}&template_type={}",
+                uri,
+                t
+            );
+        }
+        //get
         let api = Client::new();
-        let res = api.post(&uri, &hash).await?;
+        let res = api.get(&uri).await?;
         let data=self.parse_post(&res).await?;
         let list_temp=data["template_list"].as_array().unwrap();
         let mut list:Vec<Value>=vec![];

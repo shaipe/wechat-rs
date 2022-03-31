@@ -26,7 +26,7 @@ url = "2.2.2"
 http = "0.2.6"
 form_urlencoded= "1.0.1"
 
-wechat={path="../", version="0.2.0", features=["mp", "open"]}
+wechat={path="../", version="0.2.0", features=["mp", "open","weapp"]}
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
 wechat_redis= {path = "../redis", version = "0.2.0"}
 

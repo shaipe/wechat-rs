@@ -9,7 +9,6 @@ extern crate actix_web;
 // extern crate wechat;
 #[macro_use]
 extern crate wechat_sdk;
-use wechat_redis::{RedisConfig, get_redis_conf};
 use wechat_sdk::WechatError;
 
 #[macro_use]
@@ -25,6 +24,9 @@ mod result_response;
 mod utils;
 mod wx_handler;
 mod wx_msg;
+
+
+
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
     // response
@@ -82,6 +84,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
             .service(wx_handler::auth_transfer)
             .service(wx_handler::official_auth)
+            .service(wx_handler::official_auth_calback)
     })
     .bind(ip)?
     .run()

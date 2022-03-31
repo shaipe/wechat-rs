@@ -109,17 +109,17 @@ pub fn get_common_official() -> Official {
     cache.clone()
 }
 
-#[cfg(test)]
-mod tests {
-    // use crate::official::Official;
-    // #[test]
-    // fn add() {
-    //     let mut conf = Official::new("");
-    //     conf.appid = "wxf9d78c09d2efa1bc".to_owned();
-    //     conf.authorizer_access_token="33_UZSk5mAUZ_Wx2K-gNOgHFGfJm8hY6dTv2MPN55Il-5R0uxsxYs5ydhJQysKH_FTBvlHJRCKwzIlZDbdK2jZnt-N6qUtwT_zyv-vwJqFYNg-y33luXaYN0-wrWj33iK4QnKCFWAWiI5wS8pBJRBXiADDZJF".to_owned();
-    //     conf.authorizer_refresh_token ="refreshtoken@@@oDqmetXh9-gfmGIACZbjDO6-rP5AWrf_rUYAPTjSWn4".to_owned();
+// #[cfg(test)]
+// mod tests {
+//     // use crate::official::Official;
+//     // #[test]
+//     // fn add() {
+//     //     let mut conf = Official::new("");
+//     //     conf.appid = "wxf9d78c09d2efa1bc".to_owned();
+//     //     conf.authorizer_access_token="33_UZSk5mAUZ_Wx2K-gNOgHFGfJm8hY6dTv2MPN55Il-5R0uxsxYs5ydhJQysKH_FTBvlHJRCKwzIlZDbdK2jZnt-N6qUtwT_zyv-vwJqFYNg-y33luXaYN0-wrWj33iK4QnKCFWAWiI5wS8pBJRBXiADDZJF".to_owned();
+//     //     conf.authorizer_refresh_token ="refreshtoken@@@oDqmetXh9-gfmGIACZbjDO6-rP5AWrf_rUYAPTjSWn4".to_owned();
         
-    //     println!("{:?}",conf);
-    //     conf.save("");
-    // }
-}
+//     //     println!("{:?}",conf);
+//     //     conf.save("");
+//     // }
+// }
