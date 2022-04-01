@@ -3,8 +3,6 @@
 
 use wechat_sdk::{Client, WechatResult};
 
-use std::collections::HashMap;
-
 const API_DOMAIN: &'static str ="https://api.weixin.qq.com";
 
 pub struct MinDomain {
@@ -28,14 +26,17 @@ impl MinDomain {
             )
         );
 
-        let mut hash = HashMap::new();
-        hash.insert("action".to_string(),"set".to_owned());
-        hash.insert("requestdomain".to_string(),format!("{}",req_domain.join(";")));
-        hash.insert("wsrequestdomain".to_string(),format!("{}",ws_domain.join(";")));
-        hash.insert("uploaddomain".to_string(),format!("{}",upload_domain.join(";")));
-        hash.insert("downloaddomain".to_string(),format!("{}",down_domain.join(";")));
+       
+        let data=json!({
+            "action":"set",
+            "requestdomain":req_domain,
+            "wsrequestdomain":ws_domain,
+            "uploaddomain":upload_domain,
+            "downloaddomain":down_domain,
+        });
+
         let api = Client::new();
-        let res = api.post(&uri, &hash).await?;
+        let res = api.post(&uri, &data).await?;
         wechat_sdk::json_decode(&res)
     }
     /// 设置业务域名
@@ -48,12 +49,12 @@ impl MinDomain {
                 self.authorizer_access_token.clone()
             )
         );
-
-        let mut hash = HashMap::new();
-        hash.insert("action".to_string(),"set".to_owned());
-        hash.insert("webviewdomain".to_string(),format!("{}",req_domain.join(";")));
+        let data=json!({
+            "action":"set",
+            "webviewdomain":req_domain
+        });
         let api = Client::new();
-        let res = api.post(&uri, &hash).await?;
+        let res = api.post(&uri, &data).await?;
         wechat_sdk::json_decode(&res)
     }
 }

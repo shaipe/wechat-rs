@@ -1,9 +1,7 @@
 //! copyright © ecdata.cn 2021 - present
 //! 小程序代码管理
 
-use wechat_sdk::{Client, WechatResult};
-
-use std::{collections::HashMap, fmt::format};
+use wechat_sdk::{Client, WechatResult,get_url_encode};
 
 use crate::min_category::MinCategoryItem;
 
@@ -18,7 +16,22 @@ impl MinCode {
             authorizer_access_token: _authorizer_access_token.to_string(),
         }
     }
+    /// 配置小程序用户隐私保护指引
+    pub async fn set_privacy(&self, data: serde_json::Value) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/component/setprivacysetting?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
 
+        let api = Client::new();
+        let res = api.post(&uri, &data).await?;
+
+        wechat_sdk::json_decode(&res)
+    }
     /// 上传代码
     pub async fn commit_code(
         &self,
@@ -36,8 +49,6 @@ impl MinCode {
             )
         );
 
-        // let ext_json_str = ext_json.to_string();
-        //let ext_json_str="{\"extAppid\":\"wx2be69912728f0108\",\"ext\":{\"attr1\":\"value1\",\"attr2\":\"value2\"},\"window\":{}}";
         let data = json!(
         {
             "template_id":template_id,
@@ -45,12 +56,30 @@ impl MinCode {
             "user_version":user_version,
             "user_desc":user_desc
         });
-        println!("ext_json_str={:?}", data.to_string());
 
         let api = Client::new();
         let res = api.post(&uri, &data).await?;
-        println!("res==={:?}", res);
+
         wechat_sdk::json_decode(&res)
+    }
+
+    /// 获取体验版二维码
+    pub async fn get_qrcode(&self, _path: &str) -> WechatResult<Vec<u8>> {
+        let path = get_url_encode(_path);
+
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/get_qrcode?access_token={}&path={}",
+                self.authorizer_access_token.clone(),
+                path
+            )
+        );
+        println!("path={}", uri);
+        let api = Client::new();
+        let data = "".to_owned();
+        api.request_betyes("get", &uri, &data).await
     }
 
     /// 提交审核
@@ -59,57 +88,133 @@ impl MinCode {
             "{}{}",
             API_DOMAIN,
             format!(
-                "/wxa/commit?access_token={}",
+                "/wxa/submit_audit?access_token={}",
                 self.authorizer_access_token.clone()
             )
         );
-        let mut list = vec![];
-        list.push(item);
-        let s = serde_json::to_value(list).unwrap();
+        let data = json!({ "item_list": [item] });
         let api = Client::new();
-        let res = api.post(&uri, &s).await?;
+        let res = api.post(&uri, &data).await?;
         wechat_sdk::json_decode(&res)
     }
+
+    /// 查询指定版本的审核状态
+    pub async fn audit_status(&self, auditid: i64) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/get_auditstatus?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let data = json!({ "auditid": auditid });
+        let api = Client::new();
+        let res = api.post(&uri, &data).await?;
+        wechat_sdk::json_decode(&res)
+    }
+
+    /// 查询指定版本的审核状态
+    pub async fn latest_audit_status(&self) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/get_latest_auditstatus?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let api = Client::new();
+        let res = api.get(&uri).await?;
+        wechat_sdk::json_decode(&res)
+    }
+    /// 小程序审核撤回
+    pub async fn undo_audit(&self) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/undocodeaudit?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let api = Client::new();
+        let res = api.get(&uri).await?;
+        wechat_sdk::json_decode(&res)
+    }
+    /// 发布已审核通过的小程序
+    pub async fn release(&self) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/release?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let data = json!({});
+        let api = Client::new();
+        let res = api.post(&uri, &data).await?;
+        wechat_sdk::json_decode(&res)
+    }
+    /// 版本回退
+    pub async fn revert_code(&self) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/revertcoderelease?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let api = Client::new();
+        let res = api.get(&uri).await?;
+        wechat_sdk::json_decode(&res)
+    }
+
+    /// 加急审核申请
+    pub async fn speed_up_audit(&self, auditid: i64) -> WechatResult<serde_json::Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/speedupaudit?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let data = json!({ "auditid": auditid });
+        let api = Client::new();
+        let res = api.post(&uri, &data).await?;
+        wechat_sdk::json_decode(&res)
+    }
+
+    /// 获取小程序码
+    pub async fn get_wxa_code(
+        &self,
+        path: &str,
+        width: u32,
+        auto_color: bool,
+        line_color: &str,
+        is_hyaline: bool,
+    ) -> WechatResult<Vec<u8>> {
+        let path = get_url_encode(path);
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/getwxacode?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        let data = json!({
+        "path": path,
+        "width": width,
+        "auto_color": auto_color,
+        "line_color": line_color,
+        "is_hyaline": is_hyaline,
+        });
+        println!("path={}", uri);
+        let api = Client::new();
+        api.request_betyes("post", &uri, &data).await
+    }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use std::{fs::File, io::Read};
-
-//     use super::*;
-
-//     #[test]
-//     /// 上传代码
-//     fn test_commit_code() {
-//         // 加载配置文件
-//         let file_path = "config/ext.json";
-
-//         // 打开文件
-//         let mut file = match File::open(file_path) {
-//             Ok(f) => f,
-//             Err(e) => {
-//                 panic!("no such file {} exception: {}", file_path, e)
-//             }
-//         };
-//         // 读取文件到字符串变量
-//         let mut ext_json = String::new();
-//         match file.read_to_string(&mut ext_json) {
-//             Ok(s) => s,
-//             Err(e) => {
-//                 panic!("Error Reading file:{}", e);
-//             }
-//         };
-//         let ext_json_v: serde_json::Value = serde_json::from_str(&ext_json).unwrap();
-
-//         //println!("ext_json_v={:?}",ext_json_v);
-//         let mincode = MinCode::new(access_token);
-//         let rs = actix_rt::System::new().block_on(mincode.commit_code(
-//             "1",
-//             ext_json_v,
-//             "1.0.0",
-//             "测试提交",
-//         ));
-//         println!("==={:?}", rs);
-//         assert_eq!(1+1, 2);
-//     }
-// }

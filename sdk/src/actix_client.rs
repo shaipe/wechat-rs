@@ -144,7 +144,7 @@ impl Client {
             }
         }
     }
-
+    
     /// post方式提交数据
     /// url:
     /// param:
@@ -221,7 +221,6 @@ impl Client {
         url: &str,
         params: &T,
     ) -> Result<String> {
-        /// println!("params === {:?}", params);
         match self.client.request(method, url).send_json(params).await {
             Ok(mut res) => {
                 // log!("response: {:?}", res);

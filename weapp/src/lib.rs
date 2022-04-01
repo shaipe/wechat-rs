@@ -30,5 +30,8 @@ pub use min_category::{MinCategory,MinCategoryItem};
 
 mod min_code;
 pub use min_code::{MinCode};
+
+mod min_tester;
+pub use min_tester::MinTester;
 // 接口域名
 pub(crate) const API_DOMAIN: &'static str = "https://api.weixin.qq.com";

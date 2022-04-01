@@ -42,6 +42,8 @@ pub mod xmlutil;
 pub mod aes_crypt;
 pub use aes_crypt::AesCrypt;
 
+mod url_encoding;
+pub use url_encoding::get_url_encode;
 /// 写入文件到日志
 // #[allow(dead_code)]
 pub fn write_to_file(conf_path: &str, content: String) -> WechatResult<bool> {
