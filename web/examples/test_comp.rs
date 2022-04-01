@@ -1,4 +1,4 @@
-use wechat::open::{get_tripartite_config, Component, TripartiteConfig};
+use wechat::open::{get_tripartite_config, Component, TripartiteConfig,OpenAccount};
 use wechat::weapp::{MinCategory, MinTester, MinCode, MinDomain};
 
 use std::fs::File;
@@ -6,7 +6,14 @@ use std::io;
 use std::io::prelude::*;
 use wechat_redis::{get_redis_conf, RedisConfig};
 use wechat_sdk::WechatResult;
+/// 小程序测试app_id
+const _MIN_APP_ID:&str="wx2be69912728f0108";
+/// 公众号app_id
+const _OFFICIAL_APP_ID:&str="wx999317f16de96ce3";
 
+const _AUDIT_ID:i64=460232974;
+
+const _PATH:&str="pages/mer/tabbar/home";
 fn main() -> io::Result<()> {
     //test_offical_app();
 
@@ -25,8 +32,14 @@ fn main() -> io::Result<()> {
     // 查看审核状态
     //let _=test_audit_status(&access_token);
 
+    // 查看最近一次审核状态
+    //let _=test_latest_audit_status(&access_token);
+
+    // 小程序审核撤回
+    //let _=test_undo_audit(&access_token);
+
     // 体验二维码
-    let _=test_get_qrcode(&access_token);
+    //let _=test_get_qrcode(&access_token);
 
     // 设置隐私
     //let _=test_set_privacy(&access_token);
@@ -35,7 +48,17 @@ fn main() -> io::Result<()> {
     //let _=test_unbind_tester(&access_token);
 
     // 生成小程序码
-    let _=test_get_wxa_code(&access_token);
+    //let _=test_get_wxa_code(&access_token);
+
+    let _=test_release(&access_token);
+    // 创建开放平台帐号
+    //let _=test_create_open(&access_token);
+
+    // 绑定开放平台帐号
+    let _=test_bind_open(&access_token);
+
+    // 解绑开放平台帐号
+    //let _=test_unbind_open(&access_token);
     Ok(())
 }
 /// 测试公众号
@@ -44,10 +67,10 @@ fn test_offical_app() {
     let redis_config: RedisConfig = get_redis_conf();
     let comp = Component::new(tripart_config.clone(), redis_config.clone());
 
-    let app_id = "wx999317f16de96ce3";
+    
 
     // //获取详情
-    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_info(app_id));
+    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_info(_OFFICIAL_APP_ID));
     // println!("===={:?}",rs);
 
     // //获取授权信息
@@ -58,7 +81,7 @@ fn test_offical_app() {
 
     //获取授权详情
     let refresh_token = "refreshtoken@@@WLdb4MPANDWj71mXhYsl0OB3n6CweoPxsTLB2eK3M2M";
-    let rs = actix_rt::System::new().block_on(comp.fetch_authorizer_token(app_id, refresh_token));
+    let rs = actix_rt::System::new().block_on(comp.fetch_authorizer_token(_OFFICIAL_APP_ID, refresh_token));
     println!("fetch_authorizer_token==={:?}", rs);
 
     let authorizer_token="55_4MoCgiD3ni28AXxeaqwTMpPMoYUYW5M0wqIHBtTn9AUTESGdly1wm2_55UF2C2a3RMWESSPB83XduKY8iDy2Cs4tSSzQiFl-X3RcWalNfeUAy89EtI-z46Gb7gnXEJsr7DAF3dSuL0tyufeMVSChAEADAK";
@@ -72,10 +95,8 @@ fn test_min_app() -> String {
     let redis_config: RedisConfig = get_redis_conf();
     let comp = Component::new(tripart_config.clone(), redis_config.clone());
 
-    let app_id = "wx2be69912728f0108";
-
     // //获取详情
-    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_info(app_id));
+    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_info(_MIN_APP_ID));
     // println!("===={:?}",rs);
 
     // let code="queryauthcode@@@OC4bbkN1COoHhO-mJzcCBIIt5mKg8k73wN-mYx_17T5BWeDeTHSZzhDDeeAlLs3_47D_hqeAYFcPZV0Q-kR0Xg";
@@ -84,10 +105,10 @@ fn test_min_app() -> String {
 
     // //获取授权令牌
     // let refresh_token="refreshtoken@@@68i490TBYPIBf3dnYuvWD42Vy7TzvbfwJg88t6FQSPg";
-    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(app_id,refresh_token));
+    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token));
     // println!("fetch_authorizer_token==={:?}",rs);
 
-    let authorizer_token="55_93_S1cNbh86mAZO4cAkIOjwCnSUhGIOd7oXoqd5bA69VNH8oIz0i5Gvg5HzKzMKeXeROtMWI8RGnnJmkGRWkYAxgwM9CF8pPvB_RaoBUbHhejJxbqsIanR2on1SEZaRbAPhGqGr1NoQW7rRIJLVfAHDWYI";
+    let authorizer_token="55_YBRansbyffqlPaRktxivpWBzfSDOZRdqpRBdeNHDbWgtKy4WtLALUYg0J_PNUvYASWanadbRRGcdjFClJM7Dr73re0CaIRhNkWu-MBkunZUCppIA_qLII3ESIh0dFwwcw_e2eWzZHyySrKuRMZOfAKDSFU";
     // let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
     // println!("==={:?}",rs);
 
@@ -99,8 +120,8 @@ fn test_set_domain(access_token: &str) -> WechatResult<u64> {
 
     let mut req_domain = vec![];
     req_domain.push("https://wechat.ecdata.cn".to_owned());
-    //req_domain.push("ecdata.cn".to_owned());
-
+    req_domain.push("https://assets.ecdata.cn".to_owned());
+    req_domain.push("https://ht.ecdata.cn".to_owned());
     let rs = actix_rt::System::new().block_on(min_domain.set_server_domain(
         req_domain.clone(),
         req_domain.clone(),
@@ -169,7 +190,7 @@ fn test_commit_code(access_token: &str) -> WechatResult<u64> {
     //println!("ext_json_v={:?}",ext_json_v);
     let mincode = MinCode::new(access_token);
     let rs =
-        actix_rt::System::new().block_on(mincode.commit_code("2", ext_json_v, "1.0.1", "测试提交2.0"));
+        actix_rt::System::new().block_on(mincode.commit_code("3", ext_json_v, "1.0.2", "测试提交2.0"));
     println!("==={:?}", rs);
     Ok(0)
 }
@@ -180,7 +201,7 @@ pub fn test_submit_audit(access_token: &str) -> WechatResult<u64> {
     let c_list = actix_rt::System::new().block_on(category.get_category())?;
 
     let mut item = c_list[0].clone();
-    item.address = "pages/mer/tabbar/home".to_owned();
+    item.address =_PATH.to_owned();
     item.title = "谷物".to_owned();
     item.tag="女装".to_string();
     let mincode = MinCode::new(access_token);
@@ -190,19 +211,44 @@ pub fn test_submit_audit(access_token: &str) -> WechatResult<u64> {
 }
 /// 获取体验二维码
 pub fn test_get_qrcode(access_token: &str) -> WechatResult<u64> {
-    let path="pages/mer/tabbar/home";
-    let mincode = MinCode::new(access_token);
-    let rs = actix_rt::System::new().block_on(mincode.get_qrcode(path))?;
 
-    println!("{:?}",rs);
+    let mincode = MinCode::new(access_token);
+    let rs = actix_rt::System::new().block_on(mincode.get_qrcode(_PATH))?;
+
+    //println!("{:?}",rs);
     Ok(0)
 }
 
 /// 查看审核状态
 pub fn test_audit_status(access_token: &str) -> WechatResult<u64> {
-    let audit_id=460232855;
     let mincode = MinCode::new(access_token);
-    let rs = actix_rt::System::new().block_on(mincode.audit_status(audit_id));
+    let rs = actix_rt::System::new().block_on(mincode.audit_status(_AUDIT_ID));
+    println!("==={:?}", rs);
+    Ok(0)
+}
+
+/// 查询指定版本的审核状态
+pub fn test_latest_audit_status(access_token: &str) -> WechatResult<u64> {
+   
+    let mincode = MinCode::new(access_token);
+    let rs = actix_rt::System::new().block_on(mincode.latest_audit_status());
+    println!("==={:?}", rs);
+    Ok(0)
+}
+
+/// 小程序审核撤回
+pub fn test_undo_audit(access_token: &str) -> WechatResult<u64> {
+   
+    let mincode = MinCode::new(access_token);
+    let rs = actix_rt::System::new().block_on(mincode.undo_audit());
+    println!("==={:?}", rs);
+    Ok(0)
+}
+
+/// 发布小程序
+pub fn test_release(access_token: &str) -> WechatResult<u64> {
+    let mincode = MinCode::new(access_token);
+    let rs = actix_rt::System::new().block_on(mincode.release());
     println!("==={:?}", rs);
     Ok(0)
 }
@@ -228,9 +274,37 @@ pub fn test_unbind_tester(access_token: &str) -> WechatResult<u64> {
 
 /// 解绑体验者
 pub fn test_get_wxa_code(access_token: &str) -> WechatResult<u64> {
-   
+
     let bll = MinCode::new(access_token);
-    let rs = actix_rt::System::new().block_on(bll.get_wxa_code("",430,false,"",false))?;
+    let rs = actix_rt::System::new().block_on(bll.get_wxa_code(_PATH,430,false,"",false))?;
+
+    //println!("==={:?}", rs);
+    Ok(0)
+}
+
+/// 创建开放平台帐号
+pub fn test_create_open(access_token: &str) -> WechatResult<u64> {
+    let bll = OpenAccount::new(_MIN_APP_ID,access_token);
+    let rs = actix_rt::System::new().block_on(bll.create_open())?;
+
+    println!("==={:?}", rs);
+    Ok(0)
+}
+/// 绑定开放平台帐号
+pub fn test_bind_open(access_token: &str) -> WechatResult<u64> {
+    let open_id="wx2454d0ced8d53230";
+    let bll = OpenAccount::new(_MIN_APP_ID,access_token);
+    let rs = actix_rt::System::new().block_on(bll.bind_open(open_id))?;
+
+    println!("==={:?}", rs);
+    Ok(0)
+}
+
+/// 绑定开放平台帐号
+pub fn test_unbind_open(access_token: &str) -> WechatResult<u64> {
+    let open_id="wx2454d0ced8d53230";
+    let bll = OpenAccount::new(_MIN_APP_ID,access_token);
+    let rs = actix_rt::System::new().block_on(bll.unbind_open(open_id))?;
 
     println!("==={:?}", rs);
     Ok(0)

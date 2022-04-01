@@ -85,6 +85,7 @@ async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
             .service(wx_handler::auth_transfer)
             .service(wx_handler::official_auth)
             .service(wx_handler::official_auth_calback)
+            .service(wx_handler::get_wxa_code)
     })
     .bind(ip)?
     .run()

@@ -8,6 +8,7 @@ pub fn get_url_encode(c:&str)->String{
         .add(b'`')
         .add(b'+')
         .add(b'=')
-        .add(b'/');
+        // .add(b'/')
+        ;
         utf8_percent_encode(c, FRAGMENT).to_string()
 }

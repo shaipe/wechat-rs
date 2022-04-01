@@ -144,7 +144,37 @@ impl Client {
             }
         }
     }
-    
+    /// 返回bytes
+    pub async fn get_bytes(self, url: &str) -> Result<Vec<u8>> {
+        match self.client.get(url).send().await {
+            Ok(mut res) => {
+                if res.status().is_success() {
+                    match res.body().await {
+                        Ok(bs) => {
+                            
+                            return Ok(bs[..].to_vec());
+                        }
+                        Err(err) => Err(error! {
+                            code: -1,
+                            msg: format!("error: {}", err)
+                        }),
+                    }
+                } else {
+                    Err(error! {
+                        code: 500,
+                        msg: format!("status={}", res.status())
+                    })
+                }
+            }
+            Err(e) => {
+                log!("=== request error === {:?}", e);
+                Err(error! {
+                    code: 500,
+                    msg: format!("Send request error: {}", e)
+                })
+            }
+        }
+    }
     /// post方式提交数据
     /// url:
     /// param:

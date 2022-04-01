@@ -78,8 +78,7 @@ impl MinCode {
         );
         println!("path={}", uri);
         let api = Client::new();
-        let data = "".to_owned();
-        api.request_betyes("get", &uri, &data).await
+        api.get_bytes(&uri).await
     }
 
     /// 提交审核
@@ -206,15 +205,17 @@ impl MinCode {
                 self.authorizer_access_token.clone()
             )
         );
-        let data = json!({
-        "path": path,
+        let mut data = json!({
+        "path": &path,
         "width": width,
         "auto_color": auto_color,
-        "line_color": line_color,
         "is_hyaline": is_hyaline,
         });
-        println!("path={}", uri);
+        if auto_color{
+            data["line_color"]=serde_json::Value::String(line_color.to_owned());
+        }
         let api = Client::new();
-        api.request_betyes("post", &uri, &data).await
+        api.request_betyes("get", &uri, &data).await
+
     }
 }
