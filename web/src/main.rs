@@ -25,7 +25,10 @@ mod utils;
 mod wx_handler;
 mod wx_msg;
 
-
+mod cache;
+pub use cache::RedisCache;
+mod access_token;
+pub use access_token::get_comp_access_tokens;
 
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
