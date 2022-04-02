@@ -26,7 +26,10 @@ pub async fn get_comp_access_tokens() -> (String, i64) {
         let result = comp.fetch_access_token(ticket).await;
 
         match result {
-            Ok(token) => token,
+            Ok(token) => {
+                redis_cache.set_comp_token(&tripart_config.app_id ,token.clone());
+                token
+            },
             Err(_) => ("".to_owned(), 0),
         }
     } else {

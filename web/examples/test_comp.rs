@@ -117,11 +117,11 @@ fn test_min_app() -> String {
     // println!("==={:?}",rs);
 
     // //获取授权令牌
-    let refresh_token="refreshtoken@@@68i490TBYPIBf3dnYuvWD42Vy7TzvbfwJg88t6FQSPg";
-    let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
-    println!("fetch_authorizer_token==={:?}",rs);
+    // let refresh_token="refreshtoken@@@68i490TBYPIBf3dnYuvWD42Vy7TzvbfwJg88t6FQSPg";
+    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
+    // println!("fetch_authorizer_token==={:?}",rs);
 
-    let authorizer_token="55_YBRansbyffqlPaRktxivpWBzfSDOZRdqpRBdeNHDbWgtKy4WtLALUYg0J_PNUvYASWanadbRRGcdjFClJM7Dr73re0CaIRhNkWu-MBkunZUCppIA_qLII3ESIh0dFwwcw_e2eWzZHyySrKuRMZOfAKDSFU";
+    let authorizer_token="55_kaOc_qX6IULNetixZ7yrH6dABvGv0-3uVgNu7PJfujiehdhCWZn8y9TciQxwtLc_TLuaR1JABn-z3bFycVi-raz0y_0-Bxo13AsNPo0DWakKP4HAYC7to3niDmDoyewHRQIzGMspmpd2nHgGDWBjAHDWPU";
     // let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
     // println!("==={:?}",rs);
 
