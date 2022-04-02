@@ -17,7 +17,7 @@ pub mod ticket;
 pub use ticket::Ticket;
 
 pub mod config;
-pub use config::{get_tripartite_config, set_tripartite_config, TripartiteConfig};
+pub use config::{get_tripartite_config, set_tripartite_config, TripartiteConfig,get_tripartite_config_mut};
 
 mod comp;
 pub use comp::Component;

@@ -75,7 +75,19 @@ pub fn get_tripartite_config() -> TripartiteConfig {
     }
     cache
 }
-
+pub fn get_tripartite_config_mut<F>(mut func:F) -> TripartiteConfig 
+where F:FnMut()->TripartiteConfig {
+    let mut cache = match Arc::clone(&TRIPARTITE_CACHES).lock() {
+        Ok(s) => s.clone(),
+        Err(_) => TripartiteConfig::default(),
+    };
+    if cache.app_id.len() == 0 {
+        let cnf=func();
+        set_tripartite_config(cnf.clone());
+        cache = cnf;
+    }
+    cache
+}
 // 获取配置信息
 pub fn read_tripartite_config() -> TripartiteConfig {
     // 加载配置文件
