@@ -13,11 +13,11 @@ extern crate lazy_static;
 
 // 错误信息处理定义
 mod errors;
-pub use errors::{WechatError,ErrorKind};
+pub use errors::{ErrorKind, WechatError};
 
 // 加解密处理
 mod wxcrypto;
-pub use wxcrypto::{WeChatCrypto, aes128_cbc_decrypt};
+pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
 
 // 公共AccessToken管理
 mod token;
@@ -26,20 +26,20 @@ pub use token::AccessToken;
 // 导出常量配置
 pub mod constant;
 
-#[cfg(feature="req_async")]
+#[cfg(feature = "req_async")]
 mod reqw_client;
-#[cfg(feature="req_async")]
+#[cfg(feature = "req_async")]
 pub use reqw_client::Client;
-#[cfg(feature="actix")]
+#[cfg(feature = "actix")]
 mod actix_client;
-#[cfg(feature="actix")]
+#[cfg(feature = "actix")]
 pub use actix_client::Client;
 
 pub mod config;
 pub use config::*;
 
-pub mod xmlutil;
 pub mod aes_crypt;
+pub mod xmlutil;
 pub use aes_crypt::AesCrypt;
 
 mod url_encoding;
@@ -76,7 +76,6 @@ pub fn current_timestamp() -> i64 {
         .unwrap()
         .as_secs() as i64
 }
-
 
 ///
 #[inline]

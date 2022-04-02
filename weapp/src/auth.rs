@@ -5,7 +5,7 @@
 
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{AesCrypt, Client, WechatResult, aes128_cbc_decrypt};
+use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
 pub struct Auth;
 
@@ -32,7 +32,13 @@ impl Auth {
         let api = Client::new();
         let res = api.get(&url).await?;
         match wechat_sdk::json_decode(&res) {
-            Ok(data) => Ok(data),
+            Ok(data) => {
+                if data.get("errcode").is_some() {
+                    Err(error!("auth error: {:?}", data["errmsg"].as_str().unwrap_or("")))
+                } else {
+                    Ok(data)
+                }
+            }
             Err(err) => {
                 return Err(err);
             }
@@ -45,7 +51,6 @@ impl Auth {
     pub fn get_paid_union_id() -> WechatResult<String> {
         Ok("".to_string())
     }
-
 
     /// 解析小程的手机号数据
     pub fn parse_phone_number(
