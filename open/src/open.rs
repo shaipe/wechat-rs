@@ -39,12 +39,7 @@ impl OpenAccount {
         hash.insert("appid".to_string(), self.app_id.clone());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                return Err(err);
-            }
-        };
+        let data = wechat_sdk::json_decode(&res)?;
         let open_appid = match data["open_appid"].as_str() {
             Some(v) => v,
             None => "",
@@ -69,16 +64,10 @@ impl OpenAccount {
         hash.insert("open_appid".to_string(), open_app_id.to_owned());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-        let bo = match data["errcode"].as_u64() {
-            Some(v) => v == 0,
-            None => false,
-        };
+        let mut bo=false;
+        if let Ok(s) =wechat_sdk::json_decode(&res){
+            bo=true;
+        }
         Ok(bo)
     }
 
@@ -99,16 +88,30 @@ impl OpenAccount {
         hash.insert("open_appid".to_string(), open_app_id.to_owned());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let data = match wechat_sdk::json_decode(&res) {
-            Ok(_data) => _data,
-            Err(err) => {
-                return Err(err);
-            }
-        };
-        let bo = match data["errcode"].as_u64() {
-            Some(v) => v == 0,
-            None => false,
-        };
+        let mut bo=false;
+        if let Ok(s) =wechat_sdk::json_decode(&res){
+            bo=true;
+        }
         Ok(bo)
+    }
+
+     /// 获取公众号/小程序所绑定的开放平台帐号
+     pub async fn get_open_account(&self) -> WechatResult<String> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/open/get?access_token={}",
+                self.authorizer_access_token.clone()
+            )
+        );
+        log!("uri::: {}", uri);
+
+        let mut hash = HashMap::new();
+        hash.insert("appid".to_string(), self.app_id.clone());
+        let api = Client::new();
+        let res = api.post(&uri, &hash).await?;
+        let data = wechat_sdk::json_decode(&res)?;
+        Ok(data["open_appid"].to_string())
     }
 }

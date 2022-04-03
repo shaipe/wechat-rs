@@ -10,6 +10,7 @@ use std::io::prelude::*;
 ///tripartite 配置
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TripartiteConfig {
+    pub id:u32,
     // 名称
     pub name: String,
     // 域名
@@ -26,6 +27,7 @@ pub struct TripartiteConfig {
 impl TripartiteConfig {
     pub fn default() -> Self {
         TripartiteConfig {
+            id:0,
             name: String::new(),
             domain: String::new(),
             app_id: String::new(),
@@ -36,6 +38,7 @@ impl TripartiteConfig {
     }
     pub fn new(yaml_doc: yaml_rust::yaml::Yaml) -> Self {
         TripartiteConfig {
+            id:0,
             name: yaml_doc["name"].as_str().unwrap_or("").to_owned(),
             domain: yaml_doc["domain"].as_str().unwrap_or("").to_owned(),
             app_id: yaml_doc["app_id"].as_str().unwrap_or("").to_owned(),
