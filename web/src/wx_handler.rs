@@ -272,7 +272,7 @@ pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<H
 
     println!(" === redirect_uri === {:?}", redirect_uri);
 
-    let authorize = WechatAuthorize::new(&app_id, &config.app_id, "");
+    let authorize = WechatAuthorize::new(&app_id, &config.app_id);
     let mut scopes = Vec::new();
     scopes.push("snsapi_userinfo");
     let url = authorize.get_authorize_url(&redirect_uri, &state, &scopes, "code");

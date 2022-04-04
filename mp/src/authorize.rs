@@ -1,8 +1,8 @@
 //! copyright © ecdata.cn 2021 - present
 //! 微信公众号授权
-
+use serde_json::Value;
 use wechat_redis::{RedisStorage, SessionStore};
-use wechat_sdk::{ WechatResult};
+use wechat_sdk::{ WechatResult,Client};
 const WECHAT_OPEN_URI: &'static str = "https://open.weixin.qq.com";
 ///网页授权
 pub struct WechatAuthorize {
@@ -11,7 +11,7 @@ pub struct WechatAuthorize {
 }
 impl WechatAuthorize {
     ///
-    pub fn new(_app_id: &str, _com_app_id: &str, _com_access_token: &str) -> WechatAuthorize {
+    pub fn new(_app_id: &str, _com_app_id: &str) -> WechatAuthorize {
         WechatAuthorize {
             app_id: _app_id.to_string(),
             com_app_id: _com_app_id.to_string(),
@@ -40,6 +40,37 @@ impl WechatAuthorize {
         println!("authorize url: {}", uri);
 
         uri
+    }
+     /// 获取用户access_token
+     pub async fn fetch_user_access_token(&self, code:&str,comp_access_token:&str) -> WechatResult<Value> {
+     
+        let url = format!(
+            "{domain}/sns/oauth2/component/access_token?appid={appid}&code={code}&grant_type={grant_type}&component_appid={component_appid}&component_access_token={component_access_token}",
+            domain=WECHAT_OPEN_URI,
+            appid=&self.app_id,
+            code=code,
+            grant_type="authorization_code",
+            component_appid=&self.com_app_id,
+            component_access_token=comp_access_token
+        );
+       
+        let api = Client::new();
+        let res = api.get(&url).await?;
+        let data = wechat_sdk::json_decode(&res)?;
+        Ok(data)
+    }
+    /// 获取用户基本信息
+    pub async fn fetch_user_info(&self, open_id: &str,access_token:&str) -> WechatResult<Value> {
+     
+        let url = format!(
+            "{}/cgi-bin/user/info?access_token={}&openid={}&lang=Language.zh_CN",
+            WECHAT_OPEN_URI, access_token,open_id
+        );
+       
+        let api = Client::new();
+        let res = api.get(&url).await?;
+        let data = wechat_sdk::json_decode(&res)?;
+        Ok(data)
     }
 }
 
