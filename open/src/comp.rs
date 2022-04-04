@@ -109,7 +109,7 @@ impl Component {
         authorizer_appid: &str,
         refresh_token: &str,
         comp_access_token:&str
-    ) -> WechatResult<(String, String)> {
+    ) -> WechatResult<(String, i64)> {
         let url = format!(
             "{}/cgi-bin/component/api_authorizer_token?component_access_token={}",
             API_DOMAIN, comp_access_token
@@ -133,7 +133,8 @@ impl Component {
             Some(v) => v,
             None => "",
         };
-        Ok((acc_token.to_string(), ref_token.to_string()))
+        let expired_time = current_timestamp() + 7000;
+        Ok((acc_token.to_string(), expired_time))
 
     }
 

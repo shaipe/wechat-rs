@@ -22,6 +22,8 @@ pub struct TripartiteConfig {
     // 已获取的token
     pub token: String,
     pub encoding_aes_key: String,
+    pub privacy_json:String,
+    pub ext_json:String
 }
 
 impl TripartiteConfig {
@@ -34,6 +36,8 @@ impl TripartiteConfig {
             secret: String::new(),
             token: String::new(),
             encoding_aes_key: String::new(),
+            privacy_json:String::new(),
+            ext_json:String::new()
         }
     }
     pub fn new(yaml_doc: yaml_rust::yaml::Yaml) -> Self {
@@ -44,6 +48,8 @@ impl TripartiteConfig {
             app_id: yaml_doc["app_id"].as_str().unwrap_or("").to_owned(),
             secret: yaml_doc["secret"].as_str().unwrap_or("").to_owned(),
             token: yaml_doc["token"].as_str().unwrap_or("").to_owned(),
+            privacy_json: yaml_doc["privacy_json"].as_str().unwrap_or("").to_owned(),
+            ext_json: yaml_doc["ext_json"].as_str().unwrap_or("").to_owned(),
             encoding_aes_key: yaml_doc["encoding_aes_key"]
                 .as_str()
                 .unwrap_or("")
