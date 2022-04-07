@@ -3,16 +3,16 @@
 
 use wechat_sdk::{Client, WechatResult,get_url_encode};
 
-use crate::min_category::MinCategoryItem;
+use crate::category::CategoryItem;
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
-pub struct MinCode {
+pub struct Code {
     authorizer_access_token: String,
 }
-impl MinCode {
+impl Code {
     pub fn new(_authorizer_access_token: &str) -> Self {
-        MinCode {
+        Code {
             authorizer_access_token: _authorizer_access_token.to_string(),
         }
     }
@@ -82,7 +82,7 @@ impl MinCode {
     }
 
     /// 提交审核
-    pub async fn submit_audit(&self, item: MinCategoryItem) -> WechatResult<serde_json::Value> {
+    pub async fn submit_audit(&self, item: CategoryItem) -> WechatResult<serde_json::Value> {
         let uri = format!(
             "{}{}",
             API_DOMAIN,

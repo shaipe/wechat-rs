@@ -33,15 +33,15 @@ impl OpenAccount {
                 self.authorizer_access_token.clone()
             )
         );
-         log!("uri::: {},{}", uri,self.app_id);
+        // log!("uri::: {},{}", uri, self.app_id);
 
         let mut hash = HashMap::new();
         hash.insert("appid".to_string(), self.app_id.clone());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        
+
         let data = wechat_sdk::json_decode(&res)?;
-        println!("res-------={:?}",res);
+        // println!("res-------={:?}", res);
         let open_appid = match data["open_appid"].as_str() {
             Some(v) => v,
             None => "",
@@ -59,16 +59,16 @@ impl OpenAccount {
                 self.authorizer_access_token.clone()
             )
         );
-        log!("uri::: {}", uri);
+        // log!("uri::: {}", uri);
 
         let mut hash = HashMap::new();
         hash.insert("appid".to_string(), self.app_id.clone());
         hash.insert("open_appid".to_string(), open_app_id.to_owned());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let mut bo=false;
-        if let Ok(s) =wechat_sdk::json_decode(&res){
-            bo=true;
+        let mut bo = false;
+        if wechat_sdk::json_decode(&res).is_ok() {
+            bo = true;
         }
         Ok(bo)
     }
@@ -83,22 +83,22 @@ impl OpenAccount {
                 self.authorizer_access_token.clone()
             )
         );
-        log!("uri::: {}", uri);
+        // log!("uri::: {}", uri);
 
         let mut hash = HashMap::new();
         hash.insert("appid".to_string(), self.app_id.clone());
         hash.insert("open_appid".to_string(), open_app_id.to_owned());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let mut bo=false;
-        if let Ok(s) =wechat_sdk::json_decode(&res){
-            bo=true;
+        let mut bo = false;
+        if wechat_sdk::json_decode(&res).is_ok() {
+            bo = true;
         }
         Ok(bo)
     }
 
-     /// 获取公众号/小程序所绑定的开放平台帐号
-     pub async fn get_open_account(&self) -> WechatResult<String> {
+    /// 获取公众号/小程序所绑定的开放平台帐号
+    pub async fn get_open_account(&self) -> WechatResult<String> {
         let uri = format!(
             "{}{}",
             API_DOMAIN,

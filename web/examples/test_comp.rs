@@ -1,5 +1,5 @@
 use wechat::open::{get_tripartite_config, Component, OpenAccount, TripartiteConfig};
-use wechat::weapp::{MinCategory, MinCode, MinDomain, MinTester};
+use wechat::weapp::{Category, Code, Domain, Tester};
 
 use std::fs::File;
 use std::io;
@@ -133,7 +133,7 @@ fn test_min_app() -> String {
 #[allow(dead_code)]
 /// 设置域名
 fn test_set_domain(access_token: &str) -> WechatResult<u64> {
-    let min_domain = MinDomain::new(access_token);
+    let min_domain = Domain::new(access_token);
 
     let mut req_domain = vec![];
     req_domain.push("https://wechat.ecdata.cn".to_owned());
@@ -175,7 +175,7 @@ fn test_set_privacy(access_token: &str) -> WechatResult<u64> {
     };
     let privacy_json_v: serde_json::Value = serde_json::from_str(&privacy_json).unwrap();
 
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.set_privacy(privacy_json_v));
     println!("==={:?}", rs);
     Ok(0)
@@ -204,7 +204,7 @@ fn test_commit_code(access_token: &str) -> WechatResult<u64> {
     let ext_json_v: serde_json::Value = serde_json::from_str(&ext_json).unwrap();
 
     //println!("ext_json_v={:?}",ext_json_v);
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.commit_code(
         "3",
         ext_json_v,
@@ -217,7 +217,7 @@ fn test_commit_code(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 提交审核
 pub fn test_submit_audit(access_token: &str) -> WechatResult<u64> {
-    let category = MinCategory::new(access_token);
+    let category = Category::new(access_token);
 
     let c_list = actix_rt::System::new().block_on(category.get_category())?;
 
@@ -225,7 +225,7 @@ pub fn test_submit_audit(access_token: &str) -> WechatResult<u64> {
     item.address = _PATH.to_owned();
     item.title = "谷物".to_owned();
     item.tag = "女装".to_string();
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.submit_audit(item));
     println!("==={:?}", rs);
     Ok(0)
@@ -233,7 +233,7 @@ pub fn test_submit_audit(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 获取体验二维码
 pub fn test_get_qrcode(access_token: &str) -> WechatResult<u64> {
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.get_qrcode(_PATH))?;
 
     //println!("{:?}",rs);
@@ -242,7 +242,7 @@ pub fn test_get_qrcode(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 查看审核状态
 pub fn test_audit_status(access_token: &str) -> WechatResult<u64> {
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.audit_status(_AUDIT_ID));
     println!("==={:?}", rs);
     Ok(0)
@@ -250,7 +250,7 @@ pub fn test_audit_status(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 查询指定版本的审核状态
 pub fn test_latest_audit_status(access_token: &str) -> WechatResult<u64> {
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.latest_audit_status());
     println!("==={:?}", rs);
     Ok(0)
@@ -258,7 +258,7 @@ pub fn test_latest_audit_status(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 小程序审核撤回
 pub fn test_undo_audit(access_token: &str) -> WechatResult<u64> {
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.undo_audit());
     println!("==={:?}", rs);
     Ok(0)
@@ -266,7 +266,7 @@ pub fn test_undo_audit(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 发布小程序
 pub fn test_release(access_token: &str) -> WechatResult<u64> {
-    let mincode = MinCode::new(access_token);
+    let mincode = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.release());
     println!("==={:?}", rs);
     Ok(0)
@@ -275,7 +275,7 @@ pub fn test_release(access_token: &str) -> WechatResult<u64> {
 /// 绑定体验者
 pub fn test_bind_tester(access_token: &str) -> WechatResult<u64> {
     let wechat_id = "chen-9-1-8";
-    let bll = MinTester::new(access_token);
+    let bll = Tester::new(access_token);
     let rs = actix_rt::System::new().block_on(bll.bind_tester(wechat_id))?;
 
     println!("==={:?}", rs);
@@ -285,7 +285,7 @@ pub fn test_bind_tester(access_token: &str) -> WechatResult<u64> {
 /// 解绑体验者
 pub fn test_unbind_tester(access_token: &str) -> WechatResult<u64> {
     let wechat_id = "chen-9-1-8";
-    let bll = MinTester::new(access_token);
+    let bll = Tester::new(access_token);
     let rs = actix_rt::System::new().block_on(bll.unbind_tester(wechat_id))?;
 
     println!("==={:?}", rs);
@@ -294,7 +294,7 @@ pub fn test_unbind_tester(access_token: &str) -> WechatResult<u64> {
 #[allow(dead_code)]
 /// 解绑体验者
 pub fn test_get_wxa_code(access_token: &str) -> WechatResult<u64> {
-    let bll = MinCode::new(access_token);
+    let bll = Code::new(access_token);
     let rs = actix_rt::System::new().block_on(bll.get_wxa_code(_PATH, 430, false, "", false))?;
 
     //println!("==={:?}", rs);

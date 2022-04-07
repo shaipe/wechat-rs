@@ -17,7 +17,7 @@ pub use errors::{ErrorKind, WechatError};
 
 // 加解密处理
 mod wxcrypto;
-pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, WeChatCrypto};
+pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, aes256_cbc_encrypt, WeChatCrypto};
 
 // 公共AccessToken管理
 mod token;
@@ -89,11 +89,10 @@ pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
             });
         }
     };
-    let dic=obj.as_object().unwrap();
-    let code=if dic.contains_key("errcode"){
+    let dic = obj.as_object().unwrap();
+    let code = if dic.contains_key("errcode") {
         "errcode"
-    }
-    else{
+    } else {
         "code"
     };
 
@@ -102,10 +101,9 @@ pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
         None => 0,
     };
     if code != 0 {
-        let msg: String =if dic.contains_key("msg"){
+        let msg: String = if dic.contains_key("msg") {
             obj["msg"].to_string()
-        }
-        else{
+        } else {
             obj["errmsg"].to_string()
         };
         return Err(error! {

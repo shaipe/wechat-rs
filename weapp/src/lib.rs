@@ -22,16 +22,16 @@ pub use qrcode::QRCode;
 mod config;
 pub use config::WeappConfig;
 
-mod min_domain;
-pub use min_domain::MinDomain;
+mod domain;
+pub use domain::Domain;
 
-mod min_category;
-pub use min_category::{MinCategory,MinCategoryItem};
+mod category;
+pub use category::{Category, CategoryItem};
 
-mod min_code;
-pub use min_code::{MinCode};
+mod code;
+pub use code::Code;
 
-mod min_tester;
-pub use min_tester::MinTester;
+mod tester;
+pub use tester::Tester;
 // 接口域名
 pub(crate) const API_DOMAIN: &'static str = "https://api.weixin.qq.com";

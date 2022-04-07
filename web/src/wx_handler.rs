@@ -355,11 +355,11 @@ pub async fn callback(
 #[get("/wx/wxacode")]
 async fn get_wxa_code(req: HttpRequest) -> Result<HttpResponse> {
     let path = "pages/mer/tabbar/home";
-    use wechat::weapp::MinCode;
+    use wechat::weapp::Code;
     let query = req.query_string();
     let dic = utils::parse_query(query);
     let access_token = utils::get_hash_value(&dic, "access_token");
-    let bll = MinCode::new(&access_token);
+    let bll = Code::new(&access_token);
     let data = bll.get_wxa_code(path, 430, false, "", false).await.unwrap();
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("image/jpeg; charset=utf-8")

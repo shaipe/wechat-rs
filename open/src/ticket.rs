@@ -6,25 +6,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wechat_sdk::{xmlutil, WeChatCrypto, WechatResult};
 /// Ticket对象
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Ticket {
-    pub tripart_conf: TripartiteConfig
+    pub tripart_conf: TripartiteConfig,
 }
 
-// impl Default for Ticket {
-//     fn default() -> Self {
-//         Ticket {
-//             redis_con: String::from("")
-//         }
-//     }
-// }
-
 impl Ticket {
+    /// 实例化一个第三方Ticket
     pub fn new(tripart_conf: TripartiteConfig) -> Self {
         Ticket {
             tripart_conf: tripart_conf,
         }
     }
+
     /// 解析ticket
     pub fn parse_ticket(
         &self,
@@ -42,12 +36,6 @@ impl Ticket {
                 let doc = package.as_document();
                 let ticketstr =
                     xmlutil::evaluate(&doc, "//xml/ComponentVerifyTicket/text()").string();
-
-                // set_ticket_cache(
-                //     &self.redis_con,
-                //     &self.tripart_conf.app_id,
-                //     ticketstr.clone(),
-                // );
                 Ok(ticketstr)
             }
             Err(_) => Err(error! {code: 3000, msg: "Invalid"}),

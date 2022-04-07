@@ -11,7 +11,7 @@ pub struct AesCrypt {
     key_size: aes::KeySize,
 }
 impl AesCrypt {
-    //针对key的长度，keysize动态变化
+    /// 针对key的长度，keysize动态变化
     pub fn new(_key: Vec<u8>, iv: Vec<u8>) -> AesCrypt {
         let l = _key.len();
         let mut key = _key.clone();
@@ -34,30 +34,33 @@ impl AesCrypt {
             key_size: key_size,
         }
     }
+
     /// 针对字符串进行加密
     pub fn encrypt(&self, text: String) -> String {
-        //aes 加密
+        // aes 加密
         let encrypted_data = aes_cbc_encrypt(self.key_size, text.as_bytes(), &self.key, &self.iv)
             .ok()
             .unwrap();
-        //编码成base64
+        // 编码成base64
         let mut base64_encode = String::new();
         base64::encode_config_buf(&encrypted_data, base64::STANDARD, &mut base64_encode);
-
         base64_encode
     }
-    //针对byte进行加密
+
+    /// 针对byte进行加密
+    /// param1: 需要进行加密的文本信息
     pub fn encrypt_byte(&self, text: Vec<u8>) -> String {
-        //aes 加密
+        // aes 加密
         let encrypted_data = aes_cbc_encrypt(self.key_size, &text, &self.key, &self.iv)
             .ok()
             .unwrap();
-        //编码成base64
+        // 编码成base64
         let mut base64_encode = String::new();
         base64::encode_config_buf(&encrypted_data, base64::STANDARD, &mut base64_encode);
 
         base64_encode
     }
+
     /// aes解密
     /// param1: 待解密数据
     pub fn decrypt(&self, text: String) -> String {
@@ -70,7 +73,7 @@ impl AesCrypt {
                 return "".to_owned();
             }
         };
-        println!("=== msg de text===={:?}", base64_decode);
+        // println!("=== msg de text===={:?}", base64_decode);
         // aes 解码
         let decrypted_data =
             match aes_cbc_decrypt(self.key_size, &base64_decode[..], &self.key, &self.iv) {
@@ -81,7 +84,7 @@ impl AesCrypt {
                 }
             };
 
-        //转换成string
+        // 转换成string
         let the_string = str::from_utf8(&decrypted_data).expect("not UTF-8");
 
         the_string.to_owned()
@@ -122,20 +125,21 @@ fn aes_cbc_encrypt(
 }
 
 /// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
+/// @param1: key大小
+/// @param2: 加密数据
 fn aes_cbc_decrypt(
     key_size: aes::KeySize,
     encrypted_data: &[u8],
     key: &[u8],
     iv: &[u8],
 ) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
-    
     let mut decryptor = aes::cbc_decryptor(key_size, key, iv, blockmodes::PkcsPadding);
 
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
     let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
-    println!("=== decrypt key {:?} ", key);
+    // println!("=== decrypt key {:?} ", key);
     loop {
         let result = (decryptor.decrypt(&mut read_buffer, &mut write_buffer, true))?;
         final_result.extend(
@@ -151,16 +155,17 @@ fn aes_cbc_decrypt(
         }
     }
 
-    println!("==== aes === result {:?}", final_result);
+    // println!("==== aes === result {:?}", final_result);
 
     Ok(final_result)
 }
-//补0
+
+/// 位数不够时用0补齐
 fn vec_pad(txt: Vec<u8>, length: usize) -> Vec<u8> {
     if txt.len() < length {
         let s = length - txt.len();
         let mut xs = txt;
-        for i in 0..s {
+        for _i in 0..s {
             xs.push(0u8);
         }
         return xs;

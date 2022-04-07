@@ -18,6 +18,7 @@ pub struct Component {
 }
 
 impl Component {
+    /// Create a new instance
     pub fn new(tripart_conf:TripartiteConfig)->Self{
      
         Component{
@@ -27,7 +28,6 @@ impl Component {
 
     /// 获取Aceess Token
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/component_access_token.html
-   
     pub async fn fetch_access_token(&self, access_ticket: String) -> WechatResult<(String, i64)> {
         let url = format!("{}{}", API_DOMAIN, "/cgi-bin/component/api_component_token");
         let mut hash = HashMap::new();
@@ -44,12 +44,13 @@ impl Component {
                 return Err(err);
             }
         };
-        //asscess_token
+
+        // asscess_token
         let token = match data["component_access_token"].as_str() {
             Some(v) => v.to_owned(),
             None => "".to_owned(),
         };
-        println!("component_access_token={:?}", data);
+        // println!("component_access_token={:?}", data);
         let expired_time = current_timestamp() + 7000;
         //set_comp_token(&self.redis_con,&self.tripart_conf.app_id ,(token.clone(),expired_time));
         Ok((token, expired_time))
@@ -57,7 +58,6 @@ impl Component {
 
     /// 生成预授权码
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/api/pre_auth_code.html
-    /// 
     pub async fn create_preauthcode(&self,access_token:&str) -> WechatResult<String> {
        
         let uri = format!(
@@ -68,7 +68,7 @@ impl Component {
                 access_token
             )
         );
-        log!("uri::: {}", uri);
+        // log!("uri::: {}", uri);
 
         let mut hash = HashMap::new();
         hash.insert("component_appid".to_string(), self.tripart_conf.app_id.clone());
@@ -129,10 +129,10 @@ impl Component {
             Some(v) => v,
             None => "",
         };
-        let ref_token = match data["authorizer_refresh_token"].as_str() {
-            Some(v) => v,
-            None => "",
-        };
+        // let ref_token = match data["authorizer_refresh_token"].as_str() {
+        //     Some(v) => v,
+        //     None => "",
+        // };
         let expired_time = current_timestamp() + 7000;
         Ok((acc_token.to_string(), expired_time))
 
@@ -218,7 +218,8 @@ impl Component {
         conf.app_id,pre_auth_code,auth_type,encode_uri));
         uri
     }
-    //获取模版列表
+    
+    /// 获取模版列表
     pub async fn get_template_list(&self, template_type: Option<i32>,comp_access_token:&str) -> WechatResult<Vec<serde_json::Value>> {
      
         // 获取
@@ -233,7 +234,7 @@ impl Component {
                 t
             );
         }
-        //get
+        // get
         let api = Client::new();
         let res = api.get(&uri).await?;
         let data=self.parse_post(&res).await?;
@@ -255,7 +256,7 @@ impl Component {
         Ok(list)
     }
 
-    //解析post请求结果
+    /// 解析post请求结果
     pub async fn parse_post(&self,res:&str)->WechatResult<Value>{
         let data = match wechat_sdk::json_decode(&res) {
             Ok(_data) => _data,

@@ -246,7 +246,7 @@ pub fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Resul
     Ok(final_result)
 }
 // Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
+pub fn aes256_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
     let mut encryptor =
         aes::cbc_encryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
 
