@@ -1,5 +1,5 @@
  const APP_TICKET_CACHES: &str = "APP_TICKET_CACHES";
-const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
+const COMP_CATCHE_KEY: &str = "COMP_ACCESS_TOKEN_CATCHE_KEY";
 use wechat_redis::{RedisStorage, SessionStore,RedisConfig};
 use wechat_sdk::{WechatResult};
 pub struct RedisCache {

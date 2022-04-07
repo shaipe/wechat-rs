@@ -15,7 +15,8 @@ pub struct MinCategoryItem{
     pub second_class:String,
     pub first_id:i64,
     pub second_id:i64,
-    pub title:String
+    pub title:String,
+    pub desc:String,
 }
 pub struct MinCategory {
     authorizer_access_token: String,
@@ -52,7 +53,8 @@ impl MinCategory {
                 first_class:c["first_name"].to_string(),
                 second_id:c["second"].as_i64().unwrap_or_default(),
                 second_class:c["second_name"].to_string(),
-                title:"".to_owned()
+                title:"".to_owned(),
+                desc:format!("{}->{}",c["first_name"].to_string(),c["second_name"].to_string())
             });
        }
        Ok(list)

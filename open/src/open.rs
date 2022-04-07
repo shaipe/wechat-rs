@@ -33,13 +33,15 @@ impl OpenAccount {
                 self.authorizer_access_token.clone()
             )
         );
-        // log!("uri::: {}", uri);
+         log!("uri::: {},{}", uri,self.app_id);
 
         let mut hash = HashMap::new();
         hash.insert("appid".to_string(), self.app_id.clone());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
+        
         let data = wechat_sdk::json_decode(&res)?;
+        println!("res-------={:?}",res);
         let open_appid = match data["open_appid"].as_str() {
             Some(v) => v,
             None => "",

@@ -246,8 +246,10 @@ impl Component {
             > = serde_json::map::Map::new();
             let template_id=a["template_id"].as_str().unwrap();
             let user_version=a["user_version"].as_str().unwrap();
+            let user_desc=a["user_desc"].as_str().unwrap();
             v.insert("template_id".to_owned(), Value::String(template_id.to_string()));
             v.insert("user_version".to_owned(), Value::String(user_version.to_string()));
+            v.insert("user_desc".to_owned(), Value::String(user_desc.to_string()));
             list.push(serde_json::to_value(v).unwrap());
         }
         Ok(list)

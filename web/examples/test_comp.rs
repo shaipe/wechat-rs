@@ -10,16 +10,17 @@ use wechat_sdk::WechatResult;
 /// 小程序测试app_id
 const _MIN_APP_ID: &str = "wx2be69912728f0108";
 /// 公众号app_id
-const _OFFICIAL_APP_ID: &str = "wx999317f16de96ce3";
+const _OFFICIAL_APP_ID: &str = "wx5dcd5d0fe15c157c";
 
 const _AUDIT_ID: i64 = 460232974;
 
 const _PATH: &str = "pages/mer/tabbar/home";
+const OFFICAL_ACCESS_TOKEN_CATCHE_KEY: &str = "OFFICAL_ACCESS_TOKEN_CATCHE_KEY";
 fn main() -> io::Result<()> {
-    //test_offical_app();
+    let access_token = test_offical_app();
 
     // 小程序授权相关
-    let access_token = test_min_app();
+    //let access_token = test_min_app();
 
     // 设置域名
     //let _=test_set_domain(&access_token);
@@ -53,7 +54,7 @@ fn main() -> io::Result<()> {
 
     //let _ = test_release(&access_token);
     // 创建开放平台帐号
-    //let _=test_create_open(&access_token);
+    let _=test_create_open(&access_token);
 
     // 绑定开放平台帐号
     //let _ = test_bind_open(&access_token);
@@ -64,7 +65,7 @@ fn main() -> io::Result<()> {
 }
 /// 测试公众号
 #[allow(dead_code)]
-fn test_offical_app() {
+fn test_offical_app()->String {
     let tripart_config: TripartiteConfig = get_tripartite_config();
     let redis_config: RedisConfig = get_redis_conf();
     let comp = Component::new(tripart_config.clone());
@@ -90,9 +91,10 @@ fn test_offical_app() {
     //     .block_on(comp.fetch_authorizer_token(_OFFICIAL_APP_ID, refresh_token,&token.0));
     // println!("fetch_authorizer_token==={:?}", rs);
 
-    let authorizer_token="55_4MoCgiD3ni28AXxeaqwTMpPMoYUYW5M0wqIHBtTn9AUTESGdly1wm2_55UF2C2a3RMWESSPB83XduKY8iDy2Cs4tSSzQiFl-X3RcWalNfeUAy89EtI-z46Gb7gnXEJsr7DAF3dSuL0tyufeMVSChAEADAK";
-    let rs = actix_rt::System::new().block_on(comp.get_template_list(None,&token.0));
-    println!("==={:?}", rs);
+    let authorizer_token="55_-w7CYvV-4KtYUvf_ZRu3Cwb0eCxDxTvAV0gD1hyKX-idmRtUi0vEmFm_3g_7dCXs897bgKT_UNomrIJiVod-boSeRK3BjbqhRss3GlLhilxnIabcpXT_Z-nC-9Bdl5L5LOFe0UkKlRd925KVYVHfAEDMJV";
+    // let rs = actix_rt::System::new().block_on(comp.get_template_list(None,&token.0));
+    // println!("==={:?}", rs);
+    authorizer_token.to_owned()
 }
 #[allow(dead_code)]
 /// 测试小程序
@@ -120,7 +122,8 @@ fn test_min_app() -> String {
     // let refresh_token="refreshtoken@@@68i490TBYPIBf3dnYuvWD42Vy7TzvbfwJg88t6FQSPg";
     // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
     // println!("fetch_authorizer_token==={:?}",rs);
-
+    
+    // set_official_access_token(&redis_con,_MIN_APP_ID,rs.unwrap());
     let authorizer_token="55_kaOc_qX6IULNetixZ7yrH6dABvGv0-3uVgNu7PJfujiehdhCWZn8y9TciQxwtLc_TLuaR1JABn-z3bFycVi-raz0y_0-Bxo13AsNPo0DWakKP4HAYC7to3niDmDoyewHRQIzGMspmpd2nHgGDWBjAHDWPU";
     // let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
     // println!("==={:?}",rs);
@@ -325,7 +328,7 @@ pub fn test_unbind_open(access_token: &str) -> WechatResult<u64> {
     println!("==={:?}", rs);
     Ok(0)
 }
-const COMP_CATCHE_KEY: &str = "COMP_CATCHE_KEY_";
+const COMP_CATCHE_KEY: &str = "COMP_ACCESS_TOKEN_CATCHE_KEY";
 use wechat_redis::{RedisStorage, SessionStore};
 /// 获取
 pub fn get_comp_token(redis_con: &str, key: &str) -> (String, i64) {
@@ -350,4 +353,16 @@ pub fn get_comp_token(redis_con: &str, key: &str) -> (String, i64) {
         }
     }
     
+}
+pub fn set_official_access_token(redis_con: &str,key: &str, cnf: (String, i64)) {
+    let url = format!("{}", redis_con);
+    let cache_key = format!("{0}_{1}", OFFICAL_ACCESS_TOKEN_CATCHE_KEY, key);
+    match RedisStorage::from_url(url) {
+        Ok(session) => {
+            session.set(cache_key, format!("{}|{}", cnf.0, cnf.1), Some(2 * 55 * 60));
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
+    }
 }
