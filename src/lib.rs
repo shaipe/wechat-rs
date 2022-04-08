@@ -24,8 +24,8 @@ pub mod weapp {
 
 /// 微信支付
 pub mod pay {
-    #[cfg(feature = "pay")]
-    pub use wechat_weapp::*;
+    
+    pub use wechat_pay::*;
 }
 
 /// 微信小店
@@ -56,9 +56,9 @@ mod tests {
         println!("{:?}","=======================");
         //初始化 配置
         let _ = wechat_sdk::Config::load(json!({
-            "app_id": "wx455639023de66axx",
-            "mch_id": "1414479327",
-            "secret_key": "chengduhxongtuikejxi20210911888888",
+            "app_id": "wx455639023de66adb",
+            "mch_id": "1616885139",
+            "secret_key": "chengduhongtuikeji20210911888888",
         }));
 
         actix_rt::System::new().block_on(async {
@@ -66,14 +66,15 @@ mod tests {
                 "attach": "支付测试",
                 "body": "testx",
                 "nonce_str": "1212312312",
-                "out_trade_no": "1111z",
+                "out_trade_no": "11112z",
                 "notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2.php",
                 "total_fee": 1,
-                "trade_type": "APP"
+                "openid": "oUpe_5T08-CTL7sXr_XwchZmlQu4",
+                "trade_type": "JSAPI"
             });
            
-            let r = Order::create(params).await.unwrap();
-            println!("{:?}",r);
+            //let r = Order::create(params).await.unwrap();
+            //println!("{:?}",r);
         });
         //println!("{:?}",_v);
     }

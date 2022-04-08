@@ -42,25 +42,34 @@ impl Config {
 
     /// 设置配置
     pub fn load(params: serde_json::Value) -> WechatResult<Config> {
+
+        let _conf = Config{
+            app_id: format!("{}",params["app_id"].as_str().unwrap_or_default()),
+            secret: format!("{}",params["secret"].as_str().unwrap_or_default()),
+            token: format!("{}",params["token"].as_str().unwrap_or_default()),
+            platform: PlatformType::MiniProgram,
+            mch_id: format!("{}",params["mch_id"].as_str().unwrap_or_default()),
+            private_key: format!("{}",params["private_key"].as_str().unwrap_or_default()),
+            certificate: format!("{}",params["certificate"].as_str().unwrap_or_default()),
+            secret_key: format!("{}",params["secret_key"].as_str().unwrap_or_default())
+        };
+        return Ok(_conf);
+         
         match CONFIGS.get() {
             Some(conf) => {
+                let app_id = format!("{}",params["app_id"].as_str().unwrap_or_default());
+                if conf.app_id != app_id {
+                    let _ = CONFIGS.set(_conf.clone());
+                    return Ok(_conf)
+                }
+
                 Ok(conf.clone())
             },
             None => {
                 //保存值
-                let conf = Config{
-                    app_id: format!("{}",params["app_id"].as_str().unwrap_or_default()),
-                    secret: format!("{}",params["secret"].as_str().unwrap_or_default()),
-                    token: format!("{}",params["token"].as_str().unwrap_or_default()),
-                    platform: PlatformType::MiniProgram,
-                    mch_id: format!("{}",params["mch_id"].as_str().unwrap_or_default()),
-                    private_key: format!("{}",params["private_key"].as_str().unwrap_or_default()),
-                    certificate: format!("{}",params["certificate"].as_str().unwrap_or_default()),
-                    secret_key: format!("{}",params["secret_key"].as_str().unwrap_or_default())
-                };
-                let _ = CONFIGS.set(conf.clone());
+                let _ = CONFIGS.set(_conf.clone());
 
-                Ok(conf)
+                Ok(_conf)
             }
         }
         

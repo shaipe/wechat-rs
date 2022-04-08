@@ -4,7 +4,7 @@ use itertools::Itertools;
 use wechat_sdk::Config;
 use chrono::prelude::{ Utc };
 pub struct Order{
-
+    conf: Config
 }
 
 
@@ -24,13 +24,17 @@ pub struct Order{
 // + "\"appid\": \"wxdace645e0bc2c424\"" + "}"; 
 
 impl Order {
+    pub fn new(conf: Config) -> Self {
+        Order {
+            conf: conf
+        }
+    }
 
     // 统一下单
-    pub async fn create(mut params: serde_json::Value) -> WechatResult<serde_json::Value> {
+    pub async fn create(&self,mut params: serde_json::Value) -> WechatResult<serde_json::Value> {
         let api_url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
-        let conf = Config::get();
-       
-        
+        let conf = self.conf.clone();
+
         params["appid"] = serde_json::Value::String(conf.app_id);
         params["mch_id"] = serde_json::Value::String(conf.mch_id);
         //api 
@@ -63,6 +67,7 @@ impl Order {
             let prepayid = rr.get("prepay_id");
            
             if trade_type == Some("APP") && prepayid.is_some() { //二次签名
+                
                 let mut new_params = serde_json::Map::new();
                 let mut vs = vec![];
                 let timestamp = Utc::now().naive_local().timestamp();
@@ -80,6 +85,25 @@ impl Order {
                 let wait_md5_str = format!("{}",vs.join("&"));
                 let sign = format!("{:x}",md5::compute(&wait_md5_str)).to_uppercase();
                 new_params.insert(format!("sign"), json!(sign));
+                return Ok(serde_json::Value::Object(new_params));
+            }else if trade_type == Some("JSAPI") && prepayid.is_some() { //二次签名
+                let prepay_id = rr.get("prepay_id").unwrap().as_str().unwrap();
+                let mut new_params = serde_json::Map::new();
+                let mut vs = vec![];
+                let timestamp = Utc::now().naive_local().timestamp();
+                new_params.insert(format!("appId"), rr.get("appid").unwrap().clone());
+                new_params.insert(format!("timeStamp"), json!(format!("{}",timestamp)));
+                new_params.insert(format!("nonceStr"), rr.get("nonce_str").unwrap().clone());
+                new_params.insert(format!("package"), json!(format!("prepay_id={}",prepay_id)));
+                new_params.insert(format!("signType"), json!("MD5"));
+       
+                for key in new_params.keys().sorted() {
+                    vs.push(format!("{}={}", key,new_params[key].to_string().trim_matches(&['"','"'] as &[_])));
+                }
+                vs.push(format!("{}={}", "key",secret_key));    
+                let wait_md5_str = format!("{}",vs.join("&"));
+                let sign = format!("{:x}",md5::compute(&wait_md5_str)).to_uppercase();
+                new_params.insert(format!("paySign"), json!(sign));
                 return Ok(serde_json::Value::Object(new_params));
             }
 
