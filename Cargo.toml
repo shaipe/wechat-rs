@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wechat_sdk = {path = "sdk", version = "0.2.0"}
+# wechat_sdk = {path = "sdk", version = "0.2.0", default-features="false"}
 # 公众号对接
 wechat_mp = {path="mp", version = "0.2.0", optional = true}
 # 开放平台

@@ -1,9 +1,9 @@
 //! copyright © shaipe 2020 - persent
 //!
 
-#[allow(unused_imports)]
-#[macro_use]
-extern crate wechat_sdk;
+// #[allow(unused_imports)]
+// #[macro_use]
+// extern crate wechat_sdk;
 //use wechat_sdk::WechatError;
 
 pub mod open {
@@ -41,8 +41,7 @@ pub mod work {
 }
 
 
-
-pub use wechat_sdk::*;
+// pub use wechat_sdk::*;
 
 
 #[cfg(test)]
