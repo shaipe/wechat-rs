@@ -55,14 +55,14 @@ mod tests {
     fn it_pay_ok_works() {
         println!("{:?}","=======================");
         //初始化 配置
-        let _ = wechat_sdk::Config::load(json!({
-            "app_id": "wx455639023de66adb",
-            "mch_id": "1616885139",
-            "secret_key": "chengduhongtuikeji20210911888888",
-        }));
+        let conf = wechat_sdk::Config::load(json!({
+            "app_id": "",
+            "mch_id": "",
+            "secret_key": "",
+        })).unwrap();
 
         actix_rt::System::new().block_on(async {
-            let params = json!({
+            let _params = json!({
                 "attach": "支付测试",
                 "body": "testx",
                 "nonce_str": "1212312312",
@@ -72,7 +72,18 @@ mod tests {
                 "openid": "oUpe_5T08-CTL7sXr_XwchZmlQu4",
                 "trade_type": "JSAPI"
             });
-           
+
+            let params = json!({
+                "nonce_str": "1212312312",
+                "out_trade_no": "A_4425320788525061",
+                "out_refund_no": "saa1234567891",
+                "total_fee": 1,
+                "refund_fee": 1,
+                //"notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2.php",
+            });
+            let r = Order::new(conf);
+            let v = r.refund(params).await;
+            println!("{:?}",v);
             //let r = Order::create(params).await.unwrap();
             //println!("{:?}",r);
         });

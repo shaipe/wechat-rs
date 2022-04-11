@@ -6,7 +6,7 @@ use crate::constant::DEFAULT_USER_AGENT;
 use awc::{Client as HttpClient, Connector};
 use actix_web::{http::header, http::Method, web::Bytes};
 
-use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
+use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode,SslFiletype};
 use serde::Serialize;
 
 use crate::WechatResult as Result;
@@ -89,6 +89,32 @@ impl Client {
             // .header(header::REFERER, "http://localhost")
             // .initial_window_size(100)
             // .initial_connection_window_size(100)
+            .finish();
+
+        Client {
+            client: client,
+            charset: "utf-8".to_owned(),
+        }
+    }
+    // 证书
+    pub fn new_ssl(private_key: &str,certificate: &str) -> Self {
+        // disable ssl verification
+        let mut builder = SslConnector::builder(SslMethod::tls()).unwrap();
+        builder.set_verify(SslVerifyMode::NONE);
+        let _ = builder
+            .set_alpn_protos(b"\x02h2\x08http/1.1")
+            .map_err(|e| log!("Can not set alpn protocol: {:?}", e));
+        
+        let _ = builder.set_private_key_file(private_key,SslFiletype::PEM).map_err(|e| log!("apiclient_key.pem not find: {:?}", e));
+        let _ = builder.set_certificate_chain_file(certificate).map_err(|e| log!("apiclient_cert.pem not find: {:?}", e));
+        
+        let connector = Connector::new()
+            .timeout(Duration::from_secs(5))
+            .openssl(builder.build());
+
+        let client = HttpClient::builder()
+            .connector(connector)
+            .add_default_header((header::USER_AGENT, DEFAULT_USER_AGENT))
             .finish();
 
         Client {
