@@ -5,7 +5,7 @@
 
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{AesCrypt, Client, WechatResult};
+use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
 pub struct Auth;
 
@@ -32,7 +32,13 @@ impl Auth {
         let api = Client::new();
         let res = api.get(&url).await?;
         match wechat_sdk::json_decode(&res) {
-            Ok(data) => Ok(data),
+            Ok(data) => {
+                if data.get("errcode").is_some() {
+                    Err(error!("auth error: {:?}", data["errmsg"].as_str().unwrap_or("")))
+                } else {
+                    Ok(data)
+                }
+            }
             Err(err) => {
                 return Err(err);
             }
@@ -46,33 +52,36 @@ impl Auth {
         Ok("".to_string())
     }
 
-
     /// 解析小程的手机号数据
     pub fn parse_phone_number(
         encrypt_text: &str,
         session_key: &str,
         iv: &str,
     ) -> WechatResult<serde_json::Value> {
+        // 需要先进行Base64解密
+        let b64decoded = base64::decode(encrypt_text).unwrap();
         let keys = base64::decode(session_key).unwrap();
         let ivs = base64::decode(iv).unwrap();
-        let aes=AesCrypt::new(keys,ivs);
-        let content=aes.decrypt(encrypt_text.to_owned());
-        let v =content.as_bytes(); 
 
-            // log!("v {:?} str {:?}", &v, std::str::from_utf8(&v));
-        // 需要后前移7位,不解出来的对象不是正确的json
-        // 对称解密使用的算法为 AES-128-CBC，数据采用PKCS#7填充
-        let xv = &v[0..v.len() - 14];
-        // log!("v {:?}", xv);
-        match std::str::from_utf8(xv) {
-            Ok(s) => {
-                let val: serde_json::Value = match serde_json::from_str(s) {
-                    Ok(v) => v,
-                    Err(err) => return Err(error!("parse json error: {:?}", err)),
-                };
-                Ok(val)
+        match aes128_cbc_decrypt(&b64decoded, &keys, &ivs) {
+            Ok(v) => {
+                // log!("v {:?} str {:?}", &v, std::str::from_utf8(&v));
+                // 需要后前移7位,不解出来的对象不是正确的json
+                // 对称解密使用的算法为 AES-128-CBC，数据采用PKCS#7填充
+                let xv = &v[0..v.len() - 14];
+                // log!("v {:?}", xv);
+                match std::str::from_utf8(xv) {
+                    Ok(s) => {
+                        let val: serde_json::Value = match serde_json::from_str(s) {
+                            Ok(v) => v,
+                            Err(err) => return Err(error!("parse json error: {:?}", err)),
+                        };
+                        Ok(val)
+                    }
+                    Err(e) => return Err(error!("parse string failed: {:?}", e)),
+                }
             }
-            Err(e) => return Err(error!("parse string failed: {:?}", e)),
+            Err(err) => return Err(error!("failed to decrypt {:?}", err)),
         }
     }
 }

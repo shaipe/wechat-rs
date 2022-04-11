@@ -7,13 +7,13 @@ use std::collections::HashMap;
 
 const API_DOMAIN: &'static str ="https://api.weixin.qq.com";
 
-pub struct MinTester {
+pub struct Tester {
     authorizer_access_token: String,
 }
-impl MinTester {
+impl Tester {
 
     pub fn new( _authorizer_access_token: &str) -> Self {
-        MinTester {
+        Tester {
             authorizer_access_token: _authorizer_access_token.to_string(),
         }
     }

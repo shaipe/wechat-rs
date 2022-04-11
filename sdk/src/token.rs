@@ -126,9 +126,9 @@ mod tests {
     use super::*;
     #[test]
     fn test() {
-        let mut conf = AccessToken::default();
+        let mut _conf = AccessToken::default();
         // conf.username = "dlxumin1".to_owned();
-        // conf.password = "dlxumin1123".to_owned();
+        // conf.password = "dlxumin11233".to_owned();
         // conf.sign = "宏推".to_owned();
         // let _ = conf.save();
 

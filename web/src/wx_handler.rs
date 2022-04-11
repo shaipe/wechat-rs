@@ -1,6 +1,7 @@
 //! copyright
 //!
 
+use super::cache::RedisCache;
 use super::result_response::{get_exception_result, get_success_result};
 use super::utils;
 use actix_web::http;
@@ -13,6 +14,7 @@ use wechat::{
     open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
 };
 use wechat_redis::{get_redis_conf, RedisConfig};
+use super::access_token::get_comp_access_tokens;
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
 pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse, Error> {
@@ -28,12 +30,12 @@ pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<Ht
 
     let tripart_config: TripartiteConfig = get_tripartite_config();
     let redis_config: RedisConfig = get_redis_conf();
-    
-    println!("encoding_aes_key={:?}", tripart_config.encoding_aes_key);
 
-    println!("redis_config={:?}", redis_config);
-    if let Err(t) = Ticket::new(tripart_config, redis_config).parse_ticket(&post_str, dic) {
-        log!(" ticket parse_ticket: {:?}", t);
+    match Ticket::new(tripart_config.clone()).parse_ticket(&post_str, dic) {
+        Ok(s) => RedisCache::new(redis_config.clone()).set_ticket_cache(&tripart_config.app_id, s),
+        Err(t) => {
+            log!(" ticket parse_ticket: {:?}", t);
+        }
     };
 
     // 告诉服务器接收成功
@@ -71,13 +73,13 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
 
     // 基础配置
     let tripart_config: TripartiteConfig = get_tripartite_config();
-    let redis_config: RedisConfig = get_redis_conf();
-    let comp = Component::new(tripart_config.clone(), redis_config.clone());
 
+    let comp = Component::new(tripart_config.clone());
+    let comp_token = get_comp_access_tokens().await;
     // 获取预授权码
-    let result_code = match comp.create_preauthcode().await {
+    let result_code = match comp.create_preauthcode(&comp_token.0).await {
         Ok(code) => code,
-        Err(_) => match comp.create_preauthcode().await {
+        Err(_) => match comp.create_preauthcode(&comp_token.0).await {
             Ok(code) => code,
             Err(e) => {
                 return Ok(HttpResponse::build(StatusCode::OK)
@@ -176,10 +178,10 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
     }
     if current_expires_in > expires_in {
         let tripart_config: TripartiteConfig = get_tripartite_config();
-        let redis_config: RedisConfig = get_redis_conf();
-        let comp = Component::new(tripart_config.clone(), redis_config.clone());
+        let comp_token = get_comp_access_tokens().await;
+        let comp = Component::new(tripart_config.clone());
         let auth_token: String = match comp
-            .fetch_authorizer_token(&conf.appid, &conf.authorizer_refresh_token)
+            .fetch_authorizer_token(&conf.appid, &conf.authorizer_refresh_token, &comp_token.0)
             .await
         {
             Ok(v) => v.0.clone(),
@@ -230,11 +232,8 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     if md5_value != token_md5 {
         return get_exception_result("校验失败", 500);
     }
-    let tripart_config: TripartiteConfig = get_tripartite_config();
-    let redis_config: RedisConfig = get_redis_conf();
-    let comp = Component::new(tripart_config.clone(), redis_config.clone());
 
-    let token = comp.get_access_tokens().await;
+    let token = get_comp_access_tokens().await;
 
     if token.1 == 0 {
         get_exception_result("获取token为空，请检查ticket是否正确推送", 500)
@@ -273,7 +272,7 @@ pub async fn fetch_auth_url(req: HttpRequest, payload: web::Payload) -> Result<H
 
     println!(" === redirect_uri === {:?}", redirect_uri);
 
-    let authorize = WechatAuthorize::new(&app_id, &config.app_id, "");
+    let authorize = WechatAuthorize::new(&app_id, &config.app_id);
     let mut scopes = Vec::new();
     scopes.push("snsapi_userinfo");
     let url = authorize.get_authorize_url(&redirect_uri, &state, &scopes, "code");
@@ -329,15 +328,19 @@ pub async fn callback(
     let app_id = &path.0;
     // 全网发布的测试公众号和小程序
     if app_id == "wx570bc396a51b8ff8" || app_id == "wxd101a85aa106f53e" {
-        let post_str2=req.query_string();
+        let post_str2 = req.query_string();
         let dic = utils::parse_query(post_str2);
-      
-        
+
         let post_str = match std::str::from_utf8(&body) {
             Ok(s) => s,
             Err(_e) => "",
         };
-        log!("--- callback --- \n{} \n{:?}\n {:?}", app_id,post_str2,post_str);
+        log!(
+            "--- callback --- \n{} \n{:?}\n {:?}",
+            app_id,
+            post_str2,
+            post_str
+        );
         watch_time!(
             "global",
             wx_msg::global_publish(dic, post_str.to_owned()).await
@@ -351,13 +354,13 @@ pub async fn callback(
 /// 获取二维码
 #[get("/wx/wxacode")]
 async fn get_wxa_code(req: HttpRequest) -> Result<HttpResponse> {
-    let path="pages/mer/tabbar/home";
-    use wechat::weapp::{MinCode}; 
+    let path = "pages/mer/tabbar/home";
+    use wechat::weapp::Code;
     let query = req.query_string();
     let dic = utils::parse_query(query);
     let access_token = utils::get_hash_value(&dic, "access_token");
-    let bll=MinCode::new(&access_token);
-    let data=bll.get_wxa_code(path,430,false,"",false).await.unwrap();
+    let bll = Code::new(&access_token);
+    let data = bll.get_wxa_code(path, 430, false, "", false).await.unwrap();
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("image/jpeg; charset=utf-8")
         .body(data))

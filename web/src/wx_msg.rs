@@ -12,9 +12,8 @@ use wechat::{
     mp::message::{KFService, Message, ReplyRender, TextReply},
     open::{get_tripartite_config, Component, TripartiteConfig},
 };
-use wechat_redis::{get_redis_conf, RedisConfig};
+use super::access_token::get_comp_access_tokens;
 use wechat_sdk::{current_timestamp, WeChatCrypto};
-
 /// 消息回复处理
 pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
     match msg {
@@ -100,7 +99,7 @@ pub async fn proxy_reply(
 ) -> Result<HttpResponse> {
     // use crate::cluster::get_domain;
     // use wechat_sdk::Client;
-    let mut domain = "ds".to_owned(); // get_domain(app_id.to_owned());
+    let mut domain = app_id.to_owned(); // get_domain(app_id.to_owned());
 
     if domain.is_empty() {
         domain = "http://366kmpf.com".to_owned();
@@ -135,7 +134,7 @@ pub async fn global_publish(
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
-
+    let comp_token = get_comp_access_tokens().await;
     // 对接收的消息进行解码判断
     if let Ok(decode_msg) = c.decrypt_message(&post_str, &dic) {
         // println!("=== decode message === {}", decode_msg);
@@ -145,8 +144,7 @@ pub async fn global_publish(
         // 全网发布时的测试用户
         if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
             let tripart_config: TripartiteConfig = get_tripartite_config();
-            let redis_config: RedisConfig = get_redis_conf();
-            let comp = Component::new(tripart_config.clone(), redis_config.clone());
+            let comp = Component::new(tripart_config.clone());
 
             match msg {
                 Message::TextMessage(ref m) => {
@@ -155,7 +153,7 @@ pub async fn global_publish(
                     if m.content.starts_with("QUERY_AUTH_CODE:") {
                         let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
                         // 根据授权码获取公众号对应的accesstoken
-                        match comp.query_auth(&auth_code).await {
+                        match comp.query_auth(&auth_code,&comp_token.0).await {
                             Ok(v) => {
                                 // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
                                 if v["authorization_info"].is_object() {

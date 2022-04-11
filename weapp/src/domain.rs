@@ -5,13 +5,13 @@ use wechat_sdk::{Client, WechatResult};
 
 const API_DOMAIN: &'static str ="https://api.weixin.qq.com";
 
-pub struct MinDomain {
+pub struct Domain {
     authorizer_access_token: String,
 }
-impl MinDomain {
+impl Domain {
 
     pub fn new( _authorizer_access_token: &str) -> Self {
-        MinDomain {
+        Domain {
             authorizer_access_token: _authorizer_access_token.to_string(),
         }
     }
