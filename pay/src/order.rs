@@ -127,7 +127,7 @@ impl Order {
         
         let body = format!("<xml>{}</xml>",serde_xml_rs::to_string(&params).unwrap_or_default());
         
-        let request = Client::new_ssl("cert/apiclient_key.pem","cert/apiclient_cert.pem");
+        let request = Client::new_ssl(conf.private_key,cond.certificate);
    
         let r = request.post(&api_url,&body).await.unwrap_or_default();
         
