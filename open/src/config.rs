@@ -3,6 +3,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+use wechat_sdk::WechatResult;
+use yaml_rust::Yaml;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -38,8 +40,42 @@ pub struct Config {
 }
 
 impl Config {
+    /// 加载yml配置文件
+    pub fn new(conf_path: &str) -> WechatResult<Config> {
+        use yaml_rust::yaml;
+        // open file
+        let mut f = match File::open(conf_path) {
+            Ok(f) => f,
+            Err(e) => {
+                return Err(error! {
+                    code: 4004,
+                    msg: format!("{}", e)
+                });
+            }
+        };
+        let mut s = String::new();
+        match f.read_to_string(&mut s) {
+            Ok(s) => s,
+            Err(e) => {
+                return Err(error! {
+                    code: 4004,
+                    msg: format!("Error Reading file: {}", e)
+                });
+            }
+        };
+        // f.read_to_string(&mut s).unwrap(); // read file content to s
+        // load string to yaml loader
+        let docs = yaml::YamlLoader::load_from_str(&s).unwrap();
+        // get first yaml hash doc
+        let yaml_doc = &docs[0];
+        // get server value
+        let node = yaml_doc["tripartite"].clone();
+
+        Ok(Config::load_yaml_node(&node))
+    }
+
     /// 创建一个新的配置对象
-    pub fn new(yaml_doc: yaml_rust::yaml::Yaml) -> Self {
+    pub fn load_yaml_node(yaml_doc: &Yaml) -> Self {
         Config {
             id: 0,
             name: yaml_doc["name"].as_str().unwrap_or("").to_owned(),
@@ -89,8 +125,7 @@ pub fn get_tripartite_config() -> Config {
         Err(_) => Config::default(),
     };
     if cache.app_id.len() == 0 {
-        let cnf = read_tripartite_config();
-
+        let cnf = Config::new("conf/wechat.yml").unwrap_or_default();
         set_tripartite_config(cnf.clone());
         cache = cnf;
     }
@@ -112,29 +147,4 @@ where
         cache = cnf;
     }
     cache
-}
-
-/// 获取配置信息
-pub fn read_tripartite_config() -> Config {
-    // 加载配置文件
-    let file_path = "config/tripartite.yml";
-
-    // 打开文件
-    let mut file = match File::open(file_path) {
-        Ok(f) => f,
-        Err(e) => {
-            panic!("no such file {} exception: {}", file_path, e)
-        }
-    };
-    // 读取文件到字符串变量
-    let mut str_val = String::new();
-    match file.read_to_string(&mut str_val) {
-        Ok(s) => s,
-        Err(e) => {
-            panic!("Error Reading file:{}", e);
-        }
-    };
-    let doc = yaml_rust::yaml::YamlLoader::load_from_str(&str_val).unwrap();
-    let yaml_doc = doc[0].clone();
-    Config::new(yaml_doc)
 }

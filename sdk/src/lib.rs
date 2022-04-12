@@ -69,12 +69,12 @@ pub fn write_to_file(conf_path: &str, content: String) -> WechatResult<bool> {
 }
 
 /// 获取当前时间戮
-pub fn current_timestamp() -> i64 {
+pub fn current_timestamp() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs() as i64
+        .as_secs() as u64
 }
 
 ///

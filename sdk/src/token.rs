@@ -31,7 +31,7 @@ pub struct Token {
     // 访问token
     pub access_token: String,
     // access_token获取时间
-    pub create_time: i64,
+    pub create_time: u64,
     // 有效期
     pub expires: i64,
 }

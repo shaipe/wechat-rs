@@ -11,25 +11,23 @@ pub mod open {
     pub use wechat_open::*;
 }
 
-#[cfg(feature = "open")]
+/// 微信小程序
 pub mod weapp {
+    #[cfg(feature = "weapp")]
+    pub use wechat_weapp::*;
+    #[cfg(feature = "open")]
     pub use wechat_open::weapp::*;
 }
 
 /// 微信公众号
-#[cfg(feature = "mp")]
+// #[cfg(feature = "mp")]
 pub mod mp {
-    #[cfg(feature = "mp")]
+    // #[cfg(feature = "mp")]
     pub use wechat_mp::*;
 }
 
-/// 微信小程序
-#[cfg(feature = "weapp")]
-pub mod weapp {
-    pub use wechat_weapp::*;
-}
-
 /// 微信支付
+#[cfg(feature = "pay")]
 pub mod pay {
     pub use wechat_pay::*;
 }
@@ -52,9 +50,11 @@ pub use wechat_sdk::*;
 mod tests {
     // use super::*;
     use serde_json::*;
+    #[cfg(feature = "pay")]
     use wechat_pay::Order;
     //
     #[test]
+    #[cfg(feature = "pay")]
     fn it_pay_ok_works() {
         println!("{:?}", "=======================");
         //初始化 配置

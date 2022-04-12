@@ -17,9 +17,7 @@ mod ticket;
 pub use ticket::Ticket;
 
 mod config;
-pub use config::{
-    get_tripartite_config, get_tripartite_config_mut, set_tripartite_config, Config as TripartiteConfig,
-};
+pub use config::{get_tripartite_config, get_tripartite_config_mut, set_tripartite_config, Config};
 
 mod comp;
 pub use comp::Component;
@@ -31,7 +29,7 @@ pub mod weapp;
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_tripartite_config, Component, TripartiteConfig};
+    use crate::{get_tripartite_config, Component, Config as TripartiteConfig};
 
     #[test]
     fn test_redis() {

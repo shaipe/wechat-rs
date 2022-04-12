@@ -35,7 +35,7 @@ impl WeChatCrypto {
     }
 
     /// 获取签名
-    fn get_signature(&self, timestamp: i64, nonce: &str, encrypted: &str) -> String {
+    fn get_signature(&self, timestamp: u64, nonce: &str, encrypted: &str) -> String {
         let mut data = vec![
             self.token.clone(),
             timestamp.to_string(),
@@ -64,7 +64,7 @@ impl WeChatCrypto {
         //随机数
         let nonce = get_hash_value(query_params, "nonce");
         //时间缀
-        let timestamp = match get_hash_value(query_params, "timestamp").parse::<i64>() {
+        let timestamp = match get_hash_value(query_params, "timestamp").parse::<u64>() {
             Ok(v) => v,
             Err(_e) => 0,
         };
@@ -112,7 +112,7 @@ impl WeChatCrypto {
         Ok(content_string)
     }
     /// 对消息进行加密
-    pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> Result<String> {
+    pub fn encrypt_message(&self, msg: &str, timestamp: u64, nonce: &str) -> Result<String> {
         let rnd_str = get_random_string(16);
         let mut wtr = rnd_str.into_bytes();
 

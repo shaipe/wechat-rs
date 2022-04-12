@@ -22,8 +22,8 @@ pub use qrcode::QRCode;
 mod config;
 pub use config::WeappConfig;
 
-mod domain;
-pub use domain::Domain;
+// mod domain;
+// pub use domain::Domain;
 
 
 // 接口域名

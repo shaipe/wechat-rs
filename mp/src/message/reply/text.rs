@@ -8,7 +8,7 @@ use super::ReplyRender;
 pub struct TextReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: i64,
+    pub time: u64,
     pub content: String,
 }
 

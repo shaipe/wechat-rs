@@ -1,6 +1,7 @@
 //! copyright
 //!
 
+use super::access_token::get_comp_access_tokens;
 use super::cache::RedisCache;
 use super::result_response::{get_exception_result, get_success_result};
 use super::utils;
@@ -11,10 +12,9 @@ use md5;
 use std::collections::HashMap;
 use wechat::{
     mp::WechatAuthorize,
-    open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
+    open::{get_tripartite_config, Component, Config as TripartiteConfig, Ticket},
 };
 use wechat_redis::{get_redis_conf, RedisConfig};
-use super::access_token::get_comp_access_tokens;
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
 pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse, Error> {

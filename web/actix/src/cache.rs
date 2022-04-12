@@ -43,7 +43,7 @@ impl RedisCache {
         }
     }
     /// 设置单个
-    pub fn set_comp_token(&self, key: &str, cnf: (String, i64)) {
+    pub fn set_comp_token(&self, key: &str, cnf: (String, u64)) {
         let url = format!("{}", &self.redis_con);
         let cache_key = format!("{0}_{1}", COMP_CATCHE_KEY, key);
         match RedisStorage::from_url(url) {
@@ -57,7 +57,7 @@ impl RedisCache {
     }
 
     /// 获取
-    pub fn get_comp_token(&self, key: &str) -> WechatResult<(String, i64)> {
+    pub fn get_comp_token(&self, key: &str) -> WechatResult<(String, u64)> {
         let cache_key = format!("{0}_{1}", COMP_CATCHE_KEY, key);
         match RedisStorage::from_url(format!("{}", &self.redis_con)) {
             Ok(session) => {
@@ -65,7 +65,7 @@ impl RedisCache {
                 if let Some(v) = session.get(cache_key, "get".to_owned(), Some(d)) {
                     let arr: Vec<_> = v.split('|').collect();
                     if arr.len() == 2 {
-                        return Ok((arr[0].to_string(), arr[1].parse::<i64>().unwrap()));
+                        return Ok((arr[0].to_string(), arr[1].parse::<u64>().unwrap()));
                     }
                     Err(error! {code:600,msg:"数据不准确"})
                 } else {

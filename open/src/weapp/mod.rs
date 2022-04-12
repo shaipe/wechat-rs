@@ -13,3 +13,5 @@ pub use code::*;
 mod tester;
 pub use tester::*;
 
+mod domain;
+pub use domain::Domain;

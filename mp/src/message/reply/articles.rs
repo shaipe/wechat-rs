@@ -16,7 +16,7 @@ pub struct Article {
 pub struct ArticlesReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: i64,
+    pub time: u64,
     pub articles: Vec<Article>,
 }
 
