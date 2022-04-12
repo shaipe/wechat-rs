@@ -34,3 +34,4 @@ openssl = "0.10.38"
 default = ["actix"]
 actix = []
 req_async = []
+open = []

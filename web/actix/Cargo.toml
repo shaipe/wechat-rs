@@ -26,10 +26,13 @@ serde_derive = "1.0.136"
 serde_json = "1.0.79"
 url = "2.2.2"
 
-wechat = {path = "../../", version = "0.2.0", features = ["mp", "open", "weapp"]}
+wechat = {path = "../../", version = "0.2.0", features = ["mp", "open"]}
 wechat_redis = {path = "../../redis", version = "0.2.0"}
 wechat_sdk = {path = "../../sdk", version = "0.2.0"}
 
-[[bin]]
-name = "act_wechat"
-path = "src/main.rs"
+# [[bin]]
+# name = "wx"
+# path = "src/main.rs"
+# test = false
+# bench = false
+# required-features = ["frobnicate"]

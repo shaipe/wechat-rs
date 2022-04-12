@@ -2,8 +2,7 @@
 //! 微信开放平台的第三方平代小程序处理的业务
 //!
 
-
-use byteorder::{NativeEndian, ReadBytesExt};
+// use byteorder::{NativeEndian, ReadBytesExt};
 use std::io::Cursor;
 use wechat_sdk::{aes128_cbc_decrypt, aes256_cbc_decrypt, Client, WechatResult};
 
@@ -18,7 +17,7 @@ impl WxApp {
     /// DOC: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
     /// @param1: 小程序appid
     /// @param2: wx.login()获取的code
-    /// @param3: 
+    /// @param3:
     pub async fn get_session_key(
         &self,
         appid: &str,
@@ -35,14 +34,22 @@ impl WxApp {
     );
         let api = Client::new();
         let res = api.get(&url).await?;
-        match api.json_decode(&res) {
-            Ok(data) => Ok(data),
+        match wechat_sdk::json_decode(&res) {
+            Ok(data) => {
+                if data.get("errcode").is_some() {
+                    Err(error!(
+                        "auth error: {:?}",
+                        data["errmsg"].as_str().unwrap_or("")
+                    ))
+                } else {
+                    Ok(data)
+                }
+            }
             Err(err) => {
                 return Err(err);
             }
         }
     }
-
 
     /// 获取手机号
     /// @param1: 上一步获取的sessionKey

@@ -1,9 +1,9 @@
 //! copyright © ecdata.cn 2021 - present
 //! 小程序代码管理
 
-use wechat_sdk::{Client, WechatResult,get_url_encode};
+use wechat_sdk::{get_url_encode, Client, WechatResult};
 
-use crate::category::CategoryItem;
+use super::category::CategoryItem;
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
@@ -211,11 +211,10 @@ impl Code {
         "auto_color": auto_color,
         "is_hyaline": is_hyaline,
         });
-        if auto_color{
-            data["line_color"]=serde_json::Value::String(line_color.to_owned());
+        if auto_color {
+            data["line_color"] = serde_json::Value::String(line_color.to_owned());
         }
         let api = Client::new();
         api.request_betyes("get", &uri, &data).await
-
     }
 }

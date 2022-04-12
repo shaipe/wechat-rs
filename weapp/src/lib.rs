@@ -25,13 +25,6 @@ pub use config::WeappConfig;
 mod domain;
 pub use domain::Domain;
 
-mod category;
-pub use category::{Category, CategoryItem};
 
-mod code;
-pub use code::Code;
-
-mod tester;
-pub use tester::Tester;
 // 接口域名
 pub(crate) const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
