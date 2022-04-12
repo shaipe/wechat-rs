@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# wechat_sdk = {path = "sdk", version = "0.2.0", default-features="false"}
+wechat_sdk = {path = "sdk", version = "0.2.0"}
 # 公众号对接
 wechat_mp = {path="mp", version = "0.2.0", optional = true}
 # 开放平台
@@ -42,7 +42,8 @@ full = ["wechat_mp", "wechat_open", "wechat_pay", "wechat_store", "wechat_weapp"
 
 [workspace]
 members = [
-  "web", # web应用
+  "web/actix", # 基于actix-web应用
+  # "web/axum",  # 基于Axum框架的demo
   "weapp", # 小程序
   "work", # 企业微信
   "open", # 开放平台
