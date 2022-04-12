@@ -58,6 +58,8 @@ mod tests {
             "app_id": "",
             "mch_id": "",
             "secret_key": "",
+            "private_key": "cert/apiclient_key.pem",
+            "certificate": "cert/apiclient_cert.pem"
         })).unwrap();
 
         actix_rt::System::new().block_on(async {
