@@ -49,4 +49,4 @@ default = ["actix"]
 # 基于actix实现的Client
 actix = ["openssl","encoding_rs","mime","actix-web","actix-rt","awc"]
 # 依赖 tokio, indicatif
-req_async = ["bytes", "tokio", "reqwest", "indicatif"]
+axum = ["bytes", "tokio", "reqwest", "indicatif"]
