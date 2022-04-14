@@ -10,8 +10,15 @@ pub use category::*;
 mod code;
 pub use code::*;
 
+mod privacy;
+pub use privacy::Privacy;
+
 mod tester;
 pub use tester::*;
 
-mod domain;
-pub use domain::Domain;
+mod basic;
+pub use basic::Basic;
+
+
+mod template;
+pub use template::Template;

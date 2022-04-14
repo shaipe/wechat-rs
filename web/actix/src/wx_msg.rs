@@ -154,10 +154,10 @@ pub async fn global_publish(
                         // 根据授权码获取公众号对应的accesstoken
                         match comp.query_auth(&auth_code, &comp_token.0).await {
                             Ok(v) => {
-                                // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                                // v 是一个Json对象,从json对象中获取授权 auth_access_token
                                 if v["authorization_info"].is_object() {
                                     let auth_access_token = match v["authorization_info"]
-                                        ["authorizer_access_token"]
+                                        ["auth_access_token"]
                                         .as_str()
                                     {
                                         Some(token) => token.to_string(),

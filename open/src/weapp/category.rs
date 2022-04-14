@@ -19,12 +19,12 @@ pub struct CategoryItem {
     pub desc: String,
 }
 pub struct Category {
-    authorizer_access_token: String,
+    auth_access_token: String,
 }
 impl Category {
-    pub fn new(_authorizer_access_token: &str) -> Self {
+    pub fn new(_auth_access_token: &str) -> Self {
         Category {
-            authorizer_access_token: _authorizer_access_token.to_string(),
+            auth_access_token: _auth_access_token.to_string(),
         }
     }
 
@@ -35,7 +35,7 @@ impl Category {
             API_DOMAIN,
             format!(
                 "/cgi-bin/wxopen/getcategory?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let api = Client::new();

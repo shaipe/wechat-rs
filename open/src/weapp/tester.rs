@@ -8,13 +8,13 @@ use std::collections::HashMap;
 const API_DOMAIN: &'static str ="https://api.weixin.qq.com";
 
 pub struct Tester {
-    authorizer_access_token: String,
+    auth_access_token: String,
 }
 impl Tester {
 
-    pub fn new( _authorizer_access_token: &str) -> Self {
+    pub fn new( _auth_access_token: &str) -> Self {
         Tester {
-            authorizer_access_token: _authorizer_access_token.to_string(),
+            auth_access_token: _auth_access_token.to_string(),
         }
     }
     /// 绑定体验者
@@ -24,7 +24,7 @@ impl Tester {
             API_DOMAIN,
             format!(
                 "/wxa/bind_tester?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
 
@@ -41,7 +41,7 @@ impl Tester {
             API_DOMAIN,
             format!(
                 "/wxa/unbind_tester?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
 

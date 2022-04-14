@@ -142,7 +142,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
     let dic = utils::parse_query(&post_str);
     let app_id = utils::get_hash_value(&dic, "appid");
     // let domain = utils::get_hash_value(&dic, "domain");
-    let authorizer_access_token = utils::get_hash_value(&dic, "authorizer_access_token");
+    let auth_access_token = utils::get_hash_value(&dic, "auth_access_token");
     let authorizer_refresh_token = utils::get_hash_value(&dic, "authorizer_refresh_token");
     let is_common = match utils::get_hash_value(&dic, "is_common").parse::<bool>() {
         Ok(v) => v,
@@ -153,7 +153,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
         use crate::official::Official;
         let mut conf = Official::new("");
         conf.appid = app_id;
-        conf.authorizer_access_token = authorizer_access_token;
+        conf.auth_access_token = auth_access_token;
         conf.authorizer_refresh_token = authorizer_refresh_token;
         conf.expires_in = 7000 + utils::current_timestamp();
         conf.save("");
@@ -189,7 +189,7 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
         };
         if !auth_token.is_empty() {
             conf.expires_in = utils::current_timestamp() + 7000;
-            conf.authorizer_access_token = auth_token;
+            conf.auth_access_token = auth_token;
             conf.save("");
         } else {
             return get_success_result(&empty_dic);

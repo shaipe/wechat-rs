@@ -78,29 +78,38 @@ impl Config {
     pub fn load_yaml_node(yaml_doc: &Yaml) -> Self {
         Config {
             id: 0,
-            name: yaml_doc["name"].as_str().unwrap_or("").to_owned(),
-            domain: yaml_doc["domain"].as_str().unwrap_or("").to_owned(),
-            app_id: yaml_doc["app_id"].as_str().unwrap_or("").to_owned(),
-            secret: yaml_doc["secret"].as_str().unwrap_or("").to_owned(),
-            token: yaml_doc["token"].as_str().unwrap_or("").to_owned(),
+            name: yaml_doc["name"].as_str().unwrap_or_default().to_owned(),
+            domain: yaml_doc["domain"].as_str().unwrap_or_default().to_owned(),
+            app_id: yaml_doc["app_id"].as_str().unwrap_or_default().to_owned(),
+            secret: yaml_doc["secret"].as_str().unwrap_or_default().to_owned(),
+            token: yaml_doc["token"].as_str().unwrap_or_default().to_owned(),
             privacy_json_path: yaml_doc["privacy_json_path"]
                 .as_str()
-                .unwrap_or("")
+                .unwrap_or("privacy.json")
                 .to_owned(),
-            ext_json_path: yaml_doc["ext_json_path"].as_str().unwrap_or("").to_owned(),
+            ext_json_path: yaml_doc["ext_json_path"]
+                .as_str()
+                .unwrap_or("conf/ext.json")
+                .to_owned(),
             encoding_aes_key: yaml_doc["encoding_aes_key"]
                 .as_str()
-                .unwrap_or("")
+                .unwrap_or_default()
                 .to_owned(),
             web_view_domain: yaml_doc["web_view_domain"]
                 .as_str()
-                .unwrap_or("")
+                .unwrap_or_default()
                 .to_owned(),
-            request_domain: yaml_doc["request_domain"].as_str().unwrap_or("").to_owned(),
-            api_domain: yaml_doc["api_domain"].as_str().unwrap_or("").to_owned(),
+            request_domain: yaml_doc["request_domain"]
+                .as_str()
+                .unwrap_or_default()
+                .to_owned(),
+            api_domain: yaml_doc["api_domain"]
+                .as_str()
+                .unwrap_or_default()
+                .to_owned(),
             api_gray_domain: yaml_doc["api_gray_domain"]
                 .as_str()
-                .unwrap_or("")
+                .unwrap_or_default()
                 .to_owned(),
         }
     }

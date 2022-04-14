@@ -6,7 +6,7 @@
 // use std::io::Cursor;
 use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
-const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
+use crate::API_DOMAIN;
 
 pub struct WxApp;
 
