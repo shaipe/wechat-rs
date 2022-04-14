@@ -12,7 +12,7 @@ use md5;
 use std::collections::HashMap;
 use wechat::{
     mp::WechatAuthorize,
-    open::{get_tripartite_config, Component, Config as TripartiteConfig, Ticket},
+    open::{get_tripartite_config, AuthToken, Config as TripartiteConfig, Ticket},
 };
 use wechat_redis::{get_redis_conf, RedisConfig};
 /// 第三方ticket推送接收处理
@@ -74,7 +74,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     // 基础配置
     let tripart_config: TripartiteConfig = get_tripartite_config();
 
-    let comp = Component::new(tripart_config.clone());
+    let comp = AuthToken::new(tripart_config.clone());
     let comp_token = get_comp_access_tokens().await;
     // 获取预授权码
     let result_code = match comp.create_preauthcode(&comp_token.0).await {
@@ -179,7 +179,7 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
     if current_expires_in > expires_in {
         let tripart_config: TripartiteConfig = get_tripartite_config();
         let comp_token = get_comp_access_tokens().await;
-        let comp = Component::new(tripart_config.clone());
+        let comp = AuthToken::new(tripart_config.clone());
         let auth_token: String = match comp
             .fetch_authorizer_token(&conf.appid, &conf.authorizer_refresh_token, &comp_token.0)
             .await

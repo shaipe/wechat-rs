@@ -162,8 +162,7 @@ impl AuthToken {
             self.tripart_conf.app_id.clone(),
         );
 
-        let api = Client::new();
-        let res = api.post(&url, &hash).await?;
+        let res = Client::new().post(&url, &hash).await?;
         log!("==== {}", res);
         let data = crate::parse_json(&res).await?;
         Ok(data)

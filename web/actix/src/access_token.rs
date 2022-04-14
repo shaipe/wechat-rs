@@ -1,6 +1,6 @@
 use super::cache::RedisCache;
 use std::time::{SystemTime, UNIX_EPOCH};
-use wechat::open::{get_tripartite_config, Component, Config as TripartiteConfig};
+use wechat::open::{get_tripartite_config, AuthToken, Config as TripartiteConfig};
 use wechat_redis::{get_redis_conf, RedisConfig};
 
 /// 获取第三方access_token
@@ -19,7 +19,7 @@ pub async fn get_comp_access_tokens() -> (String, u64) {
     let expires_at: u64 = token.1;
     //比较过期时间
     if expires_at <= timestamp || token.0.len() == 0 {
-        let comp = Component::new(tripart_config.clone());
+        let comp = AuthToken::new(tripart_config.clone());
         let ticket = redis_cache.get_ticket_cache(&tripart_config.app_id);
         let result = comp.fetch_access_token(ticket).await;
 
