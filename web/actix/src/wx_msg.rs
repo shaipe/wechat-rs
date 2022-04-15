@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use url::Url;
 use wechat::{
     mp::message::{KFService, Message, ReplyRender, TextReply},
-    open::{get_tripartite_config, Component, Config as TripartiteConfig},
+    open::{get_tripartite_config, AuthToken, Config as TripartiteConfig},
 };
 use wechat_sdk::{current_timestamp, WeChatCrypto};
 /// 消息回复处理
@@ -143,7 +143,7 @@ pub async fn global_publish(
         // 全网发布时的测试用户
         if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
             let tripart_config: TripartiteConfig = get_tripartite_config();
-            let comp = Component::new(tripart_config.clone());
+            let comp = AuthToken::new(tripart_config.clone());
 
             match msg {
                 Message::TextMessage(ref m) => {
