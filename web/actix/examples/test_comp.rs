@@ -1,5 +1,5 @@
-use wechat::open::{get_tripartite_config, Component, OpenAccount, TripartiteConfig};
-use wechat::weapp::{Category, Code, Domain, Tester};
+use wechat::open::{get_tripartite_config, AuthToken as Component, OpenAccount,  Config as TripartiteConfig};
+use wechat::weapp::{Category, Code, Basic as Domain, Tester,Privacy,Template};
 
 use std::fs::File;
 use std::io;
@@ -16,11 +16,12 @@ const _AUDIT_ID: i64 = 460232974;
 
 const _PATH: &str = "pages/mer/tabbar/home";
 const OFFICAL_ACCESS_TOKEN_CATCHE_KEY: &str = "OFFICAL_ACCESS_TOKEN_CATCHE_KEY";
+
 fn main() -> io::Result<()> {
-    let access_token = test_offical_app();
+    //let access_token = test_offical_app();
 
     // 小程序授权相关
-    //let access_token = test_min_app();
+    let access_token = test_min_app();
 
     // 设置域名
     //let _=test_set_domain(&access_token);
@@ -54,7 +55,7 @@ fn main() -> io::Result<()> {
 
     //let _ = test_release(&access_token);
     // 创建开放平台帐号
-    let _=test_create_open(&access_token);
+    //let _=test_create_open(&access_token);
 
     // 绑定开放平台帐号
     //let _ = test_bind_open(&access_token);
@@ -96,10 +97,12 @@ fn test_offical_app()->String {
     // println!("==={:?}", rs);
     authorizer_token.to_owned()
 }
+
 #[allow(dead_code)]
 /// 测试小程序
 fn test_min_app() -> String {
     let tripart_config: TripartiteConfig = get_tripartite_config();
+    println!("tripart_config={:?}",tripart_config);
     let redis_config: RedisConfig = get_redis_conf();
     let comp = Component::new(tripart_config.clone());
 
@@ -119,14 +122,15 @@ fn test_min_app() -> String {
     // println!("==={:?}",rs);
 
     // //获取授权令牌
-    // let refresh_token="refreshtoken@@@68i490TBYPIBf3dnYuvWD42Vy7TzvbfwJg88t6FQSPg";
+    // let refresh_token="refreshtoken@@@yzx1x8n6ECinXW2iBwTD-804NWNCXfGdCbxLxSz0VqA";
     // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
     // println!("fetch_authorizer_token==={:?}",rs);
     
     // set_official_access_token(&redis_con,_MIN_APP_ID,rs.unwrap());
-    let authorizer_token="55_kaOc_qX6IULNetixZ7yrH6dABvGv0-3uVgNu7PJfujiehdhCWZn8y9TciQxwtLc_TLuaR1JABn-z3bFycVi-raz0y_0-Bxo13AsNPo0DWakKP4HAYC7to3niDmDoyewHRQIzGMspmpd2nHgGDWBjAHDWPU";
-    // let rs=actix_rt::System::new().block_on(comp.get_template_list(Some(1)));
-    // println!("==={:?}",rs);
+    let authorizer_token="55_9tyg8iY42xIyGl9ayJdUSZwnWVHy0id_UKgxIyUa2oKnjKNnFRUpP7aZ9u8s5jUMWX2Kjx-NIKRiaAHVzv-TylDCGaPs0BST_RIjEiOSxc3jAA69jffjxuWckPcGJQ1b6ooz6NTU1CP_qqQjIHReAFDQPZ";
+    
+    let rs=actix_rt::System::new().block_on(Template::new(&token.0).get_template_list(Some(0)));
+    println!("===res{:?}",rs.unwrap()[0].to_string());
 
     authorizer_token.to_owned()
 }
@@ -175,7 +179,7 @@ fn test_set_privacy(access_token: &str) -> WechatResult<u64> {
     };
     let privacy_json_v: serde_json::Value = serde_json::from_str(&privacy_json).unwrap();
 
-    let mincode = Code::new(access_token);
+    let mincode = Privacy::new(access_token);
     let rs = actix_rt::System::new().block_on(mincode.set_privacy(privacy_json_v));
     println!("==={:?}", rs);
     Ok(0)
@@ -331,7 +335,7 @@ pub fn test_unbind_open(access_token: &str) -> WechatResult<u64> {
 const COMP_CATCHE_KEY: &str = "COMP_ACCESS_TOKEN_CATCHE_KEY";
 use wechat_redis::{RedisStorage, SessionStore};
 /// 获取
-pub fn get_comp_token(redis_con: &str, key: &str) -> (String, i64) {
+pub fn get_comp_token(redis_con: &str, key: &str) -> (String, u64) {
     let cache_key = format!("{0}_{1}", COMP_CATCHE_KEY, key);
 
     match RedisStorage::from_url(format!("{}", redis_con)) {
@@ -339,9 +343,8 @@ pub fn get_comp_token(redis_con: &str, key: &str) -> (String, i64) {
             let d = "".to_owned();
             if let Some(v) = session.get(cache_key, "get".to_owned(), Some(d)) {
                 let arr: Vec<_> = v.split('|').collect();
-                println!("{:?}",arr);
                 if arr.len() == 2 {
-                    return (arr[0].to_string(), arr[1].parse::<i64>().unwrap());
+                    return (arr[0].to_string(), arr[1].parse::<u64>().unwrap());
                 }
                 return ("".to_owned(), 0);
             } else {
@@ -354,7 +357,7 @@ pub fn get_comp_token(redis_con: &str, key: &str) -> (String, i64) {
     }
     
 }
-pub fn set_official_access_token(redis_con: &str,key: &str, cnf: (String, i64)) {
+pub fn set_official_access_token(redis_con: &str,key: &str, cnf: (String, u64)) {
     let url = format!("{}", redis_con);
     let cache_key = format!("{0}_{1}", OFFICAL_ACCESS_TOKEN_CATCHE_KEY, key);
     match RedisStorage::from_url(url) {

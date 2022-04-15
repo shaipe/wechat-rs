@@ -130,7 +130,7 @@ impl AuthToken {
         let api = Client::new();
         let res = api.post(&url, &hash).await?;
         let data = crate::parse_json(&res).await?;
-        let acc_token = match data["auth_access_token"].as_str() {
+        let acc_token = match data["authorizer_access_token"].as_str() {
             Some(v) => v,
             None => "",
         };

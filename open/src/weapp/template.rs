@@ -41,12 +41,16 @@ impl Template {
         // get
         let res = Client::new().get(&uri).await?;
         let data = crate::parse_json(&res).await?;
-        let list_temp = data["template_list"].as_array().unwrap();
+       
         let mut list: Vec<Value> = vec![];
-        for a in list_temp {
+        let list_temp =match data["template_list"].as_array(){
+            Some(s)=>s.to_owned(),
+            None=>vec![]
+        };
+        for a in list_temp.iter() {
             let mut v: serde_json::map::Map<std::string::String, serde_json::value::Value> =
                 serde_json::map::Map::new();
-            let template_id = a["template_id"].as_str().unwrap();
+            let template_id = a["template_id"].as_i64().unwrap();
             let user_version = a["user_version"].as_str().unwrap();
             let user_desc = a["user_desc"].as_str().unwrap();
             v.insert(
@@ -60,6 +64,7 @@ impl Template {
             v.insert("user_desc".to_owned(), Value::String(user_desc.to_string()));
             list.push(serde_json::to_value(v).unwrap());
         }
+
         Ok(list)
     }
 

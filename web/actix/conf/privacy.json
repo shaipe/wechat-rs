@@ -1,0 +1,49 @@
+{
+    "owner_setting": {
+      "contact_email": "250075666@qq.com",
+      "notice_method": "通过公告",
+      "store_expire_timestamp":"30天"
+    },
+    "setting_list": [
+      {
+        "privacy_key": "UserInfo",
+        "privacy_text": "使用昵称注册为用户名、不再单独上传头像照片"
+      },
+      {
+        "privacy_key": "Location",
+        "privacy_text": "便于用户快速添加收货地址；根据用户定位信息分配最近的店铺"
+      },
+      {
+        "privacy_key": "Address",
+        "privacy_text": "用户注册后不再重复填写收货地址"
+      },
+      {
+        "privacy_key": "Record",
+        "privacy_text": "用户在线客服使用语音沟通"
+      },
+      {
+        "privacy_key": "Album",
+        "privacy_text": "用户分享工作成果、上传已拍摄完成的图片"
+      },
+      {
+        "privacy_key": "Camera",
+        "privacy_text": "拍摄个人头像、发布门店照片"
+      },
+      {
+        "privacy_key": "PhoneNumber",
+        "privacy_text": "使用手机号快速完成注册验证、接受验证码"
+      },
+      {
+        "privacy_key": "DeviceInfo",
+        "privacy_text": "用户账户、密码安全，验证常用登录设备"
+      },
+      {
+        "privacy_key": "AlbumWriteOnly",
+        "privacy_text": "拍摄个人头像、门店照片"
+      },
+      {
+        "privacy_key": "BlueTooth",
+        "privacy_text": "连接蓝牙打印机进行打印操作"
+      }
+    ]
+  }
