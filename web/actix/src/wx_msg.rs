@@ -3,6 +3,7 @@
 //! 微信消息处理
 //!
 
+use super::access_token::get_comp_access_tokens;
 use super::utils;
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Result};
@@ -10,7 +11,7 @@ use std::collections::HashMap;
 use url::Url;
 use wechat::{
     mp::message::{KFService, Message, ReplyRender, TextReply},
-    open::{get_tripartite_config, Component, TripartiteConfig},
+    open::{get_tripartite_config, AuthToken, Config as TripartiteConfig},
 };
 use wechat_sdk::{current_timestamp, WeChatCrypto};
 /// 消息回复处理
@@ -91,10 +92,14 @@ pub async fn message_reply(msg: &Message) -> Result<HttpResponse> {
 // }
 
 /// 代理消息业务转发
-pub async fn proxy_reply(app_id: &str, req: HttpRequest, body: web::Bytes) -> Result<HttpResponse> {
-    use crate::cluster::get_domain;
-    use wechat_sdk::Client;
-    let mut domain = get_domain(app_id.to_owned());
+pub async fn proxy_reply(
+    app_id: &str,
+    req: HttpRequest,
+    _body: web::Bytes,
+) -> Result<HttpResponse> {
+    // use crate::cluster::get_domain;
+    // use wechat_sdk::Client;
+    let mut domain = app_id.to_owned(); // get_domain(app_id.to_owned());
 
     if domain.is_empty() {
         domain = "http://366kmpf.com".to_owned();
@@ -124,13 +129,11 @@ pub async fn global_publish(
     dic: HashMap<String, String>,
     post_str: String,
 ) -> Result<HttpResponse> {
-    logs!(format!("--- callback --- {:?}, {:?}", dic, post_str));
-
     let nonce = utils::get_hash_value(&dic, "nonce");
     // 对获取的消息内容进行解密
     let conf: TripartiteConfig = get_tripartite_config();
     let c = WeChatCrypto::new(&conf.token, &conf.encoding_aes_key, &conf.app_id);
-
+    let comp_token = get_comp_access_tokens().await;
     // 对接收的消息进行解码判断
     if let Ok(decode_msg) = c.decrypt_message(&post_str, &dic) {
         // println!("=== decode message === {}", decode_msg);
@@ -139,20 +142,22 @@ pub async fn global_publish(
 
         // 全网发布时的测试用户
         if to_user == "gh_3c884a361561" || to_user == "gh_8dad206e9538" {
+            let tripart_config: TripartiteConfig = get_tripartite_config();
+            let comp = AuthToken::new(tripart_config.clone());
+
             match msg {
                 Message::TextMessage(ref m) => {
+                    println!("m.content={}", m.content);
                     // 公网发布的授权消息处理
                     if m.content.starts_with("QUERY_AUTH_CODE:") {
                         let auth_code = m.content.replace("QUERY_AUTH_CODE:", "");
-
-                        let comp = Component::new(conf);
                         // 根据授权码获取公众号对应的accesstoken
-                        match comp.query_auth(&auth_code).await {
+                        match comp.query_auth(&auth_code, &comp_token.0).await {
                             Ok(v) => {
-                                // v 是一个Json对象,从json对象中获取授权 authorizer_access_token
+                                // v 是一个Json对象,从json对象中获取授权 auth_access_token
                                 if v["authorization_info"].is_object() {
                                     let auth_access_token = match v["authorization_info"]
-                                        ["authorizer_access_token"]
+                                        ["auth_access_token"]
                                         .as_str()
                                     {
                                         Some(token) => token.to_string(),
@@ -168,7 +173,7 @@ pub async fn global_publish(
                                     .await;
                                 }
                             }
-                            Err(e) => logs!(format!("query auth_code error: {:?}", e)),
+                            Err(e) => log!("query auth_code error: {:?}", e),
                         };
                     }
                     // 文本消息回复处理
@@ -179,10 +184,7 @@ pub async fn global_publish(
                             &format!("{}_callback", &m.content),
                         );
                         let txt = tr.render();
-                        logs!(format!(
-                            "---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}",
-                            txt
-                        ));
+                        log!("---- send TESTCOMPONENT_MSG_TYPE_TEXT xml :{}", txt);
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
 
@@ -200,17 +202,17 @@ pub async fn global_publish(
                         let txt = tr.render();
                         let timestamp = current_timestamp();
                         let encrypt_text = c.encrypt_message(&txt, timestamp, &nonce);
-                        logs!(format!("---- send OTHER xml :{}", txt));
+                        log!("---- send OTHER xml :{}", txt);
                         return Ok(HttpResponse::build(StatusCode::OK)
                             .content_type("text/xml; charset=utf-8")
                             .body(encrypt_text.unwrap()));
                     }
                 }
                 Message::EventMessage(ref m) => {
-                    logs!(format!("**** EVENT *** {:?}", m));
+                    log!("**** EVENT *** {:?}", m);
                 }
                 Message::UnknownMessage(ref m) => {
-                    logs!(format!("**** Unknown *** {:?}", m));
+                    log!("**** Unknown *** {:?}", m);
                 }
             }
         } else {

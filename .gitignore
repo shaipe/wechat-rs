@@ -1,12 +1,13 @@
 /target
 **/*.rs.bk
 **/target/
+**/config/
 **/template
 /node_modules/
 **/node_modules/
 log/
 **/log/
-
+**/publish/
 
 ## 排除文件类型
 *.zip
@@ -16,7 +17,7 @@ log/
 *.log
 *.conf
 *.yml
-
+cert/
 ## delete remote file
 # git rm --cache filename
 

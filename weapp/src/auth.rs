@@ -5,9 +5,7 @@
 
 // use byteorder::{NativeEndian, ReadBytesExt};
 // use std::io::Cursor;
-use wechat_sdk::{Client, WechatResult};
-
-const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
+use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
 pub struct Auth;
 
@@ -26,15 +24,21 @@ impl Auth {
         code: &str,
     ) -> WechatResult<serde_json::Value> {
         let url = format!("{api}/sns/jscode2session?appid={appid}&secret={secret}&js_code={code}&grant_type=authorization_code",
-        api=API_DOMAIN,
+        api= crate::API_DOMAIN,
         appid=appid,
         code=code,
         secret=secret
     );
         let api = Client::new();
         let res = api.get(&url).await?;
-        match api.json_decode(&res) {
-            Ok(data) => Ok(data),
+        match wechat_sdk::json_decode(&res) {
+            Ok(data) => {
+                if data.get("errcode").is_some() {
+                    Err(error!("auth error: {:?}", data["errmsg"].as_str().unwrap_or("")))
+                } else {
+                    Ok(data)
+                }
+            }
             Err(err) => {
                 return Err(err);
             }
@@ -48,10 +52,36 @@ impl Auth {
         Ok("".to_string())
     }
 
-    /// 获取小程序全局唯一后台接口调用凭据（access_token）。调用绝大多数后台接口时都需使用 access_token，开发者需要进行妥善保存。
-    /// GET https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
-    /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-    pub fn get_access_token() -> WechatResult<String> {
-        Ok(String::from(""))
+    /// 解析小程的手机号数据
+    pub fn parse_phone_number(
+        encrypt_text: &str,
+        session_key: &str,
+        iv: &str,
+    ) -> WechatResult<serde_json::Value> {
+        // 需要先进行Base64解密
+        let b64decoded = base64::decode(encrypt_text).unwrap();
+        let keys = base64::decode(session_key).unwrap();
+        let ivs = base64::decode(iv).unwrap();
+
+        match aes128_cbc_decrypt(&b64decoded, &keys, &ivs) {
+            Ok(v) => {
+                // log!("v {:?} str {:?}", &v, std::str::from_utf8(&v));
+                // 需要后前移7位,不解出来的对象不是正确的json
+                // 对称解密使用的算法为 AES-128-CBC，数据采用PKCS#7填充
+                let xv = &v[0..v.len() - 14];
+                // log!("v {:?}", xv);
+                match std::str::from_utf8(xv) {
+                    Ok(s) => {
+                        let val: serde_json::Value = match serde_json::from_str(s) {
+                            Ok(v) => v,
+                            Err(err) => return Err(error!("parse json error: {:?}", err)),
+                        };
+                        Ok(val)
+                    }
+                    Err(e) => return Err(error!("parse string failed: {:?}", e)),
+                }
+            }
+            Err(err) => return Err(error!("failed to decrypt {:?}", err)),
+        }
     }
 }

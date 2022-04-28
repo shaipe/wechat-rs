@@ -6,6 +6,7 @@ use std::fs::File;
 use wechat_sdk::WechatResult;
 
 /// 配置信息结构体
+#[derive(Debug, Clone, Default)]
 pub struct WeappConfig {
     // 应用id
     pub app_id: String,
@@ -70,18 +71,6 @@ impl WeappConfig {
             } else {
                 "".to_owned()
             },
-        }
-    }
-}
-
-/// 默认实现
-impl std::default::Default for WeappConfig {
-    // 给定默认值
-    fn default() -> WeappConfig {
-        WeappConfig {
-            name: String::new(),
-            app_id: String::new(),
-            secret: String::new(),
         }
     }
 }

@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Official {
     pub appid: String,
-    pub authorizer_access_token: String,
+    pub auth_access_token: String,
     pub authorizer_refresh_token: String,
     pub expires_in: i64,
 }
@@ -17,7 +17,7 @@ impl Official {
     pub fn default() -> Self {
         Official {
             appid: String::from(""),
-            authorizer_access_token: String::from(""),
+            auth_access_token: String::from(""),
             authorizer_refresh_token: String::from(""),
             expires_in: 0,
         }
@@ -33,7 +33,7 @@ impl Official {
         // 打开文件
         let mut file = match File::open(file_path) {
             Ok(f) => f,
-            Err(e) =>{
+            Err(_e) =>{
                 return Official::default();
             },
         };
@@ -109,17 +109,17 @@ pub fn get_common_official() -> Official {
     cache.clone()
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::official::Official;
-    #[test]
-    fn add() {
-        let mut conf = Official::new("");
-        conf.appid = "wxf9d78c09d2efa1bc".to_owned();
-        conf.authorizer_access_token="33_UZSk5mAUZ_Wx2K-gNOgHFGfJm8hY6dTv2MPN55Il-5R0uxsxYs5ydhJQysKH_FTBvlHJRCKwzIlZDbdK2jZnt-N6qUtwT_zyv-vwJqFYNg-y33luXaYN0-wrWj33iK4QnKCFWAWiI5wS8pBJRBXiADDZJF".to_owned();
-        conf.authorizer_refresh_token ="refreshtoken@@@oDqmetXh9-gfmGIACZbjDO6-rP5AWrf_rUYAPTjSWn4".to_owned();
+// #[cfg(test)]
+// mod tests {
+//     // use crate::official::Official;
+//     // #[test]
+//     // fn add() {
+//     //     let mut conf = Official::new("");
+//     //     conf.appid = "wxf9d78c09d2efa1bc".to_owned();
+//     //     conf.auth_access_token="33_UZSk5mAUZ_Wx2K-gNOgHFGfJm8hY6dTv2MPN55Il-5R0uxsxYs5ydhJQysKH_FTBvlHJRCKwzIlZDbdK2jZnt-N6qUtwT_zyv-vwJqFYNg-y33luXaYN0-wrWj33iK4QnKCFWAWiI5wS8pBJRBXiADDZJF".to_owned();
+//     //     conf.authorizer_refresh_token ="refreshtoken@@@oDqmetXh9-gfmGIACZbjDO6-rP5AWrf_rUYAPTjSWn4".to_owned();
         
-        println!("{:?}",conf);
-        conf.save("");
-    }
-}
+//     //     println!("{:?}",conf);
+//     //     conf.save("");
+//     // }
+// }

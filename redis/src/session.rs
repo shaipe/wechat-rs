@@ -1,8 +1,6 @@
-use super::WechatResult;
+use wechat_sdk::WechatResult;
 use redis::{self, FromRedisValue, ToRedisArgs};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-pub trait SessionStruct {}
-
+use std::{collections::{BTreeMap, HashMap}};
 pub trait SessionStore: Clone {
     //根据cmd类型获取指定 key 值
     //简单类型（string,vec,int):get; 哈希:hgetall(btreemap); set(btreeset)：smembers
@@ -12,11 +10,26 @@ pub trait SessionStore: Clone {
         cmd: K,
         default: Option<T>,
     ) -> Option<T>;
-    //设置多个哈希btreemap
+    //设置多个哈希btreemap(值进行了json格式化)
     fn hmget<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
         &self,
         key: K,
         key2: K,
+        default: Option<T>,
+    ) -> Option<T>;
+    //设置多个哈希btreemap,值了传入的泛型
+    fn hmget2<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
+        &self,
+        key: K,
+        key2: K,
+        default: Option<T>,
+    ) -> Option<T>;
+    //迭代哈希表中的键值对。
+    fn hmgetpage<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
+        &self,
+        key: K,
+        cursor: u64,
+        count: u32,
         default: Option<T>,
     ) -> Option<T>;
     //设置多个哈希btreemap
@@ -30,7 +43,7 @@ pub trait SessionStore: Clone {
     //删除
     fn del<K: AsRef<str>>(&self, key: K);
     //set(btreeset) 添加
-    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T);
+    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>);
     //简单类型（string,vec,int) set，带过期时间
     fn set<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>);
     //发布订阅
@@ -69,7 +82,10 @@ impl RedisStorage {
                 set_redis_client(hash);
                 c
             }
-            Err(e) => return Err(error!(-1, format!("redis error: {}", e))),
+            Err(e) => {
+                return Err(error! {code: 6001, msg: format!("{:?}",e)});
+            
+            }
         };
         Ok(RedisStorage { client: client })
     }
@@ -86,18 +102,22 @@ impl SessionStore for RedisStorage {
     ) -> Option<T> {
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return default;
         }
         let mut conn = conn.unwrap();
         let data = redis::cmd(cmd.as_ref()).arg(key.as_ref()).query(&mut conn);
-        if data.is_err() {
-            println!("data:is_err");
-            return default;
-        }
-        if let Ok(value) = data {
-            Some(value)
-        } else {
-            default
+        match data {
+            Ok(s) => Some(s),
+            Err(e) => {
+                println!(
+                    "key={:?},cmd={:?},error={:?}",
+                    key.as_ref(),
+                    cmd.as_ref(),
+                    e
+                );
+                default
+            }
         }
     }
     fn hmget<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
@@ -108,10 +128,11 @@ impl SessionStore for RedisStorage {
     ) -> Option<T> {
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return default;
         }
         let mut conn = conn.unwrap();
-        let data = redis::cmd("HGET")
+        let data = redis::cmd("hget")
             .arg(key.as_ref())
             .arg(key2.as_ref())
             .query(&mut conn);
@@ -123,18 +144,66 @@ impl SessionStore for RedisStorage {
             let ss: String = value;
             let dic: T = serde_json::from_str(&ss).unwrap();
             Some(dic)
-        // if let Ok(v) = serde_json::from_value(j) {
-        //     let dic: T = v;
-        //     println!("ok:{:?}", key.as_ref());
-        //     Some(dic)
-        // } else {
-        //     println!("error:{:?}", key.as_ref());
-        //     default
-        // }
         } else {
             default
         }
-        //default
+    }
+    fn hmget2<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
+        &self,
+        key: K,
+        key2: K,
+        default: Option<T>,
+    ) -> Option<T> {
+        let conn = self.client.get_connection();
+        if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
+            return default;
+        }
+        let mut conn = conn.unwrap();
+        let data = redis::cmd("hget")
+            .arg(key.as_ref())
+            .arg(key2.as_ref())
+            .query(&mut conn);
+        if data.is_err() {
+            println!("data:is_err:{:?}", data.err());
+            return default;
+        }
+        if let Ok(value) = data {
+            Some(value)
+        } else {
+            default
+        }
+    }
+    fn hmgetpage<K: AsRef<str>, T: FromRedisValue + serde::de::DeserializeOwned>(
+        &self,
+        key: K,
+        cursor: u64,
+        count: u32,
+        default: Option<T>,
+    ) -> Option<T> {
+        let conn = self.client.get_connection();
+        if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
+            return default;
+        }
+        let mut conn = conn.unwrap();
+        let data = redis::cmd("HSCAN")
+            .arg(key.as_ref())
+            .cursor_arg(cursor)
+            .arg("COUNT")
+            .arg(count)
+            .query(&mut conn);
+        if data.is_err() {
+            println!("data:is_err:{:?}", data.err());
+            return default;
+        }
+        if let Ok(value) = data {
+            let ss: String = value;
+            let dic: T = serde_json::from_str(&ss).unwrap();
+            Some(dic)
+        } else {
+            default
+        }
     }
     //设置多个哈希btreemap
     fn hmsets<K: AsRef<str>, T: ToRedisArgs + std::cmp::Ord + serde::ser::Serialize>(
@@ -144,12 +213,13 @@ impl SessionStore for RedisStorage {
     ) {
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return;
         }
         let mut conn = conn.unwrap();
         let mut pip = redis::pipe();
         for (account, h) in map.iter() {
-            let v = h.clone();
+            // let v = h.clone();
             pip.cmd("HSET")
                 .arg(key)
                 .arg(account.as_ref())
@@ -166,6 +236,7 @@ impl SessionStore for RedisStorage {
     fn hmset<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, map: T) {
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return;
         }
         let mut conn = conn.unwrap();
@@ -181,10 +252,11 @@ impl SessionStore for RedisStorage {
         };
     }
     //set(btreeset) 添加
-    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T) {
+    fn sadd<K: AsRef<str>, T: ToRedisArgs>(&self, key: K, value: T, ttl: Option<usize>) {
         let key = key.as_ref();
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return;
         }
         let mut conn = conn.unwrap();
@@ -196,8 +268,11 @@ impl SessionStore for RedisStorage {
         {
             Ok(v) => v,
             Err(e) => {
-                println!("{:?},{:?}", key, e);
+                println!("sadd error={:?},{:?}", key, e);
             }
+        }
+        if let Some(seconds) = ttl {
+            redis::pipe().expire(key, seconds);
         }
     }
     //简单类型（string,vec,int) set，带过期时间
@@ -205,28 +280,36 @@ impl SessionStore for RedisStorage {
         let key = key.as_ref();
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return;
         }
         let mut conn = conn.unwrap();
         if let Some(seconds) = ttl {
-            let _: () = redis::pipe()
+            match redis::pipe()
                 .set_ex(key, value, seconds)
                 .ignore()
                 .query(&mut conn)
-                .unwrap_or(());
+            {
+                Ok(v) => v,
+                Err(e) => {
+                    println!("{:?},{:?}", key, e);
+                }
+            };
         } else {
-            let v: () = redis::pipe()
-                .cmd("set")
-                .set(key, value)
-                .query(&mut conn)
-                .unwrap_or(());
-            println!("{:?}", v)
+            match redis::pipe().cmd("set").set(key, value).query(&mut conn) {
+                Ok(v) => v,
+                Err(e) => {
+                    println!("{:?},{:?}", key, e);
+                }
+            };
+            //println!("set===={:?}", v)
         }
     }
     //根据key删除
     fn del<K: AsRef<str>>(&self, key: K) {
         let conn = self.client.get_connection();
         if conn.is_err() {
+            println!("conn:is_err:{:?}", conn.err());
             return;
         }
         let mut conn = conn.unwrap();
@@ -238,7 +321,7 @@ impl SessionStore for RedisStorage {
         };
     }
     //发布订阅
-    fn sub(&self, func: fn(Option<BTreeMap<String, String>>)) {
+    fn sub(&self, _func: fn(Option<BTreeMap<String, String>>)) {
         let conn = self.client.get_connection();
         if conn.is_err() {
             return;
@@ -311,7 +394,7 @@ impl SessionStore for RedisStorage {
             .invoke(&mut conn);
         match result {
             Ok(v) => Some(v),
-            Err(v) => None,
+            Err(_v) => None,
         }
     }
     fn setex<K: AsRef<str>>(&self, key: K, seconds: usize) {
@@ -353,6 +436,7 @@ pub fn get_redis_client() -> HashMap<String, redis::Client> {
     let cache = counter.lock().unwrap();
     cache.clone()
 }
+
 /// 宏测试
 #[test]
 fn test_err() {

@@ -9,18 +9,27 @@ extern crate actix_web;
 // extern crate wechat;
 #[macro_use]
 extern crate wechat_sdk;
+use wechat_sdk::WechatError;
 
 #[macro_use]
 extern crate lazy_static;
-use actix_web::client::Client;
+
+// use awc::Client;
+
 use actix_web::http::StatusCode;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Result};
-mod cluster;
+// mod cluster;
 mod official;
 mod result_response;
 mod utils;
 mod wx_handler;
 mod wx_msg;
+
+mod cache;
+pub use cache::RedisCache;
+mod access_token;
+pub use access_token::get_comp_access_tokens;
+
 #[get("/")]
 async fn index_handler(_req: HttpRequest) -> Result<HttpResponse> {
     // response
@@ -40,7 +49,7 @@ async fn main() -> std::io::Result<()> {
 }
 
 /// web服务启动
-async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
+async fn start_web_server(_conf_path: &str) -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 
@@ -59,6 +68,7 @@ async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
     // let ip = format!("{}:{}", conf.web.ip, conf.web.port);
     let ip = format!("{}:{}", "0.0.0.0", 999);
 
+
     // 启动一个web服务
     HttpServer::new(move || {
         App::new()
@@ -70,10 +80,15 @@ async fn start_web_server(conf_path: &str) -> std::io::Result<()> {
             //         .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             //         .max_age(3600),
             // )
-            .data(Client::new())
+            // .app_data(Client::new())
             .service(index_handler)
-            .service(wx_handler::receive_ticket)
+          
+            .service(wx_handler::verify_ticket)
             .service(web::resource("/wx/cback/{appid}").route(web::post().to(wx_handler::callback)))
+            .service(wx_handler::auth_transfer)
+            .service(wx_handler::official_auth)
+            .service(wx_handler::official_auth_calback)
+            .service(wx_handler::get_wxa_code)
     })
     .bind(ip)?
     .run()

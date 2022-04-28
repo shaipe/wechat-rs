@@ -1,15 +1,37 @@
 [package]
 name = "wechat_weapp"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["shaipe <shaipe@live.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 byteorder = "1.4.3"
-serde = { version = "1.0.125", features = ["derive"] }
-serde_json = "1.0.64"
-wechat_sdk = {path = "../sdk", version = "0.1.0"}
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
 base64 = "0.13.0"
 yaml-rust = "0.4.5"
+
+wechat_sdk = {path = "../sdk", version = "0.2.0", features=["actix"]}
+# wechat_sdk = {path = "../sdk", version = "0.2.0", features=["reqwest"], optional = true}
+#tube_img = {path="../../../ecdata/tube/modules/img/", version = "0.2.0"}
+
+
+# [target.'cfg(feature="actix")'.dependencies]
+# wechat_sdk = {path = "../sdk", version = "0.2.0", features=["actix"]}
+
+# # 使用reqwest时引入
+# [target.'cfg(feature="req_async")'.dependencies]
+# wechat_sdk = {path = "../sdk", version = "0.2.0", features=["req_async"]}
+
+[dev-dependencies]
+actix-web = { version = "4.0.1", features = ["openssl"] }
+openssl = "0.10.38"
+
+
+[features]
+default = ["actix"]
+actix = []
+req_async = []
+open = []

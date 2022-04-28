@@ -1,17 +1,15 @@
 //! copyright
 //! 微信加解密码处理
 
-use crate::WechatResult;
+use crate::AesCrypt;
+use crate::WechatResult as Result;
 use byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use crypto::buffer::{BufferResult, ReadBuffer, WriteBuffer};
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use crypto::{aes, blockmodes, buffer, symmetriccipher};
+use crypto::{aes, blockmodes, buffer};
 use std::collections::HashMap;
 use std::io::Cursor;
-
-// use rand::thread_rng;
-// use rand::Rng;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct WeChatCrypto {
@@ -25,13 +23,10 @@ impl WeChatCrypto {
     pub fn new(token: &str, encoding_aes_key: &str, _id: &str) -> WeChatCrypto {
         let mut aes_key = encoding_aes_key.to_owned();
         aes_key.push('=');
-        let key = base64::decode(&aes_key).unwrap();
-        // println!("{:?}",encoding_aes_key);
-        // let c= Config::new(CharacterSet::Crypt,true);
-        // c.decode_allow_trailing_bits(true);
 
-        // let key = base64::decode_config(&aes_key,c).unwrap();
-        // println!("{:?}",key);
+        // println!("=== aes key == {}", aes_key);
+        let key = base64::decode(&aes_key).unwrap();
+        // println!("aes_key === {:?} === key {:?}", aes_key, key);
         WeChatCrypto {
             token: token.to_owned(),
             key: key,
@@ -40,7 +35,7 @@ impl WeChatCrypto {
     }
 
     /// 获取签名
-    fn get_signature(&self, timestamp: i64, nonce: &str, encrypted: &str) -> String {
+    fn get_signature(&self, timestamp: u64, nonce: &str, encrypted: &str) -> String {
         let mut data = vec![
             self.token.clone(),
             timestamp.to_string(),
@@ -65,11 +60,11 @@ impl WeChatCrypto {
         &self,
         xml: &str,
         query_params: &HashMap<String, String>,
-    ) -> WechatResult<String> {
+    ) -> Result<String> {
         //随机数
         let nonce = get_hash_value(query_params, "nonce");
         //时间缀
-        let timestamp = match get_hash_value(query_params, "timestamp").parse::<i64>() {
+        let timestamp = match get_hash_value(query_params, "timestamp").parse::<u64>() {
             Ok(v) => v,
             Err(_e) => 0,
         };
@@ -92,16 +87,18 @@ impl WeChatCrypto {
             });
         }
         let msg = self.decrypt(&encrypted_msg)?;
-        logs!(format!("######### decode message ########## \n{}", msg));
+        log!("######### decode message ########## \n{}", msg);
         Ok(msg)
     }
 
     /// 解密
-    pub fn decrypt(&self, ciphertext: &str) -> WechatResult<String> {
-        let b64decoded = base64::decode(ciphertext).unwrap();
+    pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
+        println!("=== msg decrypt === {:?}", ciphertext);
+        let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
+        let content = aes.decrypt(ciphertext.to_owned());
+        println!("=== msg1 decrypt === {:?}", content);
         // aes descrypt
-        let text = aes256_cbc_decrypt(&b64decoded, &self.key, &self.key[..16]).unwrap();
-
+        let text = content.as_bytes();
         let mut rdr = Cursor::new(text[16..20].to_vec());
         let content_length = u32::from_be(rdr.read_u32::<NativeEndian>().unwrap()) as usize;
         let content = &text[20..content_length + 20];
@@ -114,32 +111,27 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
-
-    // //随机数
-    // fn get_random_string(&self) -> String {
-    //     if cfg!(test) {
-    //         "1234567890123456".to_owned()
-    //     } else {
-    //        thread_rng().gen_ascii_chars().take(16).collect()
-    //     }
-    // }
-
     /// 对消息进行加密
-    pub fn encrypt_message(&self, msg: &str, timestamp: i64, nonce: &str) -> WechatResult<String> {
+    pub fn encrypt_message(&self, msg: &str, timestamp: u64, nonce: &str) -> Result<String> {
         let rnd_str = get_random_string(16);
         let mut wtr = rnd_str.into_bytes();
 
-        // logs!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
+        // log!(format!("%%%%%%%%%%%%%%%%%%% rnd str %%%%%%%%%%%%%%%%%%%%%%%%% \n{}  --- {:?}", rnd_str, wtr));
 
         //采用低位编址
         wtr.write_u32::<NativeEndian>((msg.len() as u32).to_be())
             .unwrap();
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
+
+        println!("=== msg encrypt === {:?}", self.key);
         //aes 加密
-        let encrypted = aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
-        //base64 编码
+        let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
+        let encrypted = aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
+                                               //base64 编码
         let b64encoded = base64::encode(&encrypted);
+
+        println!("==== msg encrypt base64 {}", b64encoded);
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
@@ -155,10 +147,10 @@ impl WeChatCrypto {
             nonce = nonce,
         );
 
-        logs!(format!(
+        log!(
             "#################### encode message #####################\n{}",
             msg
-        ));
+        );
         Ok(msg)
     }
 }
@@ -193,12 +185,9 @@ fn get_hash_value(query_params: &HashMap<String, String>, key: &str) -> String {
         None => "".to_owned(),
     }
 }
-/// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-pub fn aes128_cbc_decrypt(
-    encrypted_data: &[u8],
-    key: &[u8],
-    iv: &[u8],
-) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+/// Decrypts a buffer with the given key and iv using AES-128/CBC/Pkcs encryption.
+pub fn aes128_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
+    // log!("decrypt: {:?} == key {:?} == iv {:?}", encrypted_data, key, iv);
     // 此处的最后一个参数要使用不直充的方式才行
     let mut decryptor =
         aes::cbc_decryptor(aes::KeySize::KeySize128, key, iv, blockmodes::NoPadding);
@@ -221,18 +210,14 @@ pub fn aes128_cbc_decrypt(
                     BufferResult::BufferOverflow => {}
                 }
             }
-            Err(e) => println!("{:?}", e),
+            Err(e) => return Err(error!("decryptor error:{:?}", e)),
         }
     }
     Ok(final_result)
 }
 
 /// Decrypts a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-pub fn aes256_cbc_decrypt(
-    encrypted_data: &[u8],
-    key: &[u8],
-    iv: &[u8],
-) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+pub fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
     // 此处的最后一个参数要使用不直充的方式才行
     let mut decryptor =
         aes::cbc_decryptor(aes::KeySize::KeySize256, key, iv, blockmodes::NoPadding);
@@ -255,17 +240,13 @@ pub fn aes256_cbc_decrypt(
                     BufferResult::BufferOverflow => {}
                 }
             }
-            Err(e) => println!("{:?}", e),
+            Err(e) => return Err(error!("decryptor error:{:?}", e)),
         }
     }
     Ok(final_result)
 }
 // Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
-fn aes256_cbc_encrypt(
-    data: &[u8],
-    key: &[u8],
-    iv: &[u8],
-) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+pub fn aes256_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
     let mut encryptor =
         aes::cbc_encryptor(aes::KeySize::KeySize256, key, iv, blockmodes::PkcsPadding);
 
@@ -274,7 +255,10 @@ fn aes256_cbc_encrypt(
     let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
     loop {
-        let result = (encryptor.encrypt(&mut read_buffer, &mut write_buffer, true))?;
+        let result = match encryptor.encrypt(&mut read_buffer, &mut write_buffer, true) {
+            Ok(result) => result,
+            Err(err) => return Err(error! {"encryptor failed: {:?}", err}),
+        };
 
         final_result.extend(
             write_buffer

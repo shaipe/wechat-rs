@@ -1,0 +1,16 @@
+[package]
+name = "axum"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# 清除
+# wechat = {path = "../../", version = "0.2.0", default-features = false, features = ["mp", "open", "weapp"]}
+
+
+
+[[bin]]
+name = "aux_wechat"
+path = "src/main.rs"
