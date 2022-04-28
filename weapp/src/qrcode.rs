@@ -43,6 +43,7 @@ impl QRCode {
     /// path	string		是	扫码进入的小程序页面路径，最大长度 128 字节，不能为空；对于小游戏，可以只传入 query 部分，来实现传参效果，如：传入 "?foo=bar"，即可在 wx.getLaunchOptionsSync 接口中的 query 参数获取到 {foo:"bar"}。
     /// width	number	430	否	二维码的宽度，单位 px。最小 280px，最大 1280px
     /// api url: https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=ACCESS_TOKEN
+    /// https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.createQRCode.html
     pub async fn create_qrcode(&self, path: &str, width: usize) -> WechatResult<Vec<u8>> {
         let access_token = self.get_access_token().await;
         if access_token == "" {
