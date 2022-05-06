@@ -8,8 +8,8 @@ version = "0.2.0"
 
 [dependencies]
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
-serde = "1.0.136"
-serde_json = "1.0.79"
+serde = "1.0.137"
+serde_json = "1.0.81"
 serde-xml-rs = "0.5.1"
 itertools= "0.10.3"
 md5= "0.7.0"
