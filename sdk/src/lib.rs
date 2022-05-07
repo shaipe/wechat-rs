@@ -69,17 +69,18 @@ pub fn write_to_file(conf_path: &str, content: String) -> WechatResult<bool> {
 }
 
 /// 获取当前时间戮
-pub fn current_timestamp() -> i64 {
+pub fn current_timestamp() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs() as i64
+        .as_secs() as u64
 }
 
 ///
 #[inline]
 pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
+    log!("==== {} ========", data);
     let obj: serde_json::Value = match serde_json::from_str(data) {
         Ok(decoded) => decoded,
         Err(ref e) => {

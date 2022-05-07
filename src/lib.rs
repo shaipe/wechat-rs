@@ -6,25 +6,29 @@
 // extern crate wechat_sdk;
 //use wechat_sdk::WechatError;
 
+#[cfg(feature = "open")]
 pub mod open {
-    #[cfg(feature = "open")]
     pub use wechat_open::*;
-}
-/// 微信公众号
-pub mod mp {
-    #[cfg(feature = "mp")]
-    pub use wechat_mp::*;
 }
 
 /// 微信小程序
 pub mod weapp {
     #[cfg(feature = "weapp")]
     pub use wechat_weapp::*;
+    #[cfg(feature = "open")]
+    pub use wechat_open::weapp::*;
+}
+
+/// 微信公众号
+// #[cfg(feature = "mp")]
+pub mod mp {
+    // #[cfg(feature = "mp")]
+    pub use wechat_mp::*;
 }
 
 /// 微信支付
+#[cfg(feature = "pay")]
 pub mod pay {
-    
     pub use wechat_pay::*;
 }
 
@@ -40,19 +44,19 @@ pub mod work {
     pub use wechat_work::*;
 }
 
-
 pub use wechat_sdk::*;
-
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
     use serde_json::*;
+    #[cfg(feature = "pay")]
     use wechat_pay::Order;
     //
     #[test]
+    #[cfg(feature = "pay")]
     fn it_pay_ok_works() {
-        println!("{:?}","=======================");
+        println!("{:?}", "=======================");
         //初始化 配置
         let conf = wechat_sdk::Config::load(json!({
             "app_id": "",
@@ -84,7 +88,7 @@ mod tests {
             });
             let r = Order::new(conf);
             let v = r.refund(params).await;
-            println!("{:?}",v);
+            println!("{:?}", v);
             //let r = Order::create(params).await.unwrap();
             //println!("{:?}",r);
         });

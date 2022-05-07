@@ -1,19 +1,19 @@
 //! copyright
 //! 微信第三方平台的ticket获取存储
 
-use super::TripartiteConfig;
+use super::Config;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wechat_sdk::{xmlutil, WeChatCrypto, WechatResult};
 /// Ticket对象
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Ticket {
-    pub tripart_conf: TripartiteConfig,
+    pub tripart_conf: Config,
 }
 
 impl Ticket {
     /// 实例化一个第三方Ticket
-    pub fn new(tripart_conf: TripartiteConfig) -> Self {
+    pub fn new(tripart_conf: Config) -> Self {
         Ticket {
             tripart_conf: tripart_conf,
         }

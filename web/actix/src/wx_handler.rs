@@ -1,6 +1,7 @@
 //! copyright
 //!
 
+use super::access_token::get_comp_access_tokens;
 use super::cache::RedisCache;
 use super::result_response::{get_exception_result, get_success_result};
 use super::utils;
@@ -11,10 +12,9 @@ use md5;
 use std::collections::HashMap;
 use wechat::{
     mp::WechatAuthorize,
-    open::{get_tripartite_config, Component, Ticket, TripartiteConfig},
+    open::{get_tripartite_config, AuthToken, Config as TripartiteConfig, Ticket},
 };
 use wechat_redis::{get_redis_conf, RedisConfig};
-use super::access_token::get_comp_access_tokens;
 /// 第三方ticket推送接收处理
 #[post("/wx/verify_ticket")]
 pub async fn verify_ticket(req: HttpRequest, payload: web::Payload) -> Result<HttpResponse, Error> {
@@ -74,7 +74,7 @@ async fn official_auth(req: HttpRequest) -> Result<HttpResponse> {
     // 基础配置
     let tripart_config: TripartiteConfig = get_tripartite_config();
 
-    let comp = Component::new(tripart_config.clone());
+    let comp = AuthToken::new(tripart_config.clone());
     let comp_token = get_comp_access_tokens().await;
     // 获取预授权码
     let result_code = match comp.create_preauthcode(&comp_token.0).await {
@@ -142,7 +142,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
     let dic = utils::parse_query(&post_str);
     let app_id = utils::get_hash_value(&dic, "appid");
     // let domain = utils::get_hash_value(&dic, "domain");
-    let authorizer_access_token = utils::get_hash_value(&dic, "authorizer_access_token");
+    let auth_access_token = utils::get_hash_value(&dic, "auth_access_token");
     let authorizer_refresh_token = utils::get_hash_value(&dic, "authorizer_refresh_token");
     let is_common = match utils::get_hash_value(&dic, "is_common").parse::<bool>() {
         Ok(v) => v,
@@ -153,7 +153,7 @@ async fn offical_back(_req: HttpRequest, payload: web::Payload) -> Result<HttpRe
         use crate::official::Official;
         let mut conf = Official::new("");
         conf.appid = app_id;
-        conf.authorizer_access_token = authorizer_access_token;
+        conf.auth_access_token = auth_access_token;
         conf.authorizer_refresh_token = authorizer_refresh_token;
         conf.expires_in = 7000 + utils::current_timestamp();
         conf.save("");
@@ -179,7 +179,7 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
     if current_expires_in > expires_in {
         let tripart_config: TripartiteConfig = get_tripartite_config();
         let comp_token = get_comp_access_tokens().await;
-        let comp = Component::new(tripart_config.clone());
+        let comp = AuthToken::new(tripart_config.clone());
         let auth_token: String = match comp
             .fetch_authorizer_token(&conf.appid, &conf.authorizer_refresh_token, &comp_token.0)
             .await
@@ -189,7 +189,7 @@ async fn fetch_common_official(_req: HttpRequest, _payload: web::Payload) -> Res
         };
         if !auth_token.is_empty() {
             conf.expires_in = utils::current_timestamp() + 7000;
-            conf.authorizer_access_token = auth_token;
+            conf.auth_access_token = auth_token;
             conf.save("");
         } else {
             return get_success_result(&empty_dic);

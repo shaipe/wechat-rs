@@ -7,7 +7,7 @@ use wechat_sdk::current_timestamp;
 pub struct ImageReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: i64,
+    pub time: u64,
     pub media_id: String,
 }
 

@@ -3,10 +3,10 @@
 //! created by shaipe 20210228
 
 use crate::constant::DEFAULT_USER_AGENT;
-use awc::{Client as HttpClient, Connector};
 use actix_web::{http::header, http::Method, web::Bytes};
+use awc::{Client as HttpClient, Connector};
 
-use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode,SslFiletype};
+use openssl::ssl::{SslConnector, SslFiletype, SslMethod, SslVerifyMode};
 use serde::Serialize;
 
 use crate::WechatResult as Result;
@@ -79,8 +79,7 @@ impl Client {
 
         let connector = Connector::new()
             .timeout(Duration::from_secs(5))
-            .openssl(builder.build())
-            ;
+            .openssl(builder.build());
 
         let client = HttpClient::builder()
             .connector(connector)
@@ -96,18 +95,23 @@ impl Client {
             charset: "utf-8".to_owned(),
         }
     }
-    // 证书
-    pub fn new_ssl(private_key: &str,certificate: &str) -> Self {
+
+    /// 带证书的远程请求客户端
+    pub fn new_ssl(private_key: &str, certificate: &str) -> Self {
         // disable ssl verification
         let mut builder = SslConnector::builder(SslMethod::tls()).unwrap();
         builder.set_verify(SslVerifyMode::NONE);
         let _ = builder
             .set_alpn_protos(b"\x02h2\x08http/1.1")
             .map_err(|e| log!("Can not set alpn protocol: {:?}", e));
-        
-        let _ = builder.set_private_key_file(private_key,SslFiletype::PEM).map_err(|e| log!("apiclient_key.pem not find: {:?}", e));
-        let _ = builder.set_certificate_chain_file(certificate).map_err(|e| log!("apiclient_cert.pem not find: {:?}", e));
-        
+
+        let _ = builder
+            .set_private_key_file(private_key, SslFiletype::PEM)
+            .map_err(|e| log!("apiclient_key.pem not find: {:?}", e));
+        let _ = builder
+            .set_certificate_chain_file(certificate)
+            .map_err(|e| log!("apiclient_cert.pem not find: {:?}", e));
+
         let connector = Connector::new()
             .timeout(Duration::from_secs(5))
             .openssl(builder.build());
@@ -122,10 +126,6 @@ impl Client {
             charset: "utf-8".to_owned(),
         }
     }
-
-    // pub fn set_reffer(mut self, reffer: String) {
-    //     self.client.
-    // }
 
     /// 设置获取数据的编码方式
     pub fn set_charset(mut self, charset: &str) -> Self {
@@ -177,7 +177,6 @@ impl Client {
                 if res.status().is_success() {
                     match res.body().await {
                         Ok(bs) => {
-                            
                             return Ok(bs[..].to_vec());
                         }
                         Err(err) => Err(error! {

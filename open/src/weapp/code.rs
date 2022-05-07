@@ -1,37 +1,22 @@
 //! copyright © ecdata.cn 2021 - present
 //! 小程序代码管理
 
-use wechat_sdk::{Client, WechatResult,get_url_encode};
+use wechat_sdk::{get_url_encode, Client, WechatResult};
 
-use crate::category::CategoryItem;
+use super::category::CategoryItem;
 
 const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
 pub struct Code {
-    authorizer_access_token: String,
+    auth_access_token: String,
 }
 impl Code {
-    pub fn new(_authorizer_access_token: &str) -> Self {
+    pub fn new(_auth_access_token: &str) -> Self {
         Code {
-            authorizer_access_token: _authorizer_access_token.to_string(),
+            auth_access_token: _auth_access_token.to_string(),
         }
     }
-    /// 配置小程序用户隐私保护指引
-    pub async fn set_privacy(&self, data: serde_json::Value) -> WechatResult<serde_json::Value> {
-        let uri = format!(
-            "{}{}",
-            API_DOMAIN,
-            format!(
-                "/cgi-bin/component/setprivacysetting?access_token={}",
-                self.authorizer_access_token.clone()
-            )
-        );
-
-        let api = Client::new();
-        let res = api.post(&uri, &data).await?;
-
-        wechat_sdk::json_decode(&res)
-    }
+    
     /// 上传代码
     pub async fn commit_code(
         &self,
@@ -45,7 +30,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/commit?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
 
@@ -72,7 +57,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/get_qrcode?access_token={}&path={}",
-                self.authorizer_access_token.clone(),
+                self.auth_access_token.clone(),
                 path
             )
         );
@@ -88,7 +73,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/submit_audit?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let data = json!({ "item_list": [item] });
@@ -104,7 +89,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/get_auditstatus?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let data = json!({ "auditid": auditid });
@@ -120,7 +105,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/get_latest_auditstatus?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let api = Client::new();
@@ -134,7 +119,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/undocodeaudit?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let api = Client::new();
@@ -148,7 +133,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/release?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let data = json!({});
@@ -163,7 +148,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/revertcoderelease?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let api = Client::new();
@@ -178,7 +163,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/speedupaudit?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let data = json!({ "auditid": auditid });
@@ -202,7 +187,7 @@ impl Code {
             API_DOMAIN,
             format!(
                 "/wxa/getwxacode?access_token={}",
-                self.authorizer_access_token.clone()
+                self.auth_access_token.clone()
             )
         );
         let mut data = json!({
@@ -211,11 +196,10 @@ impl Code {
         "auto_color": auto_color,
         "is_hyaline": is_hyaline,
         });
-        if auto_color{
-            data["line_color"]=serde_json::Value::String(line_color.to_owned());
+        if auto_color {
+            data["line_color"] = serde_json::Value::String(line_color.to_owned());
         }
         let api = Client::new();
         api.request_betyes("get", &uri, &data).await
-
     }
 }

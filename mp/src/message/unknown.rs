@@ -9,8 +9,8 @@ use wechat_sdk::{current_timestamp, xmlutil};
 pub struct UnknownMessage {
     pub from_user: String,
     pub to_user: String,
-    pub time: i64,
-    pub create_time: i64,
+    pub time: u64,
+    pub create_time: u64,
     pub id: i64,
     pub raw: String,
 }
@@ -25,7 +25,7 @@ impl MessageParser for UnknownMessage {
         let source = xmlutil::evaluate(&doc, "//xml/FromUserName/text()").string();
         let target = xmlutil::evaluate(&doc, "//xml/ToUserName/text()").string();
         let id = xmlutil::evaluate(&doc, "//xml/MsgId/text()").number() as i64;
-        let time = xmlutil::evaluate(&doc, "//xml/CreateTime/text()").number() as i64;
+        let time = xmlutil::evaluate(&doc, "//xml/CreateTime/text()").number() as u64;
         UnknownMessage {
             from_user: source,
             to_user: target,
