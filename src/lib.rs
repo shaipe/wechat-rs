@@ -41,7 +41,7 @@ pub mod work {
 }
 
 
-// pub use wechat_sdk::*;
+pub use wechat_sdk::*;
 
 
 #[cfg(test)]

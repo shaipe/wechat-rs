@@ -4,11 +4,9 @@
 
 // use serde_derive::{ Serialize, Deserialize };
 
-
-
 use crate::WechatResult;
-use std::fs::File;
 use once_cell::sync::OnceCell;
+use std::fs::File;
 // 默认加载静态全局
 static CONFIGS: OnceCell<Config> = OnceCell::new();
 
@@ -21,50 +19,46 @@ pub enum PlatformType {
     MiniProgram,     // 小程序
 }
 
-
 /// 微信sdk配置
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub app_id: String, // 应用id
-    pub secret: String, // 密钥
-    pub token: String,  // token,在接口配置时填写的token,用于sigine验证
+    pub app_id: String,         // 应用id
+    pub secret: String,         // 密钥
+    pub token: String,          // token,在接口配置时填写的token,用于sigine验证
     pub platform: PlatformType, // 配置的平台类型
-                        // pub msg_type: MessageFormat,    // 消息格式
-                        // pub encrypt_mode: EncryptMode   // 加密方式
-    pub mch_id: String, //商户id
+    // pub msg_type: MessageFormat,    // 消息格式
+    // pub encrypt_mode: EncryptMode   // 加密方式
+    pub mch_id: String,      //商户id
     pub private_key: String, //商户证书私钥
     pub certificate: String, //商户证书路径
     pub secret_key: String,  //API 秘钥
-    
 }
 
 impl Config {
-
     /// 设置配置
     pub fn load(params: serde_json::Value) -> WechatResult<Config> {
-
-        let _conf = Config{
-            app_id: format!("{}",params["app_id"].as_str().unwrap_or_default()),
-            secret: format!("{}",params["secret"].as_str().unwrap_or_default()),
-            token: format!("{}",params["token"].as_str().unwrap_or_default()),
+        let _conf = Config {
+            app_id: format!("{}", params["app_id"].as_str().unwrap_or_default()),
+            secret: format!("{}", params["secret"].as_str().unwrap_or_default()),
+            token: format!("{}", params["token"].as_str().unwrap_or_default()),
             platform: PlatformType::MiniProgram,
-            mch_id: format!("{}",params["mch_id"].as_str().unwrap_or_default()),
-            private_key: format!("{}",params["private_key"].as_str().unwrap_or_default()),
-            certificate: format!("{}",params["certificate"].as_str().unwrap_or_default()),
-            secret_key: format!("{}",params["secret_key"].as_str().unwrap_or_default())
+            mch_id: format!("{}", params["mch_id"].as_str().unwrap_or_default()),
+            private_key: format!("{}", params["private_key"].as_str().unwrap_or_default()),
+            certificate: format!("{}", params["certificate"].as_str().unwrap_or_default()),
+            secret_key: format!("{}", params["secret_key"].as_str().unwrap_or_default()),
         };
         return Ok(_conf);
-         
+
         match CONFIGS.get() {
             Some(conf) => {
-                let app_id = format!("{}",params["app_id"].as_str().unwrap_or_default());
+                let app_id = format!("{}", params["app_id"].as_str().unwrap_or_default());
                 if conf.app_id != app_id {
                     let _ = CONFIGS.set(_conf.clone());
-                    return Ok(_conf)
+                    return Ok(_conf);
                 }
 
                 Ok(conf.clone())
-            },
+            }
             None => {
                 //保存值
                 let _ = CONFIGS.set(_conf.clone());
@@ -72,18 +66,13 @@ impl Config {
                 Ok(_conf)
             }
         }
-        
     }
 
-    /// 获取对应参数 
+    /// 获取对应参数
     pub fn get() -> Config {
         match CONFIGS.get() {
-            Some(conf) => {
-                conf.clone()
-            },
-            None => {
-                Config::default()
-            }
+            Some(conf) => conf.clone(),
+            None => Config::default(),
         }
     }
 
