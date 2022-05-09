@@ -15,12 +15,15 @@
 //! 
 //! 下发小程序和公众号统一的服务消息
 //! uniformMessage.send
+//! https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/uniform-message/uniformMessage.send.html
 //! 
 //! 创建被分享动态消息或私密消息的 activity_id。
 //! updatableMessage.createActivityId
+//! https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/updatable-message/updatableMessage.createActivityId.html
 //! 
 //! 修改被分享的动态消息。
 //! updatableMessage.setUpdatableMsg
+//! https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/updatable-message/updatableMessage.setUpdatableMsg.html
 //! 
 //! 
 //! 
@@ -29,5 +32,9 @@
 //! 
 //! 
 //! 
-//! 
-//! 
+
+pub struct Message;
+
+impl Message {
+    // 
+}

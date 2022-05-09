@@ -44,7 +44,8 @@ members = [
   "work", # 企业微信
   "open", # 开放平台
   "mp", # 公众号
-  "store",
+  "store",  # 微信小店
   "sdk", # 工具类
-  "redis",
+  "redis",  # redis
+  "partner" # 微信服务商
 ]
