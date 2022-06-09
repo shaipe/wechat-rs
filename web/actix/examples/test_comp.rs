@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use wechat_redis::{get_redis_conf, RedisConfig};
-use wechat_sdk::WechatResult;
+use wechat_sdk::{WechatResult,AccessToken};
 
 /// 小程序测试app_id
 const _MIN_APP_ID: &str = "wx2be69912728f0108";
@@ -62,8 +62,10 @@ fn main() -> io::Result<()> {
 
     // 解绑开放平台帐号
     //let _=test_unbind_open(&access_token);
+
     Ok(())
 }
+
 /// 测试公众号
 #[allow(dead_code)]
 fn test_offical_app()->String {
@@ -122,15 +124,15 @@ fn test_min_app() -> String {
     // println!("==={:?}",rs);
 
     // //获取授权令牌
-    // let refresh_token="refreshtoken@@@yzx1x8n6ECinXW2iBwTD-804NWNCXfGdCbxLxSz0VqA";
-    // let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
-    // println!("fetch_authorizer_token==={:?}",rs);
+    let refresh_token="refreshtoken@@@yzx1x8n6ECinXW2iBwTD-804NWNCXfGdCbxLxSz0VqA";
+    let rs=actix_rt::System::new().block_on(comp.fetch_authorizer_token(_MIN_APP_ID,refresh_token,&token.0));
+    println!("fetch_authorizer_token==={:?}",rs);
     
-    // set_official_access_token(&redis_con,_MIN_APP_ID,rs.unwrap());
+    set_official_access_token(&redis_con,_MIN_APP_ID,rs.unwrap());
     let authorizer_token="55_9tyg8iY42xIyGl9ayJdUSZwnWVHy0id_UKgxIyUa2oKnjKNnFRUpP7aZ9u8s5jUMWX2Kjx-NIKRiaAHVzv-TylDCGaPs0BST_RIjEiOSxc3jAA69jffjxuWckPcGJQ1b6ooz6NTU1CP_qqQjIHReAFDQPZ";
     
-    let rs=actix_rt::System::new().block_on(Template::new(&token.0).get_template_list(Some(0)));
-    println!("===res{:?}",rs.unwrap()[0].to_string());
+    // let rs=actix_rt::System::new().block_on(Template::new(&token.0).get_template_list(Some(0)));
+    // println!("===res{:?}",rs.unwrap()[0].to_string());
 
     authorizer_token.to_owned()
 }
@@ -150,7 +152,8 @@ fn test_set_domain(access_token: &str) -> WechatResult<u64> {
         req_domain.clone(),
     ))?;
     println!("==={:?}", rs);
-
+   
+    //futures::executor::block_on(min_domain.set_webview_domain(req_domain.clone()));
     let rs = actix_rt::System::new().block_on(min_domain.set_webview_domain(req_domain.clone()))?;
     println!("==={:?}", rs);
 

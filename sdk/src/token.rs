@@ -60,7 +60,6 @@ impl AccessToken {
             app_id = self.app_id,
             secret = self.secret
         );
-
         // 调用远程接口
         match Client::new().get(&url).await {
             Ok(res) => {

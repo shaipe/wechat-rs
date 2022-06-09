@@ -112,7 +112,6 @@ pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
             msg: msg,
         });
     }
-    println!("obj====={:?}", obj);
     Ok(obj)
 }
 

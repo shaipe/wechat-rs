@@ -29,7 +29,7 @@ url = "2.2.2"
 wechat = {path = "../../", version = "0.2.0", features = ["open"]}
 wechat_redis = {path = "../../redis", version = "0.2.0"}
 wechat_sdk = {path = "../../sdk", version = "0.2.0"}
-
+wechat_weapp = {path = "../../weapp", version = "0.2.0"}
 # [[bin]]
 # name = "wx"
 # path = "src/main.rs"

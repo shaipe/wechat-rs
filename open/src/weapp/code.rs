@@ -77,6 +77,7 @@ impl Code {
             )
         );
         let data = json!({ "item_list": [item] });
+        println!("data=={:?}",data);
         let api = Client::new();
         let res = api.post(&uri, &data).await?;
         wechat_sdk::json_decode(&res)

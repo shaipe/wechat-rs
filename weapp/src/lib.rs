@@ -7,8 +7,7 @@
 
 #[macro_use]
 extern crate wechat_sdk;
-use wechat_sdk::WechatError;
-
+use wechat_sdk::{WechatError, WechatResult};
 // 引入json宏
 #[macro_use]
 extern crate serde_json;
@@ -24,7 +23,11 @@ pub use config::WeappConfig;
 
 // mod domain;
 // pub use domain::Domain;
+mod sub_template;
+pub use sub_template::{SubTemplate,SubTemplateKeyword};
 
+mod subscribe;
+pub use subscribe::Subscribe;
 
 // 接口域名
 pub(crate) const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
