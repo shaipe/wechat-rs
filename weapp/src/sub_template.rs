@@ -25,7 +25,7 @@ impl SubTemplate {
     }
 
     /// 获取模板标题下的关键词列表
-    pub async fn get_pub_template_keyword(&self,tid:u32) -> WechatResult<Vec<SubTemplateKeyword>> {
+    pub async fn get_pub_template_keyword(&self,tid:u32) -> WechatResult<Vec<serde_json::Value>> {
         let uri = format!(
             "{}{}",
             crate::API_DOMAIN,
@@ -41,12 +41,7 @@ impl SubTemplate {
         let categories = data["data"].as_array().unwrap();
         let mut list = vec![];
         for c in categories {
-            list.push(SubTemplateKeyword {
-                kid: c["kid"].as_u64().unwrap_or_default(),
-                name: c["name"].to_string(),
-                rule: c["rule"].to_string(),
-                example: c["example"].to_string()
-            });
+            list.push(c.to_owned());
         }
         Ok(list)
     }
