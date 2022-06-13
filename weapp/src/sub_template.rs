@@ -63,7 +63,12 @@ impl SubTemplate {
         });
         let res = api.post(&uri, &req_data).await?;
         let data = wechat_sdk::json_decode(&res)?;
-        Ok(data["priTmplId"].to_string())
+        match data["priTmplId"].as_str(){
+            Some(s)=>{
+                Ok(s.to_owned())
+            },
+            None=>Err(error!("模版id为空"))
+        }
     }
 
     /// 删除模版

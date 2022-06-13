@@ -10,7 +10,7 @@ use serde_json;
 fn main() -> io::Result<()> {
     // 获取配置
     //access_token
-    let access_token=get_access_token("wx455639023de66adb","");
+    let access_token=get_access_token("wx455639023de66adb","7dd16ab5eaa82611c5cee13b95b32dd1");
     println!("access_token={}",access_token);
     let tid=3578;
     get_pub_template_keyword(&access_token,tid);
@@ -36,7 +36,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 fn get_access_token(app_id: &str, secret: &str) -> String {
-    return "57_4Vu6tesJqDbtQUNmPVA5OvcqTSyGj-5nKc5zGAK8pVJjEOMHQVFQUiOHqDzJZPrRSyp_RjwdGtyJ_hrrI6fGB5F7BUdYe_4ryK_vDTgp19G2IqREyGz3pq2z70vowUlL8CMWqCuZrUsn6lJlIRDdAIAXGS".to_owned();
+    return "57_ersmUT5XNerwcJNE7yasQ8cjNOqZXC28RctnTRQIEleOBp2NC5npLOtIvu-rMSzpy-qZOpY7WXeQ0IxgjkDodBvwTfsIiVXcr74AOx9LbHkSXWPUVDTDm-aouy77I7ey1FhcqU5hiNuqYSN4UOGgAIAXRJ".to_owned();
     let rs = actix_rt::System::new().block_on(AccessToken::new("weapp", app_id, secret).get());
     println!("token=={:?}",rs);
     match rs {
