@@ -10,7 +10,7 @@ use serde_json;
 fn main() -> io::Result<()> {
     // 获取配置
     //access_token
-    let access_token=get_access_token("wx455639023de66adb","7dd16ab5eaa82611c5cee13b95b32dd1");
+    let access_token=get_access_token("wx455639023de66adb","");
     println!("access_token={}",access_token);
     let tid=3578;
     get_pub_template_keyword(&access_token,tid);
