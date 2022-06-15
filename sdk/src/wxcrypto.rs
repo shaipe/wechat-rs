@@ -33,7 +33,25 @@ impl WeChatCrypto {
             _id: _id.to_owned(),
         }
     }
+    /// 消息签名
+    pub fn get_msg_signature(&self, timestamp: u64, nonce: &str) -> String {
+        let mut data = vec![
+            self.token.clone(),
+            timestamp.to_string(),
+            nonce.to_owned()
+        ];
+        data.sort();
+        let data_str = data.join("");
 
+        // sha1
+        let mut hasher = Sha1::new();
+
+        // write input message
+        hasher.input_str(&data_str);
+
+        // read hash digest
+        hasher.result_str()
+    }
     /// 获取签名
     fn get_signature(&self, timestamp: u64, nonce: &str, encrypted: &str) -> String {
         let mut data = vec![
