@@ -49,23 +49,23 @@ impl Config {
         };
         return Ok(_conf);
 
-        match CONFIGS.get() {
-            Some(conf) => {
-                let app_id = format!("{}", params["app_id"].as_str().unwrap_or_default());
-                if conf.app_id != app_id {
-                    let _ = CONFIGS.set(_conf.clone());
-                    return Ok(_conf);
-                }
+        // match CONFIGS.get() {
+        //     Some(conf) => {
+        //         let app_id = format!("{}", params["app_id"].as_str().unwrap_or_default());
+        //         if conf.app_id != app_id {
+        //             let _ = CONFIGS.set(_conf.clone());
+        //             return Ok(_conf);
+        //         }
 
-                Ok(conf.clone())
-            }
-            None => {
-                //保存值
-                let _ = CONFIGS.set(_conf.clone());
+        //         Ok(conf.clone())
+        //     }
+        //     None => {
+        //         //保存值
+        //         let _ = CONFIGS.set(_conf.clone());
 
-                Ok(_conf)
-            }
-        }
+        //         Ok(_conf)
+        //     }
+        // }
     }
 
     /// 获取对应参数

@@ -9,8 +9,8 @@ edition = "2021"
 
 [dependencies]
 percent-encoding = "2.1.0"
-serde_json = "1.0.81"
-serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.82"
+serde = { version = "1.0.141", features = ["derive"] }
 # 
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
 wechat_redis= {path = "../redis", version = "0.2.0"}
