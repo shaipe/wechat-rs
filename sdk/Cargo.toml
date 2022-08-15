@@ -7,15 +7,15 @@ version = "0.2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.141", features = ["derive"] }
-serde_json = "1.0.82"
+serde = { version = "1.0.143", features = ["derive"] }
+serde_json = "1.0.83"
 
 # 加解密
 rust-crypto = "0.2.36"
 rand = "0.8.5"
 byteorder = "1.4.3"
 base64 = "0.13.0"
-chrono = "0.4.19"
+chrono = "0.4.22"
 lazy_static = "1.4.0"
 
 # Xml解析

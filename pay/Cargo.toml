@@ -8,12 +8,12 @@ version = "0.2.0"
 
 [dependencies]
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
-serde = "1.0.141"
-serde_json = "1.0.82"
+serde = "1.0.143"
+serde_json = "1.0.83"
 serde-xml-rs = "0.5.1"
 itertools= "0.10.3"
 md5= "0.7.0"
-chrono = "0.4.19"
+chrono = "0.4.22"
 
 [dev-dependencies]
 actix-web = { version = "4.1.0", features = ["openssl"] }
