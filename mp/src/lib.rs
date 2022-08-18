@@ -17,3 +17,6 @@ pub mod message;
 pub mod authorize;
 pub use authorize::WechatAuthorize;
 
+
+// 定义接口请求域名
+pub(crate) const API_DOMAIN: &'static str = "https://api.weixin.qq.com";

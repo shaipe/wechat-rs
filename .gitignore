@@ -2,7 +2,7 @@
 **/*.rs.bk
 **/target/
 **/config/
-**/template
+# **/template
 /node_modules/
 **/node_modules/
 log/

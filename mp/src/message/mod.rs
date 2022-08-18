@@ -21,6 +21,9 @@ pub use reply::{Reply, ReplyRender, TextReply};
 mod kf;
 pub use kf::KFService;
 
+mod template;
+pub use template::Template;
+
 /// 消息枚举
 #[derive(Debug, Clone)]
 pub enum Message {
