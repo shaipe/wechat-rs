@@ -288,6 +288,7 @@ pub fn test_bind_tester(access_token: &str) -> WechatResult<u64> {
     println!("==={:?}", rs);
     Ok(0)
 }
+
 #[allow(dead_code)]
 /// 解绑体验者
 pub fn test_unbind_tester(access_token: &str) -> WechatResult<u64> {
@@ -298,6 +299,7 @@ pub fn test_unbind_tester(access_token: &str) -> WechatResult<u64> {
     println!("==={:?}", rs);
     Ok(0)
 }
+
 #[allow(dead_code)]
 /// 解绑体验者
 pub fn test_get_wxa_code(access_token: &str) -> WechatResult<u64> {
@@ -307,6 +309,7 @@ pub fn test_get_wxa_code(access_token: &str) -> WechatResult<u64> {
     //println!("==={:?}", rs);
     Ok(0)
 }
+
 #[allow(dead_code)]
 /// 创建开放平台帐号
 pub fn test_create_open(access_token: &str) -> WechatResult<u64> {
@@ -358,8 +361,8 @@ pub fn get_comp_token(redis_con: &str, key: &str) -> (String, u64) {
             return ("".to_owned(), 0);
         }
     }
-    
 }
+
 pub fn set_official_access_token(redis_con: &str,key: &str, cnf: (String, u64)) {
     let url = format!("{}", redis_con);
     let cache_key = format!("{0}_{1}", OFFICAL_ACCESS_TOKEN_CATCHE_KEY, key);

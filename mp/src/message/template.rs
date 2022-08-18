@@ -73,7 +73,7 @@ impl Template {
             token = &self.access_token
         );
         match Client::new().get(&url).await {
-            Ok(res) => json_decode(&res),
+            Ok(res) => Ok(json_decode(&res)?["template_id"].clone()),
             Err(err) => Err(err),
         }
     }
