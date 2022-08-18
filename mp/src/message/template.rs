@@ -97,17 +97,36 @@ impl Template {
     }
 
     /// 发送模板消息
-    pub async fn send_template(&self, template_id: &str) -> WechatResult<Value>
-    {
+    /// @1-open_id: 接收人的openid
+    /// @2-template_id: 模板id
+    /// @3-weapp_id: 需要跳转的appid
+    /// @4-page_path: 跳转到小程序的页面路径
+    /// @5-content_data: 模板消息需要的数据
+    pub async fn send_template(
+        &self,
+        open_id: &str,
+        template_id: &str,
+        weapp_id: &str,
+        page_path: &str,
+        content_data: serde_json::Value,
+    ) -> WechatResult<Value> {
         let url = format!(
             "{api}/cgi-bin/message/template/send??access_token={token}",
             api = API_DOMAIN,
             token = &self.access_token
         );
-        match Client::new()
-            .post(&url, &json!({ "template_id": template_id }))
-            .await
-        {
+        let data = json!({
+            "touser": open_id,
+            "template_id": template_id,
+            // "url":"http://weixin.qq.com/download",
+            "miniprogram":{
+              "appid": weapp_id,
+              "pagepath": page_path
+            },
+            // "client_msg_id":"MSG_000001",
+            "data": content_data
+        });
+        match Client::new().post(&url, &data).await {
             Ok(res) => json_decode(&res),
             Err(err) => Err(err),
         }
