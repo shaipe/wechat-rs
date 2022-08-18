@@ -60,7 +60,7 @@ impl Template {
             .post(&url, &json!({ "template_id_short": short_id }))
             .await
         {
-            Ok(res) => json_decode(&res),
+            Ok(res) => Ok(json_decode(&res)?["template_id"].clone()),
             Err(err) => Err(err),
         }
     }
@@ -74,7 +74,7 @@ impl Template {
             token = &self.access_token
         );
         match Client::new().get(&url).await {
-            Ok(res) => Ok(json_decode(&res)?["template_id"].clone()),
+            Ok(res) => json_decode(&res),
             Err(err) => Err(err),
         }
     }
