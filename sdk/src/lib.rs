@@ -80,7 +80,7 @@ pub fn current_timestamp() -> u64 {
 ///
 #[inline]
 pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
-    log!("==== {} ========", data);
+    log!("==== response {} ========", data);
     let obj: serde_json::Value = match serde_json::from_str(data) {
         Ok(decoded) => decoded,
         Err(ref e) => {
