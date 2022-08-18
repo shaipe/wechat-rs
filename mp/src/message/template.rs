@@ -66,6 +66,7 @@ impl Template {
     }
 
     /// 获取设置的行业信息
+    /// 直接返回长的模板id字符串型Value
     pub async fn get_list(&self) -> WechatResult<Value> {
         let url = format!(
             "{api}/cgi-bin/template/get_all_private_template?access_token={token}",
@@ -88,6 +89,23 @@ impl Template {
         );
         match Client::new()
             .post(&url, &json!({ "template_id": id }))
+            .await
+        {
+            Ok(res) => json_decode(&res),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// 发送模板消息
+    pub async fn send_template(&self, template_id: &str) -> WechatResult<Value>
+    {
+        let url = format!(
+            "{api}/cgi-bin/message/template/send??access_token={token}",
+            api = API_DOMAIN,
+            token = &self.access_token
+        );
+        match Client::new()
+            .post(&url, &json!({ "template_id": template_id }))
             .await
         {
             Ok(res) => json_decode(&res),
