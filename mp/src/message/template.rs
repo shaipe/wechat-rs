@@ -52,7 +52,7 @@ impl Template {
     /// param1: 模板短id
     pub async fn get_template_id(&self, short_id: &str) -> WechatResult<Value> {
         let url = format!(
-            "{api}/cgi-bin/template/api_set_industry?access_token={token}",
+            "{api}/cgi-bin/template/api_add_template?access_token={token}",
             api = API_DOMAIN,
             token = &self.access_token
         );
