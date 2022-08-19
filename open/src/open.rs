@@ -54,7 +54,7 @@ impl OpenAccount {
 
     /// 将公众号或小程序绑定到开放平台帐号
     /// https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/2.0/api/account/bind.html
-    pub async fn bind_open(&self, open_app_id: &str) -> WechatResult<bool> {
+    pub async fn bind_open(&self, open_app_id: &str) -> WechatResult<serde_json::Value> {
         let uri = format!(
             "{}{}",
             API_DOMAIN,
@@ -70,12 +70,7 @@ impl OpenAccount {
         hash.insert("open_appid".to_string(), open_app_id.to_owned());
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
-        let mut bo = false;
-           log!("res::: {}", res);
-        if wechat_sdk::json_decode(&res).is_ok() {
-            bo = true;
-        }
-        Ok(bo)
+        wechat_sdk::json_decode(&res)
     }
 
     /// 将公众号或小程序从开放平台帐号中解绑
