@@ -245,6 +245,31 @@ async fn fetch_component_token(req: HttpRequest) -> Result<HttpResponse> {
     }
 }
 
+/// 获取授权者token
+#[post("/wx/fetch_authorizer_token")]
+async fn fetch_authorizer_token(payload: web::Payload) -> Result<HttpResponse> {
+    let post_str = utils::get_request_body(payload).await;
+    let dic = utils::parse_query(&post_str);
+    let app_id = utils::get_hash_value(&dic, "app_id");
+    let refresh_token = utils::get_hash_value(&dic, "refresh_token");
+
+    let tripart_config: TripartiteConfig = get_tripartite_config();
+    let comp_token = get_comp_access_tokens().await;
+    let comp = AuthToken::new(tripart_config.clone());
+    let token = match comp
+        .fetch_authorizer_token(&app_id, &refresh_token, &comp_token.0)
+        .await
+    {
+        Ok(s) => s,
+        Err(e) => return get_exception_result(&format!("{:?}", e), 500),
+    };
+
+    let mut content_dic: HashMap<String, String> = HashMap::new();
+    content_dic.insert("token".to_owned(), token.0);
+    content_dic.insert("expires_in".to_owned(), format!("{}", token.1));
+    get_success_result(&content_dic)
+}
+
 ///获得授权url
 /// x-scheme: 是在nginx的反向代理时使用, proxy_set_header X-Scheme $scheme 把请求的真实协议给定到请求头中
 #[post("/wx/fetch_auth_url")]
