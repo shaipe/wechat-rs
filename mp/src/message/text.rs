@@ -2,7 +2,7 @@
 //! 文本消息处理
 
 use super::MessageParser;
-use wechat_sdk::{current_timestamp, xmlutil};
+use wechat_sdk::xmlutil;
 
 // use super::WechatMessage;
 
@@ -20,7 +20,6 @@ use wechat_sdk::{current_timestamp, xmlutil};
 pub struct TextMessage {
     pub to_user: String,
     pub from_user: String,
-    pub time: u64,
     pub create_time: u64,
     pub content: String,
     pub id: i64,
@@ -45,10 +44,21 @@ impl MessageParser for TextMessage {
             from_user: source,
             to_user: target,
             id: id,
-            time: time,
-            create_time: current_timestamp(),
+            create_time: time,
             content: content,
             raw: xml.to_owned(),
         }
+    }
+
+    /// 转换为json数据
+    fn to_json(&self) -> serde_json::Value {
+        json!({
+            "msgType": "text",
+            "toUser": self.to_user,
+            "fromUser": self.from_user,
+            "id": self.id,
+            "createTime": self.create_time,
+            "content": self.content
+        })
     }
 }

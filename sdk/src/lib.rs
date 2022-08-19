@@ -77,6 +77,21 @@ pub fn current_timestamp() -> u64 {
         .as_secs() as u64
 }
 
+/// all letters
+const ALL_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/// random string
+pub fn get_nonce(length: usize) -> String {
+    let mut target = String::from("");
+    let chars: Vec<char> = ALL_LETTERS.chars().collect();
+    for _ in 0..length {
+        let rand_num = rand::random::<usize>();
+        target.push(chars[rand_num % 62]);
+    }
+    target
+}
+
+
 ///
 #[inline]
 pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {

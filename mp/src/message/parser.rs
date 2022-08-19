@@ -1,25 +1,28 @@
 //! copyright © ecdata.cn 2021 - present
-//! 
+//!
 
-use wechat_sdk::xmlutil;
 use super::{Message, TextMessage, UnknownMessage};
-
+use wechat_sdk::xmlutil;
 
 /// 消息解析器
 pub trait MessageParser {
     type WeChatMessage;
 
+    /// 从Xml中解析消息
     fn from_xml(xml: &str) -> Self::WeChatMessage;
+
+    /// 将消息体转为json对象
+    fn to_json(&self) -> serde_json::Value;
 }
-
-
 
 /// 解析Message信息
 pub fn parse_message<S: AsRef<str>>(xml: S) -> Message {
     let xml = xml.as_ref();
     let package = xmlutil::parse(xml);
     let doc = package.as_document();
-    let msg_type_str = xmlutil::evaluate(&doc, "//xml/MsgType/text()").string().to_lowercase();
+    let msg_type_str = xmlutil::evaluate(&doc, "//xml/MsgType/text()")
+        .string()
+        .to_lowercase();
     let msg_type = &msg_type_str[..];
     let msg = match msg_type {
         "text" => Message::TextMessage(TextMessage::from_xml(xml)),

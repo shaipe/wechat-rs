@@ -7,7 +7,7 @@ use wechat_sdk::current_timestamp;
 pub struct ImageReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: u64,
+    pub create_time: u64,
     pub media_id: String,
 }
 
@@ -17,7 +17,7 @@ impl ImageReply {
         ImageReply {
             from_user: from_user.into(),
             to_user: to_user.into(),
-            time: current_timestamp(),
+            create_time: current_timestamp(),
             media_id: media_id.into(),
         }
     }
@@ -26,7 +26,8 @@ impl ImageReply {
 impl ReplyRender for ImageReply {
     #[inline]
     fn render(&self) -> String {
-        format!(r#"<xml>
+        format!(
+            r#"<xml>
             <ToUserName><![CDATA[{to_user}]]></ToUserName>
             <FromUserName><![CDATA[{from_user}]]></FromUserName>
             <CreateTime>{time}</CreateTime>
@@ -35,18 +36,22 @@ impl ReplyRender for ImageReply {
             <MediaId><![CDATA[{media_id}]]></MediaId>
             </Image>
             </xml>"#,
-            to_user=self.to_user,
-            from_user=self.from_user,
-            time=self.time,
-            media_id=self.media_id
+            to_user = self.to_user,
+            from_user = self.from_user,
+            time = self.create_time,
+            media_id = self.media_id
         )
     }
+
+    // fn encrypt(&self) -> WechatResult<String>{
+    //     Err(error!(""))
+    // }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::ReplyRender;
     use super::ImageReply;
+    use super::ReplyRender;
 
     #[test]
     fn test_render_image_reply() {

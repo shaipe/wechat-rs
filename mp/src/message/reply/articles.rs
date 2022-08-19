@@ -2,7 +2,7 @@
 //! 图文消息回复
 
 use super::ReplyRender;
-use wechat_sdk::current_timestamp;
+use wechat_sdk::{current_timestamp, WechatResult};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Article {
@@ -16,13 +16,12 @@ pub struct Article {
 pub struct ArticlesReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: u64,
+    pub create_time: u64,
     pub articles: Vec<Article>,
 }
 
 #[allow(dead_code)]
 impl Article {
-
     #[inline]
     pub fn new<S: Into<String>>(title: S, url: S) -> Article {
         Article {
@@ -74,16 +73,17 @@ impl Article {
     }
 
     fn render(&self) -> String {
-        format!(r#"<item>
+        format!(
+            r#"<item>
             <Title><![CDATA[{title}]]></Title>
             <Description><![CDATA[{description}]]></Description>
             <PicUrl><![CDATA[{picurl}]]></PicUrl>
             <Url><![CDATA[{url}]]></Url>
             </item>"#,
-            title=self.title,
-            description=self.description,
-            picurl=self.image,
-            url=self.url,
+            title = self.title,
+            description = self.description,
+            picurl = self.image,
+            url = self.url,
         )
     }
 }
@@ -94,17 +94,21 @@ impl ArticlesReply {
         ArticlesReply {
             from_user: from_user.into(),
             to_user: to_user.into(),
-            time: current_timestamp(),
+            create_time: current_timestamp(),
             articles: vec![],
         }
     }
 
     #[inline]
-    pub fn with_articles<S: Into<String>>(from_user: S, to_user: S, articles: &[Article]) -> ArticlesReply {
+    pub fn with_articles<S: Into<String>>(
+        from_user: S,
+        to_user: S,
+        articles: &[Article],
+    ) -> ArticlesReply {
         ArticlesReply {
             from_user: from_user.into(),
             to_user: to_user.into(),
-            time: current_timestamp(),
+            create_time: current_timestamp(),
             articles: articles.to_vec(),
         }
     }
@@ -126,7 +130,8 @@ impl ReplyRender for ArticlesReply {
             articles.push(article.render());
         }
         let articles_str = articles.join("\n");
-        format!(r#"<xml>
+        format!(
+            r#"<xml>
             <ToUserName><![CDATA[{to_user}]]></ToUserName>
             <FromUserName><![CDATA[{from_user}]]></FromUserName>
             <CreateTime>{time}</CreateTime>
@@ -134,13 +139,17 @@ impl ReplyRender for ArticlesReply {
             <ArticleCount>{count}</ArticleCount>
             <Articles>{articles}</Articles>
             </xml>"#,
-            to_user=self.to_user,
-            from_user=self.from_user,
-            time=self.time,
-            count=self.articles.len(),
-            articles=articles_str,
+            to_user = self.to_user,
+            from_user = self.from_user,
+            time = self.create_time,
+            count = self.articles.len(),
+            articles = articles_str,
         )
     }
+
+    // fn encrypt(&self) -> WechatResult<String>{
+    //     Err(error!(""))
+    // }
 }
 
 #[cfg(test)]

@@ -111,7 +111,7 @@ impl Template {
         content_data: serde_json::Value,
     ) -> WechatResult<Value> {
         let url = format!(
-            "{api}/cgi-bin/message/template/send??access_token={token}",
+            "{api}/cgi-bin/message/template/send?access_token={token}",
             api = API_DOMAIN,
             token = &self.access_token
         );

@@ -37,4 +37,14 @@ impl MessageParser for EventMessage {
             raw: xml.to_owned(),
         }
     }
+
+    fn to_json(&self) -> serde_json::Value {
+        json!({
+            "msgType": "event",
+            "toUser": self.to_user,
+            "fromUser": self.from_user,
+            "createTime": self.create_time,
+            "event": self.event
+        })
+    }
 }

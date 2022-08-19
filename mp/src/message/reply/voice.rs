@@ -8,7 +8,7 @@ use crate::current_timestamp;
 pub struct VoiceReply {
     pub from_user: String,
     pub to_user: String,
-    pub time: i64,
+    pub create_time: i64,
     pub media_id: String,
 }
 
@@ -18,7 +18,7 @@ impl VoiceReply {
         VoiceReply {
             from_user: from_user.into(),
             to_user: to_user.into(),
-            time: current_timestamp(),
+            create_time: current_timestamp(),
             media_id: media_id.into(),
         }
     }
@@ -27,7 +27,8 @@ impl VoiceReply {
 impl ReplyRender for VoiceReply {
     #[inline]
     fn render(&self) -> String {
-        format!(r#"<xml>
+        format!(
+            r#"<xml>
             <ToUserName><![CDATA[{to_user}]]></ToUserName>
             <FromUserName><![CDATA[{from_user}]]></FromUserName>
             <CreateTime>{time}</CreateTime>
@@ -36,10 +37,10 @@ impl ReplyRender for VoiceReply {
             <MediaId><![CDATA[{media_id}]]></MediaId>
             </Voice>
             </xml>"#,
-            to_user=self.to_user,
-            from_user=self.from_user,
-            time=self.time,
-            media_id=self.media_id
+            to_user = self.to_user,
+            from_user = self.from_user,
+            time = self.create_time,
+            media_id = self.media_id
         )
     }
 }

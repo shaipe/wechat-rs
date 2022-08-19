@@ -35,11 +35,7 @@ impl WeChatCrypto {
     }
     /// 消息签名
     pub fn get_msg_signature(&self, timestamp: u64, nonce: &str) -> String {
-        let mut data = vec![
-            self.token.clone(),
-            timestamp.to_string(),
-            nonce.to_owned()
-        ];
+        let mut data = vec![self.token.clone(), timestamp.to_string(), nonce.to_owned()];
         data.sort();
         let data_str = data.join("");
 
@@ -93,10 +89,10 @@ impl WeChatCrypto {
         let package = xmlutil::parse(xml);
         let doc = package.as_document();
         let encrypted_msg = xmlutil::evaluate(&doc, "//xml/Encrypt/text()").string();
-        // println!("encrypted_msg={:?}",encrypted_msg);
+        // log!("encrypted_msg={:?}",encrypted_msg);
         let real_signature = self.get_signature(timestamp, &nonce, &encrypted_msg);
 
-        // println!("o: {}, new: {}", signature, real_signature);
+        // log!("o: {}, new: {}", signature, real_signature);
 
         if signature != real_signature {
             return Err(error! {
@@ -105,16 +101,16 @@ impl WeChatCrypto {
             });
         }
         let msg = self.decrypt(&encrypted_msg)?;
-        log!("######### decode message ########## \n{}", msg);
+        // log!("######### decode message ########## \n{}", msg);
         Ok(msg)
     }
 
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        println!("=== msg decrypt === {:?}", ciphertext);
+        // log!("=== msg decrypt === {:?}", ciphertext);
         let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
         let content = aes.decrypt(ciphertext.to_owned());
-        println!("=== msg1 decrypt === {:?}", content);
+        // log!("=== msg1 decrypt === {:?}", content);
         // aes descrypt
         let text = content.as_bytes();
         let mut rdr = Cursor::new(text[16..20].to_vec());
@@ -129,8 +125,10 @@ impl WeChatCrypto {
         let content_string = String::from_utf8(content.to_vec()).unwrap();
         Ok(content_string)
     }
+
     /// 对消息进行加密
-    pub fn encrypt_message(&self, msg: &str, timestamp: u64, nonce: &str) -> Result<String> {
+    /// @param msg 消息内容字符
+    pub fn encrypt_message(&self, msg: &str, nonce: &str) -> Result<String> {
         let rnd_str = get_random_string(16);
         let mut wtr = rnd_str.into_bytes();
 
@@ -142,14 +140,15 @@ impl WeChatCrypto {
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
 
-        println!("=== msg encrypt === {:?}", self.key);
+        log!("=== msg encrypt === {:?}", self.key);
         //aes 加密
         let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
         let encrypted = aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
                                                //base64 编码
         let b64encoded = base64::encode(&encrypted);
 
-        println!("==== msg encrypt base64 {}", b64encoded);
+        log!("==== msg encrypt base64 {}", b64encoded);
+        let timestamp: u64 = crate::current_timestamp();
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
@@ -340,7 +339,7 @@ mod tests {
         );
         let timestamp = crate::current_timestamp();
         let nonce = format!("{}", timestamp);
-        let encrypt_text = crypto.encrypt_message(msg, timestamp, &nonce);
+        let encrypt_text = crypto.encrypt_message(msg, &nonce);
         println!("{:?}", encrypt_text);
     }
 }

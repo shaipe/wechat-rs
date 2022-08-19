@@ -2,14 +2,13 @@
 //! 未知消息类型
 
 use super::MessageParser;
-use wechat_sdk::{current_timestamp, xmlutil};
+use wechat_sdk::xmlutil;
 
 /// 未知类型的消息结构体
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct UnknownMessage {
     pub from_user: String,
     pub to_user: String,
-    pub time: u64,
     pub create_time: u64,
     pub id: i64,
     pub raw: String,
@@ -30,9 +29,18 @@ impl MessageParser for UnknownMessage {
             from_user: source,
             to_user: target,
             id: id,
-            time: time,
-            create_time: current_timestamp(),
+            create_time: time,
             raw: xml.to_owned(),
         }
+    }
+
+    fn to_json(&self) -> serde_json::Value {
+        json!({
+            "msgType": "unknown",
+            "toUser": self.to_user,
+            "fromUser": self.from_user,
+            "id": self.id,
+            "createTime": self.create_time
+        })
     }
 }
