@@ -119,10 +119,10 @@ impl Template {
             "touser": open_id,
             "template_id": template_id,
             // "url":"http://weixin.qq.com/download",
-            "miniprogram":{
-              "appid": weapp_id,
-              "pagepath": page_path
-            },
+            // "miniprogram":{
+            //   "appid": weapp_id,
+            //   "pagepath": page_path
+            // },
             // "client_msg_id":"MSG_000001",
             "data": content_data
         });
