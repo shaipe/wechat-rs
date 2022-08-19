@@ -127,7 +127,7 @@ impl Template {
             "data": content_data
         });
         match Client::new().post(&url, &data).await {
-            Ok(res) => json_decode(&res),
+            Ok(res) =>Ok(json_decode(&res)?["msgid"].clone()),
             Err(err) => Err(err),
         }
     }
