@@ -71,6 +71,7 @@ impl OpenAccount {
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
         let mut bo = false;
+           log!("res::: {}", res);
         if wechat_sdk::json_decode(&res).is_ok() {
             bo = true;
         }
