@@ -44,12 +44,12 @@ impl OpenAccount {
         let res = api.post(&uri, &hash).await?;
 
         let data = wechat_sdk::json_decode(&res)?;
-        // println!("res-------={:?}", res);
-        let open_appid = match data["open_appid"].as_str() {
-            Some(v) => v,
-            None => "",
-        };
-        Ok(open_appid.to_owned())
+        println!("res-------={:?}", data);
+        // let open_appid = match data["open_appid"].as_str() {
+        //     Some(v) => v,
+        //     None => "",
+        // };
+        Ok( data["open_appid"].as_str().unwrap_or_default().to_owned())
     }
 
     /// 将公众号或小程序绑定到开放平台帐号
@@ -120,6 +120,6 @@ impl OpenAccount {
         let api = Client::new();
         let res = api.post(&uri, &hash).await?;
         let data = wechat_sdk::json_decode(&res)?;
-        Ok(data["open_appid"].to_string())
+        Ok(data["open_appid"].as_str().unwrap_or_default().to_owned())
     }
 }
