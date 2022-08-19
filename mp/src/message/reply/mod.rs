@@ -9,7 +9,7 @@ pub use image::ImageReply;
 
 mod articles;
 pub use articles::ArticlesReply;
-use wechat_sdk::WechatResult;
+// use wechat_sdk::WechatResult;
 
 /// 消息回复
 pub trait ReplyRender {

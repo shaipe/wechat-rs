@@ -2,7 +2,7 @@
 //! 图文消息回复
 
 use super::ReplyRender;
-use wechat_sdk::{current_timestamp, WechatResult};
+use wechat_sdk::current_timestamp;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Article {
