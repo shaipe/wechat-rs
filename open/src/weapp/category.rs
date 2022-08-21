@@ -1,7 +1,8 @@
 //! copyright © ecdata.cn 2021 - present
 //! 小程序分类管理
 
-use wechat_sdk::{Client, WechatResult};
+use serde_json::Value;
+use wechat_sdk::{json_decode, Client, WechatResult};
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +29,23 @@ impl Category {
         }
     }
 
-    /// 获取小程序分类
+    /// 获取可设置的所有类目
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/getAllCategories.html
+    pub async fn get_all_categories(&self) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/wxopen/getallcategories?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+        let res = Client::new().get(&uri).await?;
+        json_decode(&res)
+    }
+
+    /// 获取已设置的所有类目
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/getSettingCategories.html
     pub async fn get_category(&self) -> WechatResult<Vec<CategoryItem>> {
         let uri = format!(
             "{}{}",
@@ -38,9 +55,9 @@ impl Category {
                 self.auth_access_token.clone()
             )
         );
-        let api = Client::new();
+
         let hash: HashMap<String, String> = HashMap::new();
-        let res = api.post(&uri, &hash).await?;
+        let res = Client::new().post(&uri, &hash).await?;
         let data = wechat_sdk::json_decode(&res)?;
         let categories = data["categories"].as_array().unwrap();
         let mut list = vec![];
@@ -61,5 +78,106 @@ impl Category {
             });
         }
         Ok(list)
+    }
+
+    /// 获取不同类型主体可设置的类目
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/getAllCategoriesByType.html
+    /// @param1 - verify_type : 如果不填，默认传0；个人主体是0；企业主体是1；政府是2；媒体是3；其他组织是4
+    pub async fn get_category_by_type(&self, verify_type: i8) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/wxopen/getcategoriesbytype?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+
+        let data = json!(
+        {
+            "verify_type": verify_type
+        });
+
+        let res = Client::new().post(&uri, &data).await?;
+
+        json_decode(&res)
+    }
+
+    /// 添加类目
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/addCategory.html
+    pub async fn add_category(&self) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/wxopen/addcategory?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+
+        let data = json!({});
+
+        let res = Client::new().post(&uri, &data).await?;
+
+        json_decode(&res)
+    }
+
+    /// 删除目录
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/deleteCategory.html
+    /// @param1 - first	number	是	一级类目 ID
+    /// @param2 - second	number	是	二级类目 ID
+    pub async fn delete_category(&self, first: i64, second: i64) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/wxopen/deletecategory?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+
+        let data = json!(
+        {
+            "first": first,
+            "second": second
+        });
+
+        let res = Client::new().post(&uri, &data).await?;
+
+        json_decode(&res)
+    }
+
+    /// 修改类目资质信息
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/modifyCategory.html
+    pub async fn modify_category(&self) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/cgi-bin/wxopen/modifycategory?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+
+        let data = json!({});
+
+        let res = Client::new().post(&uri, &data).await?;
+
+        json_decode(&res)
+    }
+
+    /// 获取类目名称信息
+    /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/getAllCategoryName.html
+    pub async fn get_category_names(&self) -> WechatResult<Value> {
+        let uri = format!(
+            "{}{}",
+            API_DOMAIN,
+            format!(
+                "/wxa/get_category?access_token={}",
+                self.auth_access_token.clone()
+            )
+        );
+        let res = Client::new().get(&uri).await?;
+        json_decode(&res)
     }
 }

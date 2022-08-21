@@ -48,5 +48,9 @@ impl Privacy {
     // 申请隐私接口
     // https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/2.0/api/apply_api/apply_privacy_interface.html
 
-    
+    // 申请位置
+    // https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/privacy-api-management/applyPrivacyInterface.html
+
+    // 获取地理位置接口列表
+    // https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/privacy-api-management/getPrivacyInterface.html
 }

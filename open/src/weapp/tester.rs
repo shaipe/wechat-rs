@@ -30,8 +30,8 @@ impl Tester {
 
         let mut hash = HashMap::new();
         hash.insert("wechatid".to_string(),wechat_id.to_owned());
-        let api = Client::new();
-        let res = api.post(&uri, &hash).await?;
+
+        let res = Client::new().post(&uri, &hash).await?;
         wechat_sdk::json_decode(&res)
     }
     /// 解绑体验者
@@ -47,8 +47,8 @@ impl Tester {
 
         let mut hash = HashMap::new();
         hash.insert("wechatid".to_string(),wechat_id.to_owned());
-        let api = Client::new();
-        let res = api.post(&uri, &hash).await?;
+
+        let res = Client::new().post(&uri, &hash).await?;
         wechat_sdk::json_decode(&res)
     }
 }
