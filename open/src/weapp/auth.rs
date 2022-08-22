@@ -2,8 +2,7 @@
 //! 微信开放平台的第三方平代小程序处理的业务
 //!
 
-// use byteorder::{NativeEndian, ReadBytesExt};
-// use std::io::Cursor;
+use serde_json::Value;
 use wechat_sdk::{aes128_cbc_decrypt, Client, WechatResult};
 
 use crate::API_DOMAIN;
@@ -24,7 +23,7 @@ impl WxApp {
         code: &str,
         component_appid: &str,
         component_access_token: &str,
-    ) -> WechatResult<serde_json::Value> {
+    ) -> WechatResult<Value> {
         let url = format!("{api}/sns/component/jscode2session?appid={appid}&js_code={code}&grant_type=authorization_code&component_appid={component_appid}&component_access_token={component_access_token}",
         api=API_DOMAIN,
         appid=appid,

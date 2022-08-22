@@ -19,10 +19,14 @@ pub struct CategoryItem {
     pub title: String,
     pub desc: String,
 }
+/// 类目
 pub struct Category {
     auth_access_token: String,
 }
+
 impl Category {
+
+    /// 创建对象
     pub fn new(_auth_access_token: &str) -> Self {
         Category {
             auth_access_token: _auth_access_token.to_string(),
@@ -116,13 +120,11 @@ impl Category {
         );
 
         let data = json!({});
-
         let res = Client::new().post(&uri, &data).await?;
-
         json_decode(&res)
     }
 
-    /// 删除目录
+    /// 删除类目
     /// https://developers.weixin.qq.com/doc/oplatform/openApi/OpenApiDoc/miniprogram-management/category-management/deleteCategory.html
     /// @param1 - first	number	是	一级类目 ID
     /// @param2 - second	number	是	二级类目 ID
