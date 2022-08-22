@@ -14,9 +14,9 @@ pub struct Live {
 
 impl Live {
     /// 创建对象
-    pub fn new(auth_access_token: String) -> Self {
+    pub fn new(auth_access_token: &str) -> Self {
         Live {
-            auth_access_token: auth_access_token,
+            auth_access_token: auth_access_token.to_owned(),
         }
     }
 

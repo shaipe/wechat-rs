@@ -163,7 +163,7 @@ impl AuthToken {
         );
 
         let res = Client::new().post(&url, &hash).await?;
-        log!("==== {}", res);
+        // log!("==== {}", res);
         let data = crate::parse_json(&res).await?;
         Ok(data)
     }

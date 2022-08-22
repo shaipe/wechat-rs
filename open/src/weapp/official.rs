@@ -1,22 +1,22 @@
 //! copyright © ecdata.cn 2022 - present
 //! 扫码关注公众号
-//! 
+//!
 
 use serde_json::Value;
-use wechat_sdk::{WechatResult, Client, json_decode};
+use wechat_sdk::{json_decode, Client, WechatResult};
 
 use crate::API_DOMAIN;
 
-
 pub struct Official {
-    auth_access_token: String
+    auth_access_token: String,
 }
 
 impl Official {
-
     /// 创建对象
-    pub fn new(auth_access_token: String) -> Self {
-        Official { auth_access_token: auth_access_token}
+    pub fn new(auth_access_token: &str) -> Self {
+        Official {
+            auth_access_token: auth_access_token.to_owned(),
+        }
     }
 
     /// 获取已设置公众号信息
@@ -72,7 +72,6 @@ impl Official {
             "wxa_subscribe_biz_flag": biz_flag,
             "appid": appid
         });
-
 
         let res = Client::new().post(&uri, &data).await?;
 

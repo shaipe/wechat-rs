@@ -14,9 +14,9 @@ pub struct Domain {
 
 impl Domain {
     /// 创建对象
-    pub fn new(auth_access_token: String) -> Self {
+    pub fn new(auth_access_token: &str) -> Self {
         Domain {
-            auth_access_token: auth_access_token,
+            auth_access_token: auth_access_token.to_owned(),
         }
     }
 
